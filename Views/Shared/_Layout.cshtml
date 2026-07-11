@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@(ViewData["Title"] as string ?? "Dashboard") | CTD Management System</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <form id="antiForgeryForm" style="display:none;">@Html.AntiForgeryToken()</form>
+    <div class="app-shell">
+        @await Html.PartialAsync("_Sidebar")
+
+        <div class="main-area">
+            @await Html.PartialAsync("_Header")
+
+            <main class="content-area" id="contentArea">
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+
+    <div class="toast-stack" id="toastStack"></div>
+
+    <div class="modal-overlay" id="genericModal">
+        <div class="modal-box" id="genericModalBox">
+            <div class="modal-head">
+                <h3 id="genericModalTitle">Title</h3>
+                <button type="button" class="modal-close" id="genericModalClose">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="modal-body" id="genericModalBody"></div>
+            <div class="modal-foot" id="genericModalFoot"></div>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/header-notifications.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

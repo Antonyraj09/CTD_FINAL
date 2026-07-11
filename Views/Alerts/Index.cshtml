@@ -1,0 +1,81 @@
+@using CTD_FINAL.Entities
+@{
+    ViewData["Title"] = "Email / SMS Alerts";
+    var rules = (IReadOnlyList<AlertRule>)ViewBag.Rules;
+    var logs = (IReadOnlyList<AlertLog>)ViewBag.Logs;
+    string ChannelLabel(CTD_FINAL.Enums.AlertChannel c) => c switch
+    {
+        CTD_FINAL.Enums.AlertChannel.Sms => "SMS",
+        CTD_FINAL.Enums.AlertChannel.EmailAndSms => "Email + SMS",
+        _ => "Email"
+    };
+}
+<div class="section-head">
+    <div>
+        <h2>Email / SMS Alerts</h2>
+        <p>Automated notification triggers sent to staff and customers</p>
+    </div>
+    <div class="section-actions">
+        <button class="btn btn-amber btn-sm" id="newAlertRuleBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+            New Alert Rule
+        </button>
+    </div>
+</div>
+
+<div class="dash-grid" style="grid-template-columns:1fr 1.4fr;">
+    <div class="panel">
+        <div class="panel-head"><h3>Alert Rules</h3></div>
+        <div class="panel-body" id="alertRulesBody" style="display:flex;flex-direction:column;gap:10px;">
+            @foreach (var r in rules)
+            {
+                var isSms = r.Channel != CTD_FINAL.Enums.AlertChannel.Email;
+                <div class="alert-item" style="cursor:default;">
+                    <div class="alert-ico" style="background:@(isSms ? "rgba(124,92,212,.1)" : "rgba(59,130,196,.1)");color:@(isSms ? "#6240b8" : "#2c6ea3");">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8a2 2 0 0 0-2-2H8L3 11v2l5 5h11a2 2 0 0 0 2-2z"/></svg>
+                    </div>
+                    <div class="alert-text" style="flex:1;">
+                        <strong>@r.Name</strong>
+                        <span style="display:block;margin-top:3px;">@ChannelLabel(r.Channel) &middot; @r.Trigger</span>
+                        <span style="display:block;margin-top:1px;">To: @r.Audience</span>
+                    </div>
+                    <label style="display:flex;align-items:center;gap:6px;cursor:pointer;flex-shrink:0;">
+                        <input type="checkbox" data-rule-toggle="@r.Id" checked="@r.Active" style="width:16px;height:16px;accent-color:var(--transit-green);">
+                    </label>
+                </div>
+            }
+        </div>
+    </div>
+    <div class="panel">
+        <div class="panel-head"><h3>Recent Notification Log</h3></div>
+        <div class="table-scroll">
+            <table class="data-table">
+                <thead><tr><th>Channel</th><th>To</th><th>Trigger</th><th>Job No.</th><th>Sent At</th><th>Status</th></tr></thead>
+                <tbody id="alertLogBody">
+                    @if (logs.Count == 0)
+                    {
+                        <tr><td colspan="6" class="table-empty">No alerts sent yet</td></tr>
+                    }
+                    else
+                    {
+                        foreach (var a in logs)
+                        {
+                            <tr>
+                                <td><span class="tag-chip">@ChannelLabel(a.Channel)</span></td>
+                                <td>@a.To</td>
+                                <td>@a.Trigger</td>
+                                <td class="cell-strong">@a.JobNo</td>
+                                <td>@a.SentAt.ToString("d MMM yyyy HH:mm")</td>
+                                <td><span class="badge @(a.Status == "Delivered" ? "badge-delivered" : "badge-pending")">@a.Status</span></td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/alerts.js" asp-append-version="true"></script>
+}

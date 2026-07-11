@@ -1,0 +1,43 @@
+@using CTD_FINAL.Infrastructure.Masters
+@model (MasterTabConfig cfg, IEnumerable<object> records)
+@{
+    var cfg = Model.cfg;
+    var records = Model.records.ToList();
+}
+<table class="data-table" id="masterTable">
+    <thead>
+        <tr>
+            @foreach (var col in cfg.Columns)
+            {
+                <th>@col.Label</th>
+            }
+            <th class="no-print">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (records.Count == 0)
+        {
+            <tr><td colspan="@(cfg.Columns.Count + 1)" class="table-empty">No records found</td></tr>
+        }
+        else
+        {
+            foreach (var r in records)
+            {
+                var id = MasterRegistry.GetId(r);
+                <tr data-id="@id">
+                    @foreach (var col in cfg.Columns)
+                    {
+                        var val = MasterRegistry.GetString(r, col.Key);
+                        <td class="@(col.Key == "Name" ? "cell-strong" : "")">@(string.IsNullOrEmpty(val) ? "—" : val)</td>
+                    }
+                    <td class="no-print">
+                        <div class="row-actions">
+                            <button class="iconbtn-table" data-master-edit="@id" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+                            <button class="iconbtn-table danger" data-master-delete="@id" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m5 0V4a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v2"/></svg></button>
+                        </div>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>

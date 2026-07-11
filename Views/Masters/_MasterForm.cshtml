@@ -1,0 +1,19 @@
+@using CTD_FINAL.Infrastructure.Masters
+@model (MasterTabConfig cfg, object? record)
+@{
+    var cfg = Model.cfg;
+    var record = Model.record;
+    var isLast = cfg.Fields.Count % 2 != 0;
+}
+<div class="form-grid cols-2" id="masterFormFields">
+    @for (int i = 0; i < cfg.Fields.Count; i++)
+    {
+        var f = cfg.Fields[i];
+        var val = record != null ? MasterRegistry.GetString(record, f.Key) : "";
+        var span2 = isLast && i == cfg.Fields.Count - 1;
+        <div class="field @(span2 ? "span-2" : "")">
+            <label>@f.Label @(f.Required ? Html.Raw("<span class=\"req\">*</span>") : null)</label>
+            <input type="@f.InputType" id="mf_@f.Key" name="@f.Key" value="@val">
+        </div>
+    }
+</div>

@@ -1,0 +1,64 @@
+@using CTD_FINAL.DTOs
+@using CTD_FINAL.Entities
+@model PagedResult<GeneratedDocument>
+@{
+    var typeIcoMap = new Dictionary<string, (string Bg, string Fg)>
+    {
+        ["CTD Document"] = ("rgba(59,130,196,.1)", "#2c6ea3"),
+        ["Checklist"] = ("rgba(31,157,107,.1)", "#1a7e57"),
+        ["Forwarding Note"] = ("rgba(232,162,58,.13)", "#a3700f"),
+        ["Rail Form"] = ("rgba(124,92,212,.1)", "#6240b8"),
+        ["Invoice"] = ("rgba(192,57,43,.1)", "#a8332a"),
+        ["Customer Document"] = ("rgba(16,23,42,.06)", "#10172a"),
+    };
+}
+<table class="data-table">
+    <thead><tr><th>Document Name</th><th>Type</th><th>Job No.</th><th>Uploaded By</th><th>Date</th><th>Size</th><th class="no-print">Actions</th></tr></thead>
+    <tbody>
+        @if (Model.Items.Count == 0)
+        {
+            <tr><td colspan="7" class="table-empty">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+                <div>No documents found</div></td></tr>
+        }
+        else
+        {
+            foreach (var d in Model.Items)
+            {
+                var (bg, fg) = typeIcoMap.TryGetValue(d.Type, out var pair) ? pair : ("rgba(16,23,42,.06)", "#10172a");
+                <tr data-doc-id="@d.Id">
+                    <td class="cell-strong">
+                        <span style="display:inline-flex;align-items:center;gap:8px;">
+                            <span style="width:26px;height:26px;border-radius:7px;background:@bg;color:@fg;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+                            </span>@d.Name
+                        </span>
+                    </td>
+                    <td><span class="tag-chip">@d.Type</span></td>
+                    <td>@d.JobNo</td>
+                    <td>@d.UploadedBy</td>
+                    <td>@d.DocumentDate.ToString("d MMM yyyy")</td>
+                    <td>@(d.Size ?? "—")</td>
+                    <td class="no-print">
+                        <div class="row-actions">
+                            <a class="iconbtn-table" href="/Documents/Download?id=@d.Id" title="Download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></a>
+                            <button class="iconbtn-table danger" data-doc-delete="@d.Id" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m5 0V4a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v2"/></svg></button>
+                        </div>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+@if (Model.TotalPages > 1)
+{
+    <div class="table-foot">
+        <span class="text-muted">Page @Model.Page of @Model.TotalPages</span>
+        <div class="pagination">
+            @for (int p = 1; p <= Model.TotalPages; p++)
+            {
+                <button type="button" class="page-btn @(p == Model.Page ? "active" : "")" data-doc-page="@p">@p</button>
+            }
+        </div>
+    </div>
+}

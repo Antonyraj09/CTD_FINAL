@@ -1,0 +1,64 @@
+@model CTD_FINAL.Models.Account.LoginViewModel
+@{
+    Layout = "_AuthLayout";
+    ViewData["Title"] = "Sign In";
+}
+<div class="auth-shell">
+    <div class="auth-hero">
+        <div>
+            <div class="brand-mark">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#1a1305" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-6 9 6-9 6-9-6z"/><path d="M3 9v7l9 6 9-6V9"/><path d="M12 15v6"/></svg>
+            </div>
+            <h2>CTD Suite</h2>
+            <p>India–Nepal Transit Permit &amp; Customs Transit Declaration management, end to end.</p>
+
+            <div class="auth-feature-list">
+                <div class="auth-feature"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg> Role-based access for Admin, Manager, Operator &amp; Viewer</div>
+                <div class="auth-feature"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg> Full CTD job lifecycle: Draft → Closed</div>
+                <div class="auth-feature"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg> Live dashboards, reports &amp; audit history</div>
+            </div>
+        </div>
+        <div class="auth-footnote">&copy; @DateTime.UtcNow.Year CTD Suite · Himalayan Cargo Movers Pvt. Ltd.</div>
+    </div>
+
+    <div class="auth-form-panel">
+        <h1>Sign in</h1>
+        <p class="auth-sub">Enter your credentials to access the CTD Management System.</p>
+
+        <form asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Model.ReturnUrl" method="post" novalidate>
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="auth-validation-summary" style="@(ViewData.ModelState.IsValid ? "display:none;" : "")"></div>
+
+            <div class="auth-field">
+                <label asp-for="UserNameOrEmail">Username or Email</label>
+                <input asp-for="UserNameOrEmail" type="text" autocomplete="username" autofocus placeholder="you@company.com" />
+                <span asp-validation-for="UserNameOrEmail" class="text-danger"></span>
+            </div>
+
+            <div class="auth-field">
+                <label asp-for="Password">Password</label>
+                <div class="auth-password-wrap">
+                    <input asp-for="Password" type="password" id="Password" autocomplete="current-password" placeholder="••••••••" />
+                    <button type="button" class="auth-toggle-visibility" data-target="Password" aria-label="Show password">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                </div>
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+
+            <div class="auth-row">
+                <label class="auth-remember">
+                    <input type="checkbox" asp-for="RememberMe" />
+                    Remember me
+                </label>
+                <a asp-controller="Account" asp-action="ForgotPassword">Forgot password?</a>
+            </div>
+
+            <button type="submit" class="btn btn-amber auth-submit">Sign In</button>
+        </form>
+
+        <div class="auth-demo-note">
+            <strong>Demo accounts</strong> (password <code>ChangeMe#2026</code>): admin@ctdsuite.com · manager@ctdsuite.com · operator@ctdsuite.com · viewer@ctdsuite.com
+        </div>
+    </div>
+</div>

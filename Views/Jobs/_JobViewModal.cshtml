@@ -1,0 +1,104 @@
+@using CTD_FINAL.Entities
+@using CTD_FINAL.Enums
+@model CtdJob
+@{
+    var steps = Enum.GetValues<WorkflowStatus>();
+    int currentIdx = (int)Model.Status;
+    string BillingBadgeClass(BillingStatus s) => s switch { BillingStatus.Paid => "badge-paid", BillingStatus.Partial => "badge-partial", _ => "badge-unpaid" };
+
+    var timelineSteps = new (string Label, DateTime? Date, WorkflowStatus Key)[]
+    {
+        ("Job Created", Model.JobDate, WorkflowStatus.Draft),
+        ("Submitted to Customs", Model.CtdDate, WorkflowStatus.Submitted),
+        ($"CTD Approved · {Model.CtdNumber ?? "Pending"}", Model.CtdDate, WorkflowStatus.Approved),
+        ($"In Transit · {Model.BorderPoint?.Name}", Model.ArrivalDate, WorkflowStatus.Transit),
+        ("Delivered in Nepal", Model.DeliveryDate, WorkflowStatus.Delivered),
+        ("Job Closed & Billed", Model.Status == WorkflowStatus.Closed ? Model.UpdatedAt : null, WorkflowStatus.Closed),
+    };
+}
+<div class="workflow-strip" style="margin-bottom:22px;">
+    @for (int i = 0; i < steps.Length; i++)
+    {
+        var cls = i < currentIdx ? "done" : (i == currentIdx ? "current" : "");
+        <div class="wf-node @cls"><div class="wf-dot">@(i < currentIdx ? "✓" : (i + 1).ToString())</div><div class="wf-label">@steps[i]</div></div>
+        if (i < steps.Length - 1)
+        {
+            <div class="wf-line @(i < currentIdx ? "done" : "")"></div>
+        }
+    }
+</div>
+
+<div class="tabs-row" style="margin-bottom:16px;">
+    <div class="tab-btn active" data-jt="overview">Overview</div>
+    <div class="tab-btn" data-jt="containers">Containers</div>
+    <div class="tab-btn" data-jt="docs">Documents</div>
+    <div class="tab-btn" data-jt="billing">Billing</div>
+    <div class="tab-btn" data-jt="timeline">Timeline</div>
+</div>
+
+<div class="tab-pane active" id="jt-overview">
+    <div class="grid-2">
+        <div>
+            <p style="margin:0 0 8px;"><b>Job No.</b><br>@Model.JobNo</p>
+            <p style="margin:0 0 8px;"><b>Importer</b><br>@(Model.Importer?.Name ?? "—")</p>
+            <p style="margin:0 0 8px;"><b>Transporter</b><br>@(Model.Transporter?.Name ?? "—")</p>
+            <p style="margin:0 0 8px;"><b>Agent</b><br>@(Model.Agent?.Name ?? "—")</p>
+        </div>
+        <div>
+            <p style="margin:0 0 8px;"><b>CTD No. / Type</b><br>@(Model.CtdNumber ?? "Pending") (@Model.CtdType)</p>
+            <p style="margin:0 0 8px;"><b>Border Point</b><br>@(Model.BorderPoint?.Name ?? "—")</p>
+            <p style="margin:0 0 8px;"><b>Customs House</b><br>@(Model.CustomsHouse?.Name ?? "—")</p>
+            <p style="margin:0 0 8px;"><b>Commodity</b><br>@(Model.Commodity?.Name ?? "—") (HS @(Model.HsCode ?? "—"))</p>
+        </div>
+    </div>
+</div>
+<div class="tab-pane" id="jt-containers">
+    <table class="data-table"><thead><tr><th>Container No.</th><th>Size</th><th>Seal</th><th>Weight</th></tr></thead>
+        <tbody>
+            @foreach (var c in Model.Containers)
+            {
+                <tr><td>@c.ContainerNo</td><td>@c.Size</td><td>@c.Seal</td><td>@c.Weight.ToString("N0") kg</td></tr>
+            }
+        </tbody>
+    </table>
+</div>
+<div class="tab-pane" id="jt-docs">
+    <div class="flex-between" style="padding:10px 0;border-bottom:1px solid var(--surface-2);"><span>CTD Document</span><span class="badge @(Model.CtdDocGenerated ? "badge-delivered" : "badge-pending")">@(Model.CtdDocGenerated ? "Generated" : "Pending")</span></div>
+    <div class="flex-between" style="padding:10px 0;border-bottom:1px solid var(--surface-2);"><span>Checklist</span><span class="badge @(Model.ChecklistDocGenerated ? "badge-delivered" : "badge-pending")">@(Model.ChecklistDocGenerated ? "Generated" : "Pending")</span></div>
+    <div class="flex-between" style="padding:10px 0;border-bottom:1px solid var(--surface-2);"><span>Forwarding Note &amp; Rail Form</span><span class="badge @(Model.ForwardingDocGenerated ? "badge-delivered" : "badge-pending")">@(Model.ForwardingDocGenerated ? "Generated" : "Pending")</span></div>
+</div>
+<div class="tab-pane" id="jt-billing">
+    <div class="billing-row" style="color:var(--ink-600);"><span>Service Charges</span><span style="color:var(--ink-900);">₹@Model.ServiceCharge.ToString("N2")</span></div>
+    <div class="billing-row" style="color:var(--ink-600);"><span>Transport Charges</span><span style="color:var(--ink-900);">₹@Model.TransportCharge.ToString("N2")</span></div>
+    <div class="billing-row" style="color:var(--ink-600);"><span>Other Charges</span><span style="color:var(--ink-900);">₹@Model.OtherCharge.ToString("N2")</span></div>
+    <div class="billing-row" style="color:var(--ink-600);"><span>GST (@Model.TaxPercent%)</span><span style="color:var(--ink-900);">₹@Model.Tax.ToString("N2")</span></div>
+    <div class="billing-row total" style="color:var(--ink-900);border-top:1px solid var(--surface-border);"><span>Total</span><span class="amt" style="color:var(--seal-red);">₹@Model.Total.ToString("N2")</span></div>
+    <div style="margin-top:10px;"><span class="badge @BillingBadgeClass(Model.BillingStatus)">@Model.BillingStatus</span></div>
+</div>
+<div class="tab-pane" id="jt-timeline">
+    <div class="timeline">
+        @foreach (var s in timelineSteps)
+        {
+            var stepIdx = (int)s.Key;
+            var cls = stepIdx < currentIdx ? "done" : (stepIdx == currentIdx ? "current" : "");
+            <div class="tl-item @cls">
+                <div class="tl-dot"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg></div>
+                <div class="tl-content"><strong>@s.Label</strong><p>@(s.Date.HasValue ? s.Date.Value.ToString("d MMM yyyy") : (cls != "" ? "In progress" : "Pending"))</p></div>
+            </div>
+        }
+    </div>
+</div>
+
+<script>
+  (function(){
+    var root = document.currentScript.closest('.modal-body') || document;
+    root.querySelectorAll('[data-jt]').forEach(function(tab){
+      tab.addEventListener('click', function(){
+        root.querySelectorAll('[data-jt]').forEach(function(t){ t.classList.remove('active'); });
+        tab.classList.add('active');
+        root.querySelectorAll('.tab-pane').forEach(function(p){ p.classList.remove('active'); });
+        root.querySelector('#jt-' + tab.dataset.jt).classList.add('active');
+      });
+    });
+  })();
+</script>

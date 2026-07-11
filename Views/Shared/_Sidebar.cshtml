@@ -1,0 +1,222 @@
+@using CTD_FINAL.Interfaces
+@using CTD_FINAL.Constants
+@inject IPermissionService PermissionService
+@{
+    var role = User.IsInRole(RoleNames.Administrator) ? RoleNames.Administrator
+        : User.IsInRole(RoleNames.Manager) ? RoleNames.Manager
+        : User.IsInRole(RoleNames.Operator) ? RoleNames.Operator
+        : RoleNames.Viewer;
+
+    var matrix = await PermissionService.GetMatrixAsync();
+    bool Can(string key) => matrix.TryGetValue(role, out var m) && m.TryGetValue(key, out var a) && a;
+
+    string activeNav = ViewData["ActiveNav"] as string ?? "";
+    string activeModule = ViewData["ActiveModule"] as string ?? "";
+    string NavClass(string slug) => "sidebar-link" + (activeNav == slug ? " active" : "");
+    string ModuleClass(string key) => "erp-module" + (activeModule == key ? " open" : "");
+    string ModuleHeaderClass(string key) => "erp-module-header" + (activeModule == key ? " module-active" : "");
+}
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+        <div class="brand-mark">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#1a1305" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-6 9 6-9 6-9-6z"/><path d="M3 9v7l9 6 9-6V9"/><path d="M12 15v6"/></svg>
+        </div>
+        <div class="brand-text">
+            <strong>CTD Suite</strong>
+            <small>India · Nepal Transit</small>
+        </div>
+    </div>
+    <div class="sidebar-toggle" id="sidebarToggle" title="Collapse sidebar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </div>
+
+    <nav class="sidebar-nav" id="sidebarNav">
+
+        <div class="nav-section-label">Overview</div>
+        @if (Can(PermissionKeys.DashboardView))
+        {
+            <div class="sidebar-link-wrap">
+                <a class="@NavClass("dashboard")" asp-controller="Dashboard" asp-action="Index">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+                    <span>Dashboard</span>
+                </a>
+                <div class="collapsed-tip">Dashboard</div>
+            </div>
+        }
+        @if (Can(PermissionKeys.CustomerDashboardView))
+        {
+            <div class="sidebar-link-wrap">
+                <a class="@NavClass("customerDashboard")" asp-controller="Dashboard" asp-action="Customer">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    <span>Customer View</span>
+                </a>
+                <div class="collapsed-tip">Customer View</div>
+            </div>
+        }
+
+        <div class="nav-section-label">Entry / Edit</div>
+
+        @if (Can(PermissionKeys.MasterDataManage))
+        {
+            <div class="sidebar-link-wrap">
+                <a class="@NavClass("masters")" asp-controller="Masters" asp-action="Index">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    <span>1. Master</span>
+                </a>
+                <div class="collapsed-tip">Master</div>
+            </div>
+        }
+
+        <div class="@ModuleClass("edi-import")" id="module-edi-import">
+            <div class="@ModuleHeaderClass("edi-import")" data-module="edi-import">
+                <div class="erp-module-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
+                <span class="erp-module-label">2. EDI Import</span>
+                <svg class="erp-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="erp-submenu">
+                <div class="sidebar-link-wrap"><a class="@NavClass("edi-import-iae") erp-child" asp-controller="Placeholder" asp-action="Index" asp-route-slug="edi-import-iae"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="2"/></svg><span>EDI Import (IAE)</span></a><div class="collapsed-tip">EDI Import (IAE)</div></div>
+                <div class="sidebar-link-wrap"><a class="@NavClass("edi-import-ise") erp-child" asp-controller="Placeholder" asp-action="Index" asp-route-slug="edi-import-ise"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="2"/></svg><span>EDI Import (ISE)</span></a><div class="collapsed-tip">EDI Import (ISE)</div></div>
+            </div>
+        </div>
+
+        <div class="@ModuleClass("edi-export")" id="module-edi-export">
+            <div class="@ModuleHeaderClass("edi-export")" data-module="edi-export">
+                <div class="erp-module-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+                <span class="erp-module-label">3. EDI Export</span>
+                <svg class="erp-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="erp-submenu">
+                <div class="sidebar-link-wrap"><a class="@NavClass("edi-export-eae") erp-child" asp-controller="Placeholder" asp-action="Index" asp-route-slug="edi-export-eae"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="2"/></svg><span>EDI Export (EAE)</span></a><div class="collapsed-tip">EDI Export (EAE)</div></div>
+                <div class="sidebar-link-wrap"><a class="@NavClass("edi-export-ese") erp-child" asp-controller="Placeholder" asp-action="Index" asp-route-slug="edi-export-ese"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="2"/></svg><span>EDI Export (ESE)</span></a><div class="collapsed-tip">EDI Export (ESE)</div></div>
+            </div>
+        </div>
+
+        @if (Can(PermissionKeys.JobCreateEdit) || Can(PermissionKeys.JobIsneManage))
+        {
+            <div class="@ModuleClass("jobs")" id="module-jobs">
+                <div class="@ModuleHeaderClass("jobs")" data-module="jobs">
+                    <div class="erp-module-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div>
+                    <span class="erp-module-label">4. Jobs</span>
+                    <svg class="erp-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <div class="erp-submenu">
+                    <div class="sidebar-link-wrap"><a class="@NavClass("job-esne-esbe") erp-child" asp-controller="Placeholder" asp-action="Index" asp-route-slug="job-esne-esbe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="2"/></svg><span>Job ESNE / ESBE</span></a><div class="collapsed-tip">Job ESNE / ESBE</div></div>
+                    @if (Can(PermissionKeys.JobIsneManage))
+                    {
+                        <div class="sidebar-link-wrap"><a class="@NavClass("job-isne") erp-child" asp-controller="JobIsne" asp-action="Index"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="2"/></svg><span>Job ISNE</span></a><div class="collapsed-tip">Job ISNE</div></div>
+                    }
+                    <div class="sidebar-link-wrap"><a class="@NavClass("job-miscn") erp-child" asp-controller="Placeholder" asp-action="Index" asp-route-slug="job-miscn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="2"/></svg><span>Job MISCN</span></a><div class="collapsed-tip">Job MISCN</div></div>
+                    <div class="sidebar-link-wrap"><a class="@NavClass("job-misct") erp-child" asp-controller="Placeholder" asp-action="Index" asp-route-slug="job-misct"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="2"/></svg><span>Job MISCT</span></a><div class="collapsed-tip">Job MISCT</div></div>
+                    <div class="sidebar-link-wrap"><a class="@NavClass("job-isne-browse") erp-child" asp-controller="Placeholder" asp-action="Index" asp-route-slug="job-isne-browse"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="2"/></svg><span>Job ISNE Browse</span></a><div class="collapsed-tip">Job ISNE Browse</div></div>
+                    <div class="sidebar-link-wrap"><a class="@NavClass("edi-job-register") erp-child" asp-controller="Placeholder" asp-action="Index" asp-route-slug="edi-job-register"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="2"/></svg><span>EDI Job Register</span></a><div class="collapsed-tip">EDI Job Register</div></div>
+                    @if (Can(PermissionKeys.JobCreateEdit))
+                    {
+                        <div class="sidebar-link-wrap"><a class="@NavClass("tracking") erp-child" asp-controller="Jobs" asp-action="Tracking"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="2"/></svg><span>CTD Tracking</span></a><div class="collapsed-tip">CTD Tracking</div></div>
+                        <div class="sidebar-link-wrap"><a class="@NavClass("wizard") erp-child" asp-controller="Jobs" asp-action="Wizard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="2"/></svg><span>New CTD Job</span></a><div class="collapsed-tip">New CTD Job</div></div>
+                        <div class="sidebar-link-wrap"><a class="@NavClass("documents") erp-child" asp-controller="Documents" asp-action="Index"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="2"/></svg><span>Document Archive</span></a><div class="collapsed-tip">Document Archive</div></div>
+                    }
+                </div>
+            </div>
+        }
+
+        <div class="@ModuleClass("delivery")" id="module-delivery">
+            <div class="@ModuleHeaderClass("delivery")" data-module="delivery">
+                <div class="erp-module-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div>
+                <span class="erp-module-label">5. Delivery</span>
+                <svg class="erp-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="erp-submenu">
+                <div class="sidebar-link-wrap"><a class="@NavClass("delivery-isne") erp-child" asp-controller="Placeholder" asp-action="Index" asp-route-slug="delivery-isne"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="2"/></svg><span>Delivery ISNE</span></a><div class="collapsed-tip">Delivery ISNE</div></div>
+                <div class="sidebar-link-wrap"><a class="@NavClass("delivery-challan") erp-child" asp-controller="Placeholder" asp-action="Index" asp-route-slug="delivery-challan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="2"/></svg><span>Delivery Challan</span></a><div class="collapsed-tip">Delivery Challan</div></div>
+                <div class="sidebar-link-wrap"><a class="@NavClass("delivery-export") erp-child" asp-controller="Placeholder" asp-action="Index" asp-route-slug="delivery-export"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="2"/></svg><span>Delivery Export</span></a><div class="collapsed-tip">Delivery Export</div></div>
+                <div class="sidebar-link-wrap"><a class="@NavClass("delivery-misct") erp-child" asp-controller="Placeholder" asp-action="Index" asp-route-slug="delivery-misct"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="2"/></svg><span>Delivery MISCT</span></a><div class="collapsed-tip">Delivery MISCT</div></div>
+            </div>
+        </div>
+
+        <div class="@ModuleClass("accounts")" id="module-accounts">
+            <div class="@ModuleHeaderClass("accounts")" data-module="accounts">
+                <div class="erp-module-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+                <span class="erp-module-label">6. Accounts</span>
+                <svg class="erp-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="erp-submenu">
+                <div class="sidebar-link-wrap"><a class="@NavClass("exchange-rate") erp-child" asp-controller="Placeholder" asp-action="Index" asp-route-slug="exchange-rate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="2"/></svg><span>Exchange Rate</span></a><div class="collapsed-tip">Exchange Rate</div></div>
+                <div class="sidebar-link-wrap"><a class="@NavClass("slot-date") erp-child" asp-controller="Placeholder" asp-action="Index" asp-route-slug="slot-date"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="2"/></svg><span>Slot Date</span></a><div class="collapsed-tip">Slot Date</div></div>
+                @if (Can(PermissionKeys.InvoiceGenerate))
+                {
+                    <div class="sidebar-link-wrap"><a class="@NavClass("billing") erp-child" asp-controller="Placeholder" asp-action="Index" asp-route-slug="billing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="2"/></svg><span>Billing</span></a><div class="collapsed-tip">Billing</div></div>
+                    <div class="sidebar-link-wrap"><a class="@NavClass("billing-browse") erp-child" asp-controller="Placeholder" asp-action="Index" asp-route-slug="billing-browse"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="2"/></svg><span>Billing Browse</span></a><div class="collapsed-tip">Billing Browse</div></div>
+                }
+                <div class="sidebar-link-wrap"><a class="@NavClass("petty-cash") erp-child" asp-controller="Placeholder" asp-action="Index" asp-route-slug="petty-cash"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="2"/></svg><span>Petty Cash Voucher</span></a><div class="collapsed-tip">Petty Cash Voucher</div></div>
+                <div class="sidebar-link-wrap"><a class="@NavClass("cash-bank-voucher") erp-child" asp-controller="Placeholder" asp-action="Index" asp-route-slug="cash-bank-voucher"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="2"/></svg><span>Cash / Bank Voucher</span></a><div class="collapsed-tip">Cash / Bank Voucher</div></div>
+                <div class="sidebar-link-wrap"><a class="@NavClass("journal-voucher") erp-child" asp-controller="Placeholder" asp-action="Index" asp-route-slug="journal-voucher"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="2"/></svg><span>Journal Voucher</span></a><div class="collapsed-tip">Journal Voucher</div></div>
+                <div class="sidebar-link-wrap"><a class="@NavClass("purchase-bill") erp-child" asp-controller="Placeholder" asp-action="Index" asp-route-slug="purchase-bill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="2"/></svg><span>Purchase Bill</span></a><div class="collapsed-tip">Purchase Bill</div></div>
+                <div class="sidebar-link-wrap"><a class="@NavClass("purchase-tds") erp-child" asp-controller="Placeholder" asp-action="Index" asp-route-slug="purchase-tds"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="2"/></svg><span>Purchase TDS Booked</span></a><div class="collapsed-tip">Purchase TDS Booked</div></div>
+                <div class="sidebar-link-wrap"><a class="@NavClass("purchase-payment") erp-child" asp-controller="Placeholder" asp-action="Index" asp-route-slug="purchase-payment"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="2"/></svg><span>Purchase Payment</span></a><div class="collapsed-tip">Purchase Payment</div></div>
+            </div>
+        </div>
+
+        @if (Can(PermissionKeys.ReportsViewExport))
+        {
+            <div class="@ModuleClass("erp-reports")" id="module-erp-reports">
+                <div class="@ModuleHeaderClass("erp-reports")" data-module="erp-reports">
+                    <div class="erp-module-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18.4 9 12 15.4 8.6 12 4 16.6"/></svg></div>
+                    <span class="erp-module-label">7. Reports</span>
+                    <svg class="erp-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <div class="erp-submenu">
+                    <div class="sidebar-link-wrap"><a class="@NavClass("reports") erp-child" asp-controller="Reports" asp-action="Index"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="2"/></svg><span>Report 1</span></a><div class="collapsed-tip">Report 1</div></div>
+                    <div class="sidebar-link-wrap"><a class="@NavClass("report-2") erp-child" asp-controller="Placeholder" asp-action="Index" asp-route-slug="report-2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="2"/></svg><span>Report 2</span></a><div class="collapsed-tip">Report 2</div></div>
+                    <div class="sidebar-link-wrap"><a class="@NavClass("report-3") erp-child" asp-controller="Placeholder" asp-action="Index" asp-route-slug="report-3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="2"/></svg><span>Report 3</span></a><div class="collapsed-tip">Report 3</div></div>
+                </div>
+            </div>
+        }
+
+        <div class="nav-section-label" style="margin-top:8px;">System</div>
+        @if (Can(PermissionKeys.UsersRolesManage))
+        {
+            <div class="sidebar-link-wrap">
+                <a class="@NavClass("users")" asp-controller="Users" asp-action="Index">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    <span>Users &amp; Roles</span>
+                </a>
+                <div class="collapsed-tip">Users &amp; Roles</div>
+            </div>
+        }
+        @if (Can(PermissionKeys.AuditHistoryView))
+        {
+            <div class="sidebar-link-wrap">
+                <a class="@NavClass("audit")" asp-controller="Audit" asp-action="Index">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>
+                    <span>Audit History</span>
+                </a>
+                <div class="collapsed-tip">Audit History</div>
+            </div>
+        }
+        @if (Can(PermissionKeys.AlertRulesManage))
+        {
+            <div class="sidebar-link-wrap">
+                <a class="@NavClass("alerts")" asp-controller="Alerts" asp-action="Index">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+                    <span>Alerts (Email/SMS)</span>
+                </a>
+                <div class="collapsed-tip">Alerts</div>
+            </div>
+        }
+        <div class="sidebar-link-wrap">
+            <a class="@NavClass("settings")" asp-controller="Settings" asp-action="Index">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                <span>Settings</span>
+            </a>
+            <div class="collapsed-tip">Settings</div>
+        </div>
+    </nav>
+
+    <div class="sidebar-foot">
+        <div class="role-pill">
+            <span class="dot"></span>
+            <div class="role-text"><strong>@(User.FindFirst("FullName")?.Value ?? User.Identity?.Name ?? "")</strong>@role · Online</div>
+        </div>
+    </div>
+</aside>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>

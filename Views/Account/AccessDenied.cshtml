@@ -1,0 +1,14 @@
+@{
+    Layout = "_AuthLayout";
+    ViewData["Title"] = "Access Denied";
+}
+<div class="auth-shell" style="grid-template-columns:1fr;max-width:520px;">
+    <div class="auth-form-panel" style="align-items:center;text-align:center;">
+        <div class="brand-mark" style="margin:0 auto 20px;">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#1a1305" stroke-width="2"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="13"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </div>
+        <h1>Access Denied</h1>
+        <p class="auth-sub">Your account role does not have permission to view this page. If you believe this is a mistake, contact your system administrator.</p>
+        <a class="btn btn-amber" asp-controller="Dashboard" asp-action="Index">Back to Dashboard</a>
+    </div>
+</div>

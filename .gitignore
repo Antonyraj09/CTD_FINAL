@@ -1,0 +1,30 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+
+## Logs
+logs/
+*.log
+
+## Rider/VS Code
+.idea/
+.vscode/
+
+## OS
+.DS_Store
+Thumbs.db
+
+## Client-side libraries (restored via libman.json)
+wwwroot/lib/
+
+## EF Core
+*.mdf
+*.ldf
+
+## Runtime-uploaded document storage (see Documents/Upload) — stored outside
+## wwwroot so the static file middleware can never serve it directly.
+App_Data/uploads/documents/*
+!App_Data/uploads/documents/.gitkeep

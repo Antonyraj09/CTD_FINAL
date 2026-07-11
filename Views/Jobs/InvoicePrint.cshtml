@@ -1,0 +1,33 @@
+@using CTD_FINAL.Entities
+@model CtdJob
+@{
+    Layout = null;
+    var invNo = ViewData["InvoiceNo"] as string;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Invoice @invNo</title>
+    <style>body{font-family:Arial;padding:30px;}table{width:100%;border-collapse:collapse;}td,th{border:1px solid #ccc;padding:7px;}</style>
+</head>
+<body onload="window.print()">
+    <div style="display:flex;justify-content:space-between;margin-bottom:14px;">
+        <div><strong style="font-size:18px;">TAX INVOICE</strong><br><span style="color:#666;">Himalayan Cargo Movers Pvt. Ltd.</span></div>
+        <div style="text-align:right;"><span style="color:#666;">Invoice No.</span><br><strong>@invNo</strong></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;">
+        <p><b>Bill To</b><br>@(Model.Importer?.Name ?? "—")<br>Job Ref: @Model.JobNo</p>
+        <p style="text-align:right;"><b>Invoice Date</b><br>@DateTime.Now.ToString("d MMM yyyy")</p>
+    </div>
+    <table>
+        <thead><tr><th>Description</th><th>Amount</th></tr></thead>
+        <tbody>
+            <tr><td>CTD Service Charges</td><td>₹@Model.ServiceCharge.ToString("N2")</td></tr>
+            <tr><td>Transport Charges</td><td>₹@Model.TransportCharge.ToString("N2")</td></tr>
+            <tr><td>Other Charges</td><td>₹@Model.OtherCharge.ToString("N2")</td></tr>
+            <tr><td>GST @@ @Model.TaxPercent%</td><td>₹@Model.Tax.ToString("N2")</td></tr>
+        </tbody>
+        <tfoot><tr><td><b>Total Payable</b></td><td><b>₹@Model.Total.ToString("N2")</b></td></tr></tfoot>
+    </table>
+</body>
+</html>

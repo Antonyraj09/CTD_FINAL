@@ -1,0 +1,32 @@
+@using CTD_FINAL.Entities
+@model CtdJob
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Job Sheet - @Model.JobNo</title>
+    <style>body{font-family:Arial,sans-serif;padding:30px;color:#10172a;} h1{margin-bottom:2px;} table{width:100%;border-collapse:collapse;margin-top:14px;} td,th{border:1px solid #ccc;padding:7px 10px;text-align:left;font-size:12.5px;} th{background:#11192e;color:#fff;}</style>
+</head>
+<body onload="window.print()">
+    <h1>CTD Job Sheet — @Model.JobNo</h1>
+    <p style="color:#666;">Status: @Model.Status &nbsp;|&nbsp; Generated @DateTime.Now.ToString("d MMM yyyy, h:mm tt")</p>
+    <table>
+        <tr><th>Importer</th><td>@(Model.Importer?.Name ?? "—")</td><th>Transporter</th><td>@(Model.Transporter?.Name ?? "—")</td></tr>
+        <tr><th>CTD No.</th><td>@(Model.CtdNumber ?? "Pending")</td><th>CTD Date</th><td>@(Model.CtdDate?.ToString("d MMM yyyy") ?? "—")</td></tr>
+        <tr><th>Border Point</th><td>@(Model.BorderPoint?.Name ?? "—")</td><th>Customs House</th><td>@(Model.CustomsHouse?.Name ?? "—")</td></tr>
+        <tr><th>Commodity</th><td>@(Model.Commodity?.Name ?? "—")</td><th>HS Code</th><td>@(Model.HsCode ?? "—")</td></tr>
+        <tr><th>Gross Weight</th><td>@Model.GrossWt kg</td><th>Net Weight</th><td>@Model.NetWt kg</td></tr>
+        <tr><th>Total Billing</th><td>₹@Model.Total.ToString("N2")</td><th>Payment Status</th><td>@Model.BillingStatus</td></tr>
+    </table>
+    <h3>Containers</h3>
+    <table>
+        <tr><th>Container No.</th><th>Size</th><th>Seal</th><th>Weight</th></tr>
+        @foreach (var c in Model.Containers)
+        {
+            <tr><td>@c.ContainerNo</td><td>@c.Size</td><td>@c.Seal</td><td>@c.Weight kg</td></tr>
+        }
+    </table>
+</body>
+</html>

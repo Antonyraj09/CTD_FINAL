@@ -1,0 +1,23 @@
+@model CTD_FINAL.Models.Shared.PlaceholderViewModel
+@{
+    ViewData["Title"] = Model.Title;
+    ViewData["Breadcrumb"] = "CTD Suite / " + Model.Title;
+}
+
+<div class="panel" style="margin-top:4px;">
+    <div class="placeholder-view">
+        <div class="ph-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+        </div>
+        <h3>@Model.Title</h3>
+        <p>@Model.Description</p>
+        @if (Model.ComingInFutureBuildPhase)
+        {
+            <span class="badge badge-transit">Coming in a future build phase</span>
+        }
+        else
+        {
+            <span class="badge badge-submitted">Under Development</span>
+        }
+    </div>
+</div>

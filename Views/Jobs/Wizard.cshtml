@@ -1,0 +1,244 @@
+@using CTD_FINAL.Enums
+@model CTD_FINAL.Models.Jobs.JobWizardViewModel
+@{
+    var job = Model.Job;
+    ViewData["Title"] = job is null ? "New CTD Job" : $"Edit CTD Job — {job.JobNo}";
+}
+<div class="section-head">
+    <div>
+        <h2 id="wizardHeading">@(job is null ? "New CTD Job" : $"Edit CTD Job — {job.JobNo}")</h2>
+        <p>Complete all four steps to create and process a transit declaration</p>
+    </div>
+    <div class="section-actions">
+        <span class="tag-chip" id="wizardJobTag">
+            @if (job is null)
+            {
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                @:Draft — not yet saved
+            }
+            else
+            {
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>
+                @:Saved · <span class="badge badge-@(job.Status.ToString().ToLower())" style="margin-left:6px;">@job.Status</span>
+            }
+        </span>
+    </div>
+</div>
+
+<div class="wizard-shell" id="wizardShell" data-job-id="@(job?.Id ?? 0)">
+    <div class="wizard-steps" id="wizardStepsBar">
+        <div class="wstep current" data-step="1"><div class="wstep-num">1</div><div class="wstep-meta"><span class="lbl">Step 1</span><span class="nm">Job Information</span></div></div>
+        <div class="wstep" data-step="2"><div class="wstep-num">2</div><div class="wstep-meta"><span class="lbl">Step 2</span><span class="nm">Shipment Details</span></div></div>
+        <div class="wstep" data-step="3"><div class="wstep-num">3</div><div class="wstep-meta"><span class="lbl">Step 3</span><span class="nm">Customs &amp; CTD</span></div></div>
+        <div class="wstep" data-step="4"><div class="wstep-num">4</div><div class="wstep-meta"><span class="lbl">Step 4</span><span class="nm">Delivery &amp; Billing</span></div></div>
+    </div>
+
+    <div class="wizard-body">
+        <!-- STEP 1 -->
+        <div class="wizard-pane active" id="wpane-1">
+            <div class="subhead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Job Information</div>
+            <div class="form-grid">
+                <div class="field"><label>Job Number</label><div class="field-static" id="f1_jobNumber">@(job?.JobNo ?? "Assigned on save")</div></div>
+                <div class="field"><label>Job Date <span class="req">*</span></label><input type="date" id="f1_jobDate" value="@((job?.JobDate ?? DateTime.Today).ToString("yyyy-MM-dd"))"></div>
+                <div class="field">
+                    <label>Shipment Type <span class="req">*</span></label>
+                    <div class="radio-group">
+                        <label class="radio-pill @(job == null || job.ShipmentType == ShipmentType.Single ? "checked" : "")" id="rp_single"><input type="radio" name="shipType" value="single" checked="@(job == null || job.ShipmentType == ShipmentType.Single)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7"/></svg>Single Container</label>
+                        <label class="radio-pill @(job?.ShipmentType == ShipmentType.Multiple ? "checked" : "")" id="rp_multi"><input type="radio" name="shipType" value="multiple" checked="@(job?.ShipmentType == ShipmentType.Multiple)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="7" width="8" height="9"/><rect x="9" y="7" width="8" height="9"/><path d="M17 9h3l3 3v4h-6"/></svg>Multiple Container</label>
+                    </div>
+                </div>
+                <div class="field"><label>Importer <span class="req">*</span></label>
+                    <select id="f1_importer"><option value="">-- Select --</option>@foreach (var i in Model.Importers){<option value="@i.Id" selected="@(i.Id == job?.ImporterId)">@i.Name</option>}</select>
+                    <span class="field-error">Please select an importer</span>
+                </div>
+                <div class="field"><label>Agent</label>
+                    <select id="f1_agent"><option value="">-- Select --</option>@foreach (var a in Model.Agents){<option value="@a.Id" selected="@(a.Id == job?.AgentId)">@a.Name</option>}</select>
+                </div>
+                <div class="field"><label>Transporter <span class="req">*</span></label>
+                    <select id="f1_transporter"><option value="">-- Select --</option>@foreach (var t in Model.Transporters){<option value="@t.Id" selected="@(t.Id == job?.TransporterId)">@t.Name</option>}</select>
+                    <span class="field-error">Please select a transporter</span>
+                </div>
+                <div class="field"><label>Origin Country</label>
+                    <select id="f1_originCountry">
+                        <option selected="@(job == null || job.OriginCountry == "India")">India</option>
+                        <option selected="@(job?.OriginCountry == "China (via India)")">China (via India)</option>
+                        <option selected="@(job?.OriginCountry == "Bangladesh (via India)")">Bangladesh (via India)</option>
+                        <option selected="@(job?.OriginCountry == "Other (3rd country transit)")">Other (3rd country transit)</option>
+                    </select>
+                </div>
+                <div class="field"><label>Port / Point of Arrival (India) <span class="req">*</span></label>
+                    <select id="f1_portArrival">@foreach (var p in CTD_FINAL.Models.Jobs.JobWizardViewModel.PortArrivals){<option value="@p" selected="@(p == job?.PortArrival)">@p</option>}</select>
+                </div>
+                <div class="field"><label>Nepal Border Point <span class="req">*</span></label>
+                    <select id="f1_borderPoint"><option value="">-- Select --</option>@foreach (var b in Model.BorderPoints){<option value="@b.Id" selected="@(b.Id == job?.BorderPointId)">@b.Name (@b.State)</option>}</select>
+                    <span class="field-error">Please select a Nepal border point</span>
+                </div>
+                <div class="field"><label>Job Created By</label><div class="field-static" id="f1_createdBy">@(job?.CreatedBy ?? (User.FindFirst("FullName")?.Value ?? User.Identity?.Name))</div></div>
+                <div class="field span-2"><label>Remarks</label><input type="text" id="f1_remarks" value="@job?.Remarks" placeholder="Internal note for this job (optional)"></div>
+            </div>
+        </div>
+
+        <!-- STEP 2 -->
+        <div class="wizard-pane" id="wpane-2">
+            <div class="subhead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 16v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="10" cy="6" r="3"/><path d="M22 16v-2a4 4 0 0 0-3-3.87"/><path d="M16 2.13a4 4 0 0 1 0 7.75"/></svg>Invoice &amp; Cargo Details</div>
+            <div class="form-grid">
+                <div class="field"><label>Invoice Number <span class="req">*</span></label><input type="text" id="f2_invoiceNo" value="@job?.InvoiceNo" placeholder="INV-0000"></div>
+                <div class="field"><label>Invoice Date <span class="req">*</span></label><input type="date" id="f2_invoiceDate" value="@(job?.InvoiceDate?.ToString("yyyy-MM-dd"))"></div>
+                <div class="field"><label>Currency</label>
+                    <select id="f2_currency">
+                        @foreach (var c in new[] { "USD", "INR", "EUR", "NPR" }) { <option selected="@(job != null ? c == job.Currency : c == "USD")">@c</option> }
+                    </select>
+                </div>
+                <div class="field"><label>Invoice Value <span class="req">*</span></label><input type="number" id="f2_invoiceValue" value="@job?.InvoiceValue" placeholder="0.00" min="0" step="0.01"></div>
+                <div class="field"><label>Commodity <span class="req">*</span></label>
+                    <select id="f2_commodity"><option value="">-- Select --</option>@foreach (var c in Model.Commodities){<option value="@c.Id" selected="@(c.Id == job?.CommodityId)">@c.Name — HS @c.HsCode</option>}</select>
+                </div>
+                <div class="field"><label>HS Code</label><input type="text" id="f2_hsCode" value="@job?.HsCode" placeholder="e.g. 8517.12"></div>
+                <div class="field"><label>Gross Weight (KG) <span class="req">*</span></label><input type="number" id="f2_grossWt" value="@job?.GrossWt" min="0" step="0.01"></div>
+                <div class="field"><label>Net Weight (KG) <span class="req">*</span></label><input type="number" id="f2_netWt" value="@job?.NetWt" min="0" step="0.01"></div>
+                <div class="field"><label>No. of Packages</label><input type="number" id="f2_packages" value="@job?.Packages" min="0" step="1"></div>
+            </div>
+            <div class="divider"></div>
+            <div class="flex-between" style="margin-bottom:12px;">
+                <h4 style="margin:0;font-size:13.5px;">Container / Cargo Grid</h4>
+                <button type="button" class="btn btn-outline btn-xs" id="addContainerRowBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>Add Container Row</button>
+            </div>
+            <div class="mini-table-wrap">
+                <table class="mini-table">
+                    <thead><tr><th style="width:26px;">#</th><th>Container Number</th><th>Size / Type</th><th>Seal Number</th><th>Weight (KG)</th><th style="width:40px;"></th></tr></thead>
+                    <tbody id="containerRowsBody"></tbody>
+                    <tfoot><tr><td colspan="4" style="text-align:right;">Total Container Weight</td><td id="containerTotalWeight">0.00</td><td></td></tr></tfoot>
+                </table>
+            </div>
+        </div>
+
+        <!-- STEP 3 -->
+        <div class="wizard-pane" id="wpane-3">
+            <div class="subhead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-6 9 6-9 6-9-6z"/><path d="M3 9v7l9 6 9-6V9"/></svg>Customs &amp; CTD Processing</div>
+            <div class="form-grid">
+                <div class="field"><label>CTD Type <span class="req">*</span></label>
+                    <div class="radio-group">
+                        <label class="radio-pill @(job == null || job.CtdType == CtdType.EDI ? "checked" : "")" id="rp_edi"><input type="radio" name="ctdType" value="EDI" checked="@(job == null || job.CtdType == CtdType.EDI)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>EDI</label>
+                        <label class="radio-pill @(job?.CtdType == CtdType.Manual ? "checked" : "")" id="rp_manual"><input type="radio" name="ctdType" value="Manual" checked="@(job?.CtdType == CtdType.Manual)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>Manual</label>
+                    </div>
+                </div>
+                <div class="field"><label>CTD Number <span class="req">*</span></label><input type="text" id="f3_ctdNumber" value="@job?.CtdNumber" placeholder="System / EDI generated"></div>
+                <div class="field"><label>CTD Date <span class="req">*</span></label><input type="date" id="f3_ctdDate" value="@(job?.CtdDate?.ToString("yyyy-MM-dd"))"></div>
+                <div class="field"><label>Customs House <span class="req">*</span></label>
+                    <select id="f3_customsHouse"><option value="">-- Select --</option>@foreach (var c in Model.CustomsHouses){<option value="@c.Id" selected="@(c.Id == job?.CustomsHouseId)">@c.Name (@c.Code)</option>}</select>
+                </div>
+                <div class="field span-2"><label>Transit Route <span class="req">*</span></label>
+                    <select id="f3_transitRoute"><option value="">-- Select --</option>@foreach (var r in Model.TransitRoutes){<option value="@r.Id" selected="@(r.Id == job?.TransitRouteId)">@r.Name · @r.Distance</option>}</select>
+                </div>
+                <div class="field"><label>Expected Delivery Date</label><input type="date" id="f3_expDeliveryDate" value="@(job?.ExpDeliveryDate?.ToString("yyyy-MM-dd"))"></div>
+                <div class="field"><label>CTD Workflow Status</label><div class="field-static" id="f3_workflowStatusDisplay">@(job?.Status.ToString() ?? "Draft")</div></div>
+                <div class="field"><label>Auto Document No.</label><div class="field-static" id="f3_autoDocNo">Assigned on generate</div></div>
+            </div>
+            <div class="divider"></div>
+            <h4 style="margin:0 0 12px;font-size:13.5px;">Document Checklist</h4>
+            <div class="checklist-grid" id="checklistGrid"></div>
+            <div class="doc-action-row">
+                <div class="doc-action-card @(job?.CtdDocGenerated == true ? "ready" : "")" id="genCtdCard">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+                    <h4>CTD Document</h4><p>Generate the customs transit declaration PDF</p>
+                    <button type="button" class="btn btn-outline btn-xs btn-block" id="generateCtdBtn">@(job?.CtdDocGenerated == true ? "Re-generate CTD" : "Generate CTD")</button>
+                </div>
+                <div class="doc-action-card @(job?.ChecklistDocGenerated == true ? "ready" : "")" id="genChecklistCard">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                    <h4>Checklist</h4><p>Document verification checklist for filing</p>
+                    <button type="button" class="btn btn-outline btn-xs btn-block" id="generateChecklistBtn">@(job?.ChecklistDocGenerated == true ? "Re-generate Checklist" : "Generate Checklist")</button>
+                </div>
+                <div class="doc-action-card @(job?.ForwardingDocGenerated == true ? "ready" : "")" id="genFwdCard">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                    <h4>Forwarding Note &amp; Rail Form</h4><p>Generate forwarding note and rail transit forms</p>
+                    <button type="button" class="btn btn-outline btn-xs btn-block" id="generateFwdBtn">@(job?.ForwardingDocGenerated == true ? "Re-generate Note" : "Generate Note")</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 4 -->
+        <div class="wizard-pane" id="wpane-4">
+            <div class="subhead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>Delivery &amp; Billing</div>
+            <div class="form-grid">
+                <div class="field"><label>Arrival Date (Border)</label><input type="date" id="f4_arrivalDate" value="@(job?.ArrivalDate?.ToString("yyyy-MM-dd"))"></div>
+                <div class="field"><label>Delivery Date (Nepal)</label><input type="date" id="f4_deliveryDate" value="@(job?.DeliveryDate?.ToString("yyyy-MM-dd"))"></div>
+                <div class="field"><label>Delivery Status</label>
+                    <select id="f4_deliveryStatus">
+                        @foreach (var s in new[] { "In Transit", "Arrived at Border", "Customs Cleared Nepal", "Delivered", "Delayed" })
+                        {
+                            <option selected="@(job != null ? FormatDeliveryStatus(job.DeliveryStatus) == s : s == "In Transit")">@s</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="divider"></div>
+            <h4 style="margin:0 0 14px;font-size:13.5px;">Billing &amp; Charges</h4>
+            <div class="grid-2">
+                <div>
+                    <div class="form-grid cols-2">
+                        <div class="field"><label>Service Charges (₹)</label><input type="number" id="f4_serviceCharge" min="0" step="0.01" value="@(job?.ServiceCharge ?? 0)"></div>
+                        <div class="field"><label>Transport Charges (₹)</label><input type="number" id="f4_transportCharge" min="0" step="0.01" value="@(job?.TransportCharge ?? 0)"></div>
+                        <div class="field"><label>Other Charges (₹)</label><input type="number" id="f4_otherCharge" min="0" step="0.01" value="@(job?.OtherCharge ?? 0)"></div>
+                        <div class="field"><label>Tax (GST %)</label>
+                            <select id="f4_taxPercent">
+                                @foreach (var t in new[] { 0, 5, 12, 18 })
+                                {
+                                    <option value="@t" selected="@(job != null ? job.TaxPercent == t : t == 18)">@(t == 0 ? "Exempt (0%)" : $"{t}%")</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="field" style="margin-top:14px;"><label>Payment Status</label>
+                        <select id="f4_paymentStatus">
+                            @foreach (var s in new[] { "Unpaid", "Partial", "Paid" }) { <option selected="@(job != null ? job.BillingStatus.ToString() == s : s == "Unpaid")">@s</option> }
+                        </select>
+                    </div>
+                </div>
+                <div class="billing-summary">
+                    <div class="billing-row"><span>Service Charges</span><span id="billServiceOut">₹0.00</span></div>
+                    <div class="billing-row"><span>Transport Charges</span><span id="billTransportOut">₹0.00</span></div>
+                    <div class="billing-row"><span>Other Charges</span><span id="billOtherOut">₹0.00</span></div>
+                    <div class="billing-row"><span>Taxable Subtotal</span><span id="billSubtotalOut">₹0.00</span></div>
+                    <div class="billing-row"><span>GST (<span id="billTaxPctOut">18</span>%)</span><span id="billTaxOut">₹0.00</span></div>
+                    <div class="billing-row total"><span>Total Payable</span><span class="amt" id="billTotalOut">₹0.00</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="wizard-foot">
+        <button type="button" class="btn btn-ghost" id="wizardPrevBtn" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>Back</button>
+        <div class="right-actions">
+            <button type="button" class="btn btn-outline" id="wizardSaveDraftBtn">Save Draft</button>
+            <button type="button" class="btn btn-primary" id="wizardNextBtn">Continue<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button>
+            <button type="button" class="btn btn-success" id="wizardCloseJobBtn" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>Close Job</button>
+            <button type="button" class="btn btn-amber" id="wizardGenInvoiceBtn" style="display:@(job != null && (job.Status == WorkflowStatus.Delivered || job.Status == WorkflowStatus.Closed) ? "inline-flex" : "none");"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Generate Invoice</button>
+        </div>
+    </div>
+</div>
+
+@{
+    var containerInit = job != null && job.Containers.Any()
+        ? job.Containers.Select(c => new { containerNo = c.ContainerNo, size = c.Size, seal = c.Seal, weight = (decimal?)c.Weight })
+        : new[] { new { containerNo = "", size = (string?)"20ft Standard", seal = (string?)"", weight = (decimal?)null } };
+    var checklistInit = job != null && job.ChecklistItems.Any()
+        ? job.ChecklistItems.OrderBy(c => c.SortOrder).Select(c => new { name = c.Name, done = c.Done })
+        : Model.DefaultChecklist.Select(c => new { name = c.Name, done = c.Done });
+}
+<script id="containerDataInit" type="application/json">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(containerInit))</script>
+<script id="checklistDataInit" type="application/json">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(checklistInit))</script>
+
+@section Scripts {
+    <script src="~/js/wizard.js" asp-append-version="true"></script>
+}
+
+@functions {
+    string FormatDeliveryStatus(DeliveryStatusType s) => s switch
+    {
+        DeliveryStatusType.ArrivedAtBorder => "Arrived at Border",
+        DeliveryStatusType.CustomsClearedNepal => "Customs Cleared Nepal",
+        DeliveryStatusType.Delivered => "Delivered",
+        DeliveryStatusType.Delayed => "Delayed",
+        _ => "In Transit"
+    };
+}

@@ -1,0 +1,38 @@
+@model CTD_FINAL.Models.Users.UserFormViewModel
+@{
+    var roles = (string[])ViewBag.Roles;
+}
+<input type="hidden" id="uf_id" value="@Model.Id" />
+<div class="form-grid cols-2">
+    <div class="field">
+        <label>Full Name <span class="req">*</span></label>
+        <input type="text" id="uf_fullName" value="@Model.FullName">
+    </div>
+    <div class="field">
+        <label>Email <span class="req">*</span></label>
+        <input type="email" id="uf_email" value="@Model.Email">
+    </div>
+    <div class="field">
+        <label>Role <span class="req">*</span></label>
+        <select id="uf_role">
+            @foreach (var role in roles)
+            {
+                <option value="@role" selected="@(role == Model.Role)">@role</option>
+            }
+        </select>
+    </div>
+    <div class="field">
+        <label>Status</label>
+        <div class="toggle-field" style="padding-top:10px;">
+            <label class="toggle-switch">
+                <input type="checkbox" id="uf_isActive" checked="@Model.IsActive">
+                <span class="toggle-slider"></span>
+            </label>
+            <span class="toggle-label">Active</span>
+        </div>
+    </div>
+</div>
+@if (Model.Id == 0)
+{
+    <p style="margin:12px 0 0;font-size:12px;color:var(--ink-500);">A temporary password will be generated and shown once you save — share it with the user securely.</p>
+}

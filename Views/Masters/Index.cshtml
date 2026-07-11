@@ -1,0 +1,69 @@
+@using CTD_FINAL.Infrastructure.Masters
+@{
+    ViewData["Title"] = "Master Data — Setup";
+    var activeTab = ViewData["ActiveTab"] as string ?? "importer";
+}
+<div class="section-head">
+    <div>
+        <h2>Master Data</h2>
+        <p>Manage reference data used across CTD jobs</p>
+    </div>
+</div>
+
+<div class="master-layout">
+    <div class="panel" style="padding:12px;align-self:start;">
+        <div class="master-tab-list" id="masterTabList">
+            <div class="master-tab @(activeTab == "importer" ? "active" : "")" data-master="importer">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Importer <span class="cnt" id="cnt_importer">0</span>
+            </div>
+            <div class="master-tab @(activeTab == "agent" ? "active" : "")" data-master="agent">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                Agent <span class="cnt" id="cnt_agent">0</span>
+            </div>
+            <div class="master-tab @(activeTab == "transporter" ? "active" : "")" data-master="transporter">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                Transporter <span class="cnt" id="cnt_transporter">0</span>
+            </div>
+            <div class="master-tab @(activeTab == "commodity" ? "active" : "")" data-master="commodity">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41 13.42 20.6a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82Z"/><line x1="7" y1="7" x2="7" y2="7"/></svg>
+                Commodity <span class="cnt" id="cnt_commodity">0</span>
+            </div>
+            <div class="master-tab @(activeTab == "route" ? "active" : "")" data-master="route">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="19" r="3"/><circle cx="18" cy="5" r="3"/><path d="M9 19c8 0 4-14 9-14"/></svg>
+                Transit Routes <span class="cnt" id="cnt_route">0</span>
+            </div>
+            <div class="master-tab @(activeTab == "border" ? "active" : "")" data-master="border">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                Border Points <span class="cnt" id="cnt_border">0</span>
+            </div>
+            <div class="master-tab @(activeTab == "customshouse" ? "active" : "")" data-master="customshouse">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
+                Customs Houses <span class="cnt" id="cnt_customshouse">0</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="table-toolbar">
+            <h3 id="masterTitle" style="margin:0;font-size:14.5px;">@MasterRegistry.Get(activeTab).Title</h3>
+            <div style="display:flex;gap:10px;align-items:center;">
+                <div class="table-search" style="min-width:200px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                    <input type="text" id="masterSearchInput" placeholder="Search…">
+                </div>
+                <button class="btn btn-amber btn-sm" id="masterAddBtn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                    Add New
+                </button>
+            </div>
+        </div>
+        <div class="table-scroll" id="masterTableContainer" data-active-tab="@activeTab">
+            <!-- loaded via AJAX -->
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/masters.js" asp-append-version="true"></script>
+}

@@ -1,0 +1,58 @@
+@{
+    ViewData["Title"] = "Reports";
+    var reports = new (string Key, string Title, string Desc, string Icon)[]
+    {
+        ("dailyJob", "Daily Job Report", "All jobs created on a selected date",
+            "<rect x=\"3\" y=\"4\" width=\"18\" height=\"18\" rx=\"2\"/><line x1=\"16\" y1=\"2\" x2=\"16\" y2=\"6\"/><line x1=\"8\" y1=\"2\" x2=\"8\" y2=\"6\"/><line x1=\"3\" y1=\"10\" x2=\"21\" y2=\"10\"/>"),
+        ("ctdRegister", "CTD Register", "Complete register of CTD numbers issued",
+            "<path d=\"M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z\"/><path d=\"M14 2v6h6\"/>"),
+        ("pendingCtd", "Pending CTD Report", "Jobs awaiting CTD number / approval",
+            "<circle cx=\"12\" cy=\"12\" r=\"9\"/><line x1=\"12\" y1=\"8\" x2=\"12\" y2=\"13\"/><line x1=\"12\" y1=\"16\" x2=\"12.01\" y2=\"16\"/>"),
+        ("containerMovement", "Container Movement Report", "Container-wise movement and weight detail",
+            "<rect x=\"1\" y=\"3\" width=\"15\" height=\"13\" rx=\"1\"/><path d=\"M16 8h4l3 3v5h-7\"/><circle cx=\"5.5\" cy=\"18.5\" r=\"2.5\"/><circle cx=\"18.5\" cy=\"18.5\" r=\"2.5\"/>"),
+        ("deliveryStatus", "Delivery Status Report", "Current delivery state across all jobs",
+            "<path d=\"M20 6 9 17l-5-5\"/>"),
+        ("customerRevenue", "Customer-wise Revenue Report", "Revenue contribution by importer",
+            "<path d=\"M3 3v18h18\"/><path d=\"M18.4 9 12 15.4 8.6 12 4 16.6\"/>"),
+        ("billingSummary", "Billing Summary Report", "Charges breakdown and payment status by job",
+            "<line x1=\"12\" y1=\"1\" x2=\"12\" y2=\"23\"/><path d=\"M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6\"/>"),
+    };
+}
+
+<div class="section-head">
+    <div>
+        <h2>Reports</h2>
+        <p>Operational and financial reporting with export to Excel, PDF, and print</p>
+    </div>
+</div>
+
+<div class="report-grid" id="reportCardsGrid">
+    @foreach (var r in reports)
+    {
+        <div class="report-card" data-report="@r.Key">
+            <div class="r-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">@Html.Raw(r.Icon)</svg></div>
+            <h4>@r.Title</h4>
+            <p>@r.Desc</p>
+            <div class="r-foot"><button type="button" class="btn btn-outline btn-xs">Open Report &rarr;</button></div>
+        </div>
+    }
+</div>
+
+<div class="panel" id="reportOutputPanel" style="display:none;margin-top:20px;">
+    <div class="table-toolbar">
+        <h3 id="reportOutputTitle" style="margin:0;font-size:14.5px;">Report</h3>
+        <div class="export-bar">
+            <button type="button" class="btn btn-outline btn-xs" data-export="excel" data-table="#reportOutputTable" id="reportExportExcel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>Excel</button>
+            <button type="button" class="btn btn-outline btn-xs" data-export="pdf" data-table="#reportOutputTable" id="reportExportPdf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>PDF</button>
+            <button type="button" class="btn btn-outline btn-xs" data-action="printTable" data-table="#reportOutputTable" id="reportPrint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print</button>
+            <button type="button" class="btn btn-ghost btn-xs" id="closeReportBtn">Close</button>
+        </div>
+    </div>
+    <div class="table-scroll" id="reportOutputContainer">
+        <table class="data-table" id="reportOutputTable"><thead></thead><tbody></tbody></table>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/reports.js" asp-append-version="true"></script>
+}

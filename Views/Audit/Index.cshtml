@@ -1,0 +1,102 @@
+@using CTD_FINAL.Enums
+@model CTD_FINAL.Models.Audit.AuditIndexViewModel
+@{
+    ViewData["Title"] = "Audit History";
+    var actionColor = new Dictionary<AuditActionType, string>
+    {
+        [AuditActionType.Created] = "#1f9d6b",
+        [AuditActionType.Updated] = "#3b82c4",
+        [AuditActionType.StatusChange] = "#e8a23a",
+        [AuditActionType.DocumentGenerated] = "#7c5cd4",
+        [AuditActionType.Deleted] = "#c0392b",
+    };
+    string ActionLabel(AuditActionType a) => a switch
+    {
+        AuditActionType.StatusChange => "Status Change",
+        AuditActionType.DocumentGenerated => "Document Generated",
+        _ => a.ToString()
+    };
+}
+<div class="section-head">
+    <div>
+        <h2>Audit History</h2>
+        <p>Complete trail of who changed what, and when, across every job</p>
+    </div>
+</div>
+
+<div class="panel" style="margin-bottom:18px;">
+    <div class="panel-body">
+        <form method="get" asp-action="Index" class="form-grid cols-4">
+            <div class="field"><label>Job Number</label><input type="text" name="jobNo" value="@Model.JobNo" placeholder="Filter by job no."></div>
+            <div class="field">
+                <label>User</label>
+                <select name="user">
+                    <option value="">All Users</option>
+                    @foreach (var u in Model.Users)
+                    {
+                        <option value="@u" selected="@(u == Model.User)">@u</option>
+                    }
+                </select>
+            </div>
+            <div class="field">
+                <label>Action Type</label>
+                <select name="actionType">
+                    <option value="">All Actions</option>
+                    @foreach (AuditActionType a in Enum.GetValues<AuditActionType>())
+                    {
+                        <option value="@a" selected="@(a == Model.Action)">@ActionLabel(a)</option>
+                    }
+                </select>
+            </div>
+            <div class="field" style="align-self:flex-end;"><button type="submit" class="btn btn-primary btn-block">Filter</button></div>
+        </form>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-head"><h3>Change Log</h3><span class="sub">@Model.Result.TotalCount entries</span></div>
+    <div class="panel-body" id="auditLogBody">
+        @if (Model.Result.Items.Count == 0)
+        {
+            <div class="empty-state">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>
+                <h4>No matching audit entries</h4>
+                <p>Try adjusting your filters</p>
+            </div>
+        }
+        else
+        {
+            foreach (var r in Model.Result.Items)
+            {
+                <div class="audit-row">
+                    <div class="audit-time">@r.Timestamp.ToString("d MMM yyyy, h:mm tt")</div>
+                    <div class="audit-user">@r.User</div>
+                    <div class="audit-detail">
+                        <span class="tag-chip" style="background:@(actionColor[r.Action])1a;color:@(actionColor[r.Action]);margin-right:8px;">@ActionLabel(r.Action)</span>
+                        <span style="font-weight:700;">@r.JobNo</span>
+                        @if (!string.IsNullOrEmpty(r.Field))
+                        {
+                            <span class="field-change"> — <b>@r.Field</b>: <span class="old-val">@r.FromValue</span> → <span class="new-val">@r.ToValue</span></span>
+                        }
+                        @if (!string.IsNullOrEmpty(r.Detail))
+                        {
+                            <span class="field-change"> — @r.Detail</span>
+                        }
+                    </div>
+                </div>
+            }
+        }
+    </div>
+    @if (Model.Result.TotalPages > 1)
+    {
+        <div class="table-foot">
+            <span class="text-muted">Page @Model.Result.Page of @Model.Result.TotalPages</span>
+            <div class="pagination">
+                @for (int p = 1; p <= Model.Result.TotalPages; p++)
+                {
+                    <a class="page-btn @(p == Model.Result.Page ? "active" : "")" asp-action="Index" asp-route-jobNo="@Model.JobNo" asp-route-user="@Model.User" asp-route-actionType="@Model.Action" asp-route-page="@p">@p</a>
+                }
+            </div>
+        </div>
+    }
+</div>

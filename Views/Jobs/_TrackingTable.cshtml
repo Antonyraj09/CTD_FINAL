@@ -1,0 +1,68 @@
+@using CTD_FINAL.DTOs
+@using CTD_FINAL.Entities
+@model PagedResult<CtdJob>
+@{
+    var sortKey = ViewData["SortKey"] as string ?? "jobDate";
+    var sortDir = ViewData["SortDir"] as string ?? "desc";
+    string SortIco(string key) => sortKey == key ? (sortDir == "asc" ? "↑" : "↓") : "↕";
+    string BadgeClass(string status) => "badge-" + status.ToLowerInvariant();
+    string BillingBadgeClass(string s) => s switch { "Paid" => "badge-paid", "Partial" => "badge-partial", _ => "badge-unpaid" };
+}
+<table class="data-table" id="trackingTable">
+    <thead>
+        <tr>
+            <th class="sortable" data-sort="jobNo">Job No. <span class="sort-ico">@SortIco("jobNo")</span></th>
+            <th class="sortable" data-sort="jobDate">Date <span class="sort-ico">@SortIco("jobDate")</span></th>
+            <th class="sortable" data-sort="importer">Importer <span class="sort-ico">@SortIco("importer")</span></th>
+            <th>CTD No.</th>
+            <th>Containers</th>
+            <th>Border Point</th>
+            <th class="sortable" data-sort="status">Status <span class="sort-ico">@SortIco("status")</span></th>
+            <th>Billing</th>
+            <th class="no-print">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model.Items.Count == 0)
+        {
+            <tr><td colspan="9" class="table-empty">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                <div>No jobs match your search criteria</div>
+            </td></tr>
+        }
+        else
+        {
+            foreach (var j in Model.Items)
+            {
+                <tr data-job-id="@j.Id">
+                    <td class="cell-strong job-code">@j.JobNo</td>
+                    <td>@j.JobDate.ToString("d MMM yyyy")</td>
+                    <td>@(j.Importer?.Name ?? "Unassigned")</td>
+                    <td class="ctd-code">@(j.CtdNumber ?? "—")</td>
+                    <td>@j.Containers.Count × @(j.Containers.FirstOrDefault()?.Size?.Split(' ').FirstOrDefault())</td>
+                    <td>@(j.BorderPoint?.Name ?? "—")</td>
+                    <td><span class="badge @BadgeClass(j.Status.ToString())">@j.Status</span></td>
+                    <td><span class="badge @BillingBadgeClass(j.BillingStatus.ToString())">@j.BillingStatus</span></td>
+                    <td class="no-print">
+                        <div class="row-actions">
+                            <button class="iconbtn-table" data-row-action="view" data-job-id="@j.Id" title="View"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                            <a class="iconbtn-table" asp-controller="Jobs" asp-action="Wizard" asp-route-id="@j.Id" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></a>
+                            <a class="iconbtn-table" href="/Jobs/PrintSheet/@j.Id" target="_blank" title="Print"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg></a>
+                        </div>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+<div class="table-foot">
+    <span class="text-muted" id="trk_paginationInfo">
+        @(Model.TotalCount > 0 ? $"Showing {((Model.Page - 1) * Model.PageSize) + 1}–{Math.Min(Model.Page * Model.PageSize, Model.TotalCount)} of {Model.TotalCount}" : "Showing 0–0 of 0")
+    </span>
+    <div class="pagination" id="trk_pagination">
+        @for (int p = 1; p <= Model.TotalPages; p++)
+        {
+            <button type="button" class="page-btn @(p == Model.Page ? "active" : "")" data-page="@p">@p</button>
+        }
+    </div>
+</div>

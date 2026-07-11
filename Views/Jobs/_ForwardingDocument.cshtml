@@ -1,0 +1,18 @@
+@using CTD_FINAL.Entities
+@model CtdJob
+<h2 style="margin:0;">FORWARDING NOTE</h2>
+<p class="doc-meta">Job: @Model.JobNo &nbsp;|&nbsp; Generated: @DateTime.Now.ToString("d MMM yyyy, h:mm tt")</p>
+<table>
+    <tr><th style="width:34%;">Consignor</th><td>@(Model.Importer?.Name ?? "—")</td></tr>
+    <tr><th>Transporter</th><td>@(Model.Transporter?.Name ?? "—")</td></tr>
+    <tr><th>Route</th><td>@(Model.TransitRoute?.Name ?? "—")</td></tr>
+    <tr><th>Destination Border Point</th><td>@(Model.BorderPoint?.Name ?? "—")</td></tr>
+    <tr><th>Container(s)</th><td>@string.Join(", ", Model.Containers.Select(c => c.ContainerNo))</td></tr>
+</table>
+<h2 style="margin:18px 0 0;">RAIL TRANSIT FORM</h2>
+<table>
+    <tr><th style="width:34%;">Rake / Wagon Ref.</th><td>RW-@Random.Shared.Next(1000, 9999)</td></tr>
+    <tr><th>Loading Point</th><td>ICD / CFS near origin port</td></tr>
+    <tr><th>Unloading Point</th><td>@(Model.BorderPoint?.Name ?? "—")</td></tr>
+    <tr><th>Total Weight</th><td>@Model.GrossWt.ToString("N2") kg</td></tr>
+</table>

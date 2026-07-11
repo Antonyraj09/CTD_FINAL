@@ -1,0 +1,20 @@
+@using CTD_FINAL.Entities
+@model CtdJob
+<h2 style="margin:0;">CUSTOMS TRANSIT DECLARATION</h2>
+<p class="doc-meta">Job: @Model.JobNo &nbsp;|&nbsp; Generated: @DateTime.Now.ToString("d MMM yyyy, h:mm tt")</p>
+<table>
+    <tr><th style="width:34%;">Job Number</th><td>@Model.JobNo</td></tr>
+    <tr><th>CTD Type / Number</th><td>@Model.CtdType — @(Model.CtdNumber ?? "Pending")</td></tr>
+    <tr><th>CTD Date</th><td>@(Model.CtdDate?.ToString("d MMM yyyy") ?? "—")</td></tr>
+    <tr><th>Importer</th><td>@(Model.Importer?.Name ?? "—")</td></tr>
+    <tr><th>Transporter</th><td>@(Model.Transporter?.Name ?? "—")</td></tr>
+    <tr><th>Customs House</th><td>@(Model.CustomsHouse?.Name ?? "—")</td></tr>
+    <tr><th>Transit Route</th><td>@(Model.TransitRoute?.Name ?? "—")</td></tr>
+    <tr><th>Nepal Border Point</th><td>@(Model.BorderPoint?.Name ?? "—")</td></tr>
+    <tr><th>Commodity / HS Code</th><td>@(Model.Commodity?.Name ?? "—") — @(Model.HsCode ?? "—")</td></tr>
+    <tr><th>Invoice No. / Value</th><td>@Model.InvoiceNo — @Model.Currency @Model.InvoiceValue.ToString("N2")</td></tr>
+    <tr><th>Gross / Net Weight</th><td>@Model.GrossWt.ToString("N2") kg / @Model.NetWt.ToString("N2") kg</td></tr>
+    <tr><th>Packages</th><td>@Model.Packages</td></tr>
+    <tr><th>Expected Delivery</th><td>@(Model.ExpDeliveryDate?.ToString("d MMM yyyy") ?? "—")</td></tr>
+</table>
+<p style="margin-top:14px;font-size:11.5px;color:#666;">Containers: @string.Join("; ", Model.Containers.Select(c => $"{c.ContainerNo} ({c.Size}, seal {c.Seal})"))</p>

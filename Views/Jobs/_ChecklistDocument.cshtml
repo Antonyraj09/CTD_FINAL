@@ -1,0 +1,16 @@
+@using CTD_FINAL.Entities
+@model CtdJob
+<h2 style="margin:0;">DOCUMENT CHECKLIST</h2>
+<p class="doc-meta">Job: @Model.JobNo &nbsp;|&nbsp; Generated: @DateTime.Now.ToString("d MMM yyyy, h:mm tt")</p>
+<table>
+    <tr><th style="width:50px;">#</th><th>Document</th><th style="width:90px;">Status</th></tr>
+    @{ int i = 1; }
+    @foreach (var c in Model.ChecklistItems.OrderBy(c => c.SortOrder))
+    {
+        <tr>
+            <td>@i</td><td>@c.Name</td>
+            <td>@if (c.Done){ <b style="color:green;">Verified</b> }else{ <span style="color:#c0392b;">Pending</span> }</td>
+        </tr>
+        i++;
+    }
+</table>

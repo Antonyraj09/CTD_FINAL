@@ -1,0 +1,30 @@
+@using CTD_FINAL.DTOs
+@model ReportResult
+<table class="data-table" id="reportOutputTable">
+    <thead>
+        <tr>
+            @foreach (var c in Model.Columns)
+            {
+                <th>@c</th>
+            }
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model.Rows.Count == 0)
+        {
+            <tr><td colspan="@Model.Columns.Count" class="table-empty">No data available for this report</td></tr>
+        }
+        else
+        {
+            foreach (var row in Model.Rows)
+            {
+                <tr>
+                    @foreach (var v in row)
+                    {
+                        <td>@v</td>
+                    }
+                </tr>
+            }
+        }
+    </tbody>
+</table>

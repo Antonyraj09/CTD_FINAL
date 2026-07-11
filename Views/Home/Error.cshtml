@@ -1,0 +1,13 @@
+@{
+    Layout = "_AuthLayout";
+}
+<div class="auth-shell" style="grid-template-columns:1fr;max-width:520px;">
+    <div class="auth-form-panel" style="align-items:center;text-align:center;">
+        <div class="brand-mark" style="margin:0 auto 20px;background:linear-gradient(135deg,var(--seal-red),var(--seal-red-light));">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#2b0805" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
+        <h1>Something went wrong</h1>
+        <p class="auth-sub">An unexpected error occurred while processing your request. Our team has been notified via the application log.</p>
+        <a class="btn btn-amber" asp-controller="Dashboard" asp-action="Index">Back to Dashboard</a>
+    </div>
+</div>

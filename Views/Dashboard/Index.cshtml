@@ -1,0 +1,107 @@
+@{
+    ViewData["Title"] = "Dashboard";
+}
+<div class="section-head">
+    <div>
+        <h2>Operations Dashboard</h2>
+        <p>India–Nepal transit overview · Live snapshot as of <span id="dashDate"></span></p>
+    </div>
+    <div class="section-actions">
+        <button class="btn btn-outline btn-sm" id="dashRefreshBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            Refresh
+        </button>
+        <a class="btn btn-amber btn-sm" asp-controller="Jobs" asp-action="Wizard">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+            New CTD Job
+        </a>
+    </div>
+</div>
+
+<div class="kpi-grid" id="kpiGrid"><!-- injected by JS --></div>
+
+<div class="panel" style="margin-bottom:18px;">
+    <div class="panel-body" style="padding:16px 20px;display:flex;gap:12px;flex-wrap:wrap;">
+        <a class="btn btn-outline btn-sm qa-btn" asp-controller="Jobs" asp-action="Wizard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>New CTD Job</a>
+        <a class="btn btn-outline btn-sm qa-btn" asp-controller="Jobs" asp-action="Tracking"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>Track Shipment</a>
+        <a class="btn btn-outline btn-sm qa-btn" asp-controller="Masters" asp-action="Index"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Add Importer</a>
+        <a class="btn btn-outline btn-sm qa-btn" asp-controller="Placeholder" asp-action="Index" asp-route-slug="reports"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18.4 9 12 15.4 8.6 12 4 16.6"/></svg>View Reports</a>
+        <a class="btn btn-outline btn-sm qa-btn" asp-controller="Documents" asp-action="Index"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>Document Archive</a>
+    </div>
+</div>
+
+<div class="dash-grid">
+    <div class="panel">
+        <div class="panel-head">
+            <h3>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18.4 9 12 15.4 8.6 12 4 16.6"/></svg>
+                Monthly CTD Volume &amp; Revenue
+            </h3>
+            <div class="chart-tabs">
+                <div class="chart-tab active" data-chart="volume">CTD Volume</div>
+                <div class="chart-tab" data-chart="revenue">Revenue (₹)</div>
+            </div>
+        </div>
+        <div class="panel-body">
+            <svg id="mainChart" viewBox="0 0 760 280" style="width:100%;height:280px;overflow:visible;"></svg>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-head">
+            <h3>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8a2 2 0 0 0-2-2H8L3 11v2l5 5h11a2 2 0 0 0 2-2z"/></svg>
+                Priority Alerts
+            </h3>
+            <a class="panel-link" asp-controller="Placeholder" asp-action="Index" asp-route-slug="alerts">View all</a>
+        </div>
+        <div class="panel-body">
+            <div class="alert-list" id="dashAlertList"></div>
+        </div>
+    </div>
+</div>
+
+<div class="dash-grid" style="grid-template-columns:1fr 1fr;">
+    <div class="panel">
+        <div class="panel-head">
+            <h3><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>Jobs by Workflow Status</h3>
+            <span class="sub" id="statusDonutTotal"></span>
+        </div>
+        <div class="panel-body" style="display:flex;align-items:center;gap:24px;">
+            <svg id="statusDonut" viewBox="0 0 200 200" style="width:170px;height:170px;flex-shrink:0;"></svg>
+            <div id="statusDonutLegend" style="flex:1;display:flex;flex-direction:column;gap:9px;"></div>
+        </div>
+    </div>
+    <div class="panel">
+        <div class="panel-head">
+            <h3><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>Volume by Nepal Border Point</h3>
+        </div>
+        <div class="panel-body">
+            <div id="borderPointBars" style="display:flex;flex-direction:column;gap:14px;"></div>
+        </div>
+    </div>
+</div>
+
+<div class="panel" style="margin-top:18px;">
+    <div class="table-toolbar">
+        <h3 style="font-size:14.5px;margin:0;">Recent CTD Jobs</h3>
+        <div style="display:flex;gap:10px;">
+            <a class="panel-link" asp-controller="Jobs" asp-action="Tracking">View all jobs →</a>
+        </div>
+    </div>
+    <div class="table-scroll">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Job No.</th><th>Date</th><th>Importer</th><th>CTD No.</th><th>Container(s)</th>
+                    <th>Border Point</th><th>Status</th><th>Billing</th><th class="no-print">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="dashRecentJobsBody"></tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/dashboard.js" asp-append-version="true"></script>
+}

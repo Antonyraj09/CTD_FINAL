@@ -1,0 +1,36 @@
+@{
+    ViewData["Title"] = "Document Attachment & PDF Archive";
+}
+<div class="section-head">
+    <div>
+        <h2>Document Attachment &amp; PDF Archive</h2>
+        <p>All generated and uploaded documents across every CTD job</p>
+    </div>
+    <div class="section-actions">
+        <button class="btn btn-amber btn-sm" id="docUploadBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Upload Document
+        </button>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="table-toolbar">
+        <div class="table-search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="text" id="doc_search" placeholder="Search by job no., document name, type…">
+        </div>
+        <div class="table-filters">
+            <select id="doc_typeFilter" style="border:1px solid var(--surface-border);border-radius:8px;padding:8px 11px;font-size:12.5px;">
+                <option value="">All Document Types</option>
+                <option>CTD Document</option><option>Checklist</option><option>Forwarding Note</option>
+                <option>Rail Form</option><option>Invoice</option><option>Customer Document</option>
+            </select>
+        </div>
+    </div>
+    <div class="table-scroll" id="documentsTableContainer"><!-- loaded via AJAX --></div>
+</div>
+
+@section Scripts {
+    <script src="~/js/documents.js" asp-append-version="true"></script>
+}
