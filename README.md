@@ -45,11 +45,17 @@ database/scripts/ Idempotent SQL script generated from the EF Core migration
    libman restore
    ```
 
-2. **Point the connection string at your SQL Server.** Edit `appsettings.Development.json` or set `ConnectionStrings__DefaultConnection`:
+2. **Point the connection string at your SQL Server.** `appsettings.Development.json` ships targeting a local SQL Server Express instance via Windows auth:
+   ```json
+   { "ConnectionStrings": { "DefaultConnection": "Server=.\\SQLEXPRESS;Database=CtdFinalDb_Dev;Trusted_Connection=True;TrustServerCertificate=True;MultipleActiveResultSets=true" } }
+   ```
+   Adjust `.\SQLEXPRESS` if your instance has a different name (check via `sqlcmd -L` or the `SQL Server (...)` entry in `services.msc`). Using a Docker container or a SQL-auth login instead? Swap in:
    ```json
    { "ConnectionStrings": { "DefaultConnection": "Server=localhost,1433;Database=CtdFinalDb_Dev;User Id=sa;Password=<your-password>;TrustServerCertificate=True;MultipleActiveResultSets=true" } }
    ```
    `appsettings.Production.json` / `appsettings.Testing.json` ship with placeholder credentials — override via environment variables or a secrets manager.
+
+   **Note on environments**: the app only reads `appsettings.Development.json` when `ASPNETCORE_ENVIRONMENT=Development`. `Properties/launchSettings.json` sets this automatically for `dotnet run` / Visual Studio F5 (`http`/`https` profiles) — without it, or if you run the published output directly, the app falls back to `Production` and uses the base `appsettings.json` (LocalDB) instead.
 
 3. **Apply migrations and seed data.** Happens automatically on startup. To provision manually:
    ```bash
