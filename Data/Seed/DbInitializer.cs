@@ -114,27 +114,41 @@ public static class DbInitializer
     {
         if (!await context.Parties.AnyAsync())
         {
+            // Minimal seed: legal name, role(s) and one head-office branch (city/phone/email/GSTIN
+            // moved there — GST registration is per state in India, so it belongs on the branch, not
+            // the party). PAN/IEC/CIN/banking/AEO are left blank for real data entry via the UI.
+            static Party Seed(string name, string city, string phone, string email, string? gstin = null,
+                bool importer = false, bool agent = false, bool transporter = false, string? license = null, string? fleet = null) => new()
+            {
+                Name = name, IsImporter = importer, IsAgent = agent, IsTransporter = transporter,
+                License = license, Fleet = fleet,
+                Branches = new List<PartyBranch>
+                {
+                    new() { BranchName = "Head Office", IsPrimary = true, IsActive = true, AddressLine1 = city, City = city, Country = "India", Gstin = gstin, Phone = phone, Email = email }
+                }
+            };
+
             context.Parties.AddRange(
                 // Importers
-                new Party { Name = "Himalaya Steel Traders Pvt Ltd", IsImporter = true, Gstin = "10AABCH5566D1Z3", City = "Patna", Phone = "+91 98230 11234", Email = "ops@himalayasteel.com" },
-                new Party { Name = "Annapurna Foods Imports", IsImporter = true, Gstin = "22AAACA1234B1Z9", City = "Raxaul", Phone = "+91 99110 44521", Email = "contact@annapurnafoods.in" },
-                new Party { Name = "Everest Polymers Pvt Ltd", IsImporter = true, Gstin = "07AAFCE7788K1Z2", City = "Kolkata", Phone = "+91 98301 22390", Email = "logistics@everestpolymers.com" },
-                new Party { Name = "Kathmandu Auto Parts Co.", IsImporter = true, Gstin = "19AAGCK9090M1Z1", City = "Kolkata", Phone = "+91 98740 55210", Email = "info@kathmanduauto.com.np" },
-                new Party { Name = "Gorkha Cement Industries", IsImporter = true, Gstin = "10AAJCG4455L1Z6", City = "Patna", Phone = "+91 94310 88761", Email = "procurement@gorkhacement.com" },
-                new Party { Name = "Lumbini Pharma Distributors", IsImporter = true, Gstin = "06AAKCL2233N1Z4", City = "Gurugram", Phone = "+91 98100 67321", Email = "supply@lumbinipharma.in" },
+                Seed("Himalaya Steel Traders Pvt Ltd", "Patna", "+91 98230 11234", "ops@himalayasteel.com", "10AABCH5566D1Z3", importer: true),
+                Seed("Annapurna Foods Imports", "Raxaul", "+91 99110 44521", "contact@annapurnafoods.in", "22AAACA1234B1Z9", importer: true),
+                Seed("Everest Polymers Pvt Ltd", "Kolkata", "+91 98301 22390", "logistics@everestpolymers.com", "07AAFCE7788K1Z2", importer: true),
+                Seed("Kathmandu Auto Parts Co.", "Kolkata", "+91 98740 55210", "info@kathmanduauto.com.np", "19AAGCK9090M1Z1", importer: true),
+                Seed("Gorkha Cement Industries", "Patna", "+91 94310 88761", "procurement@gorkhacement.com", "10AAJCG4455L1Z6", importer: true),
+                Seed("Lumbini Pharma Distributors", "Gurugram", "+91 98100 67321", "supply@lumbinipharma.in", "06AAKCL2233N1Z4", importer: true),
 
                 // Agents (CHA)
-                new Party { Name = "Patel CHA Services", IsAgent = true, License = "CHA/KOL/0091", City = "Kolkata", Phone = "+91 98300 12233", Email = "patel.cha@logimail.com" },
-                new Party { Name = "Eastern Border Clearing Agency", IsAgent = true, License = "CHA/RXL/0042", City = "Raxaul", Phone = "+91 94300 99887", Email = "ebca@logimail.com" },
-                new Party { Name = "Siliguri Transit Consultants", IsAgent = true, License = "CHA/SIL/0117", City = "Siliguri", Phone = "+91 98765 44120", Email = "siliguri.tc@logimail.com" },
+                Seed("Patel CHA Services", "Kolkata", "+91 98300 12233", "patel.cha@logimail.com", agent: true, license: "CHA/KOL/0091"),
+                Seed("Eastern Border Clearing Agency", "Raxaul", "+91 94300 99887", "ebca@logimail.com", agent: true, license: "CHA/RXL/0042"),
+                Seed("Siliguri Transit Consultants", "Siliguri", "+91 98765 44120", "siliguri.tc@logimail.com", agent: true, license: "CHA/SIL/0117"),
                 // Also runs its own fleet across the border — demonstrates a party holding more than one role.
-                new Party { Name = "Birgunj Forwarding Associates", IsAgent = true, IsTransporter = true, License = "CHA/BGJ/0205", Fleet = "12 Trailers", City = "Birgunj (Nepal liaison)", Phone = "+977 98410 23456", Email = "bfa@logimail.com" },
+                Seed("Birgunj Forwarding Associates", "Birgunj (Nepal liaison)", "+977 98410 23456", "bfa@logimail.com", agent: true, transporter: true, license: "CHA/BGJ/0205", fleet: "12 Trailers"),
 
                 // Transporters
-                new Party { Name = "Himgiri Road Carriers", IsTransporter = true, Fleet = "42 Trailers", City = "Kolkata", Phone = "+91 98300 55678", Email = "fleet@himgiritransport.com" },
-                new Party { Name = "National Highway Logistics Pvt Ltd", IsTransporter = true, Fleet = "68 Trailers", City = "Patna", Phone = "+91 99551 23410", Email = "ops@nhlogistics.in" },
-                new Party { Name = "Saptkoshi Carriers", IsTransporter = true, Fleet = "25 Trailers", City = "Raxaul", Phone = "+91 94300 77654", Email = "contact@saptkoshicarriers.com" },
-                new Party { Name = "Konkan Rail-Road Movers", IsTransporter = true, Fleet = "Rail Rake + 30 Trailers", City = "Kolkata", Phone = "+91 98301 99001", Email = "krrm@logimail.com" });
+                Seed("Himgiri Road Carriers", "Kolkata", "+91 98300 55678", "fleet@himgiritransport.com", transporter: true, fleet: "42 Trailers"),
+                Seed("National Highway Logistics Pvt Ltd", "Patna", "+91 99551 23410", "ops@nhlogistics.in", transporter: true, fleet: "68 Trailers"),
+                Seed("Saptkoshi Carriers", "Raxaul", "+91 94300 77654", "contact@saptkoshicarriers.com", transporter: true, fleet: "25 Trailers"),
+                Seed("Konkan Rail-Road Movers", "Kolkata", "+91 98301 99001", "krrm@logimail.com", transporter: true, fleet: "Rail Rake + 30 Trailers"));
         }
 
         if (!await context.Commodities.AnyAsync())

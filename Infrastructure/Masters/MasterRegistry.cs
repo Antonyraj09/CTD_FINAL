@@ -25,24 +25,6 @@ public static class MasterRegistry
 {
     public static readonly Dictionary<string, MasterTabConfig> Tabs = new()
     {
-        ["party"] = new MasterTabConfig
-        {
-            Key = "party", EntityType = typeof(Party), Title = "Party Master", EntityLabel = "Party",
-            Columns = new() { ("Name", "Party Name"), ("Roles", "Role(s)"), ("City", "City"), ("Phone", "Phone"), ("Email", "Email") },
-            Fields = new()
-            {
-                new("Name", "Party Name", "text", true),
-                new("City", "City", "text", true),
-                new("Phone", "Phone", "text", false),
-                new("Email", "Email", "email", false),
-                new("IsImporter", "Importer", "checkbox", false),
-                new("IsTransporter", "Transporter", "checkbox", false),
-                new("IsAgent", "Agent", "checkbox", false),
-                new("Gstin", "GSTIN (Importer)", "text", false),
-                new("License", "CHA License No. (Agent)", "text", false),
-                new("Fleet", "Fleet Details (Transporter)", "text", false),
-            }
-        },
         ["commodity"] = new MasterTabConfig
         {
             Key = "commodity", EntityType = typeof(Commodity), Title = "Commodity Master", EntityLabel = "Commodity",
@@ -86,7 +68,7 @@ public static class MasterRegistry
     };
 
     public static MasterTabConfig Get(string tab) =>
-        Tabs.TryGetValue(tab, out var cfg) ? cfg : Tabs["party"];
+        Tabs.TryGetValue(tab, out var cfg) ? cfg : Tabs["commodity"];
 
     public static string GetString(object entity, string propName)
     {

@@ -1,4 +1,10 @@
-﻿IF OBJECT_ID(N'[__EFMigrationsHistory]') IS NULL
+﻿-- Required when running via sqlcmd: its default session has QUOTED_IDENTIFIER OFF, which
+-- breaks the filtered unique indexes below (e.g. GSTIN/PAN "unique when not null"). Not
+-- needed when EF Core applies this migration itself (Microsoft.Data.SqlClient defaults it ON).
+SET QUOTED_IDENTIFIER ON;
+GO
+
+IF OBJECT_ID(N'[__EFMigrationsHistory]') IS NULL
 BEGIN
     CREATE TABLE [__EFMigrationsHistory] (
         [MigrationId] nvarchar(150) NOT NULL,
@@ -1270,6 +1276,349 @@ IF NOT EXISTS (
 BEGIN
     INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
     VALUES (N'20260711105120_MergePartyMaster', N'8.0.11');
+END;
+GO
+
+COMMIT;
+GO
+
+BEGIN TRANSACTION;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711112611_AddPartyBranchesAndDetails'
+)
+BEGIN
+    DROP INDEX [IX_Parties_Gstin] ON [Parties];
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711112611_AddPartyBranchesAndDetails'
+)
+BEGIN
+    ALTER TABLE [Parties] ADD [TradeName] nvarchar(200) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711112611_AddPartyBranchesAndDetails'
+)
+BEGIN
+    ALTER TABLE [Parties] ADD [Constitution] int NOT NULL DEFAULT 0;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711112611_AddPartyBranchesAndDetails'
+)
+BEGIN
+    ALTER TABLE [Parties] ADD [Pan] nvarchar(10) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711112611_AddPartyBranchesAndDetails'
+)
+BEGIN
+    ALTER TABLE [Parties] ADD [IecCode] nvarchar(15) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711112611_AddPartyBranchesAndDetails'
+)
+BEGIN
+    ALTER TABLE [Parties] ADD [CinNumber] nvarchar(30) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711112611_AddPartyBranchesAndDetails'
+)
+BEGIN
+    ALTER TABLE [Parties] ADD [LicenseValidUpto] datetime2 NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711112611_AddPartyBranchesAndDetails'
+)
+BEGIN
+    ALTER TABLE [Parties] ADD [AeoStatus] int NOT NULL DEFAULT 0;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711112611_AddPartyBranchesAndDetails'
+)
+BEGIN
+    ALTER TABLE [Parties] ADD [AeoCertificateNo] nvarchar(50) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711112611_AddPartyBranchesAndDetails'
+)
+BEGIN
+    ALTER TABLE [Parties] ADD [BankName] nvarchar(150) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711112611_AddPartyBranchesAndDetails'
+)
+BEGIN
+    ALTER TABLE [Parties] ADD [BankAccountNo] nvarchar(30) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711112611_AddPartyBranchesAndDetails'
+)
+BEGIN
+    ALTER TABLE [Parties] ADD [BankIfsc] nvarchar(15) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711112611_AddPartyBranchesAndDetails'
+)
+BEGIN
+    ALTER TABLE [Parties] ADD [AdCode] nvarchar(20) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711112611_AddPartyBranchesAndDetails'
+)
+BEGIN
+    ALTER TABLE [Parties] ADD [Website] nvarchar(200) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711112611_AddPartyBranchesAndDetails'
+)
+BEGIN
+    ALTER TABLE [Parties] ADD [ContactPersonName] nvarchar(150) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711112611_AddPartyBranchesAndDetails'
+)
+BEGIN
+    ALTER TABLE [Parties] ADD [ContactPersonDesignation] nvarchar(100) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711112611_AddPartyBranchesAndDetails'
+)
+BEGIN
+    ALTER TABLE [Parties] ADD [ContactPersonPhone] nvarchar(30) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711112611_AddPartyBranchesAndDetails'
+)
+BEGIN
+    ALTER TABLE [Parties] ADD [ContactPersonEmail] nvarchar(150) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711112611_AddPartyBranchesAndDetails'
+)
+BEGIN
+    ALTER TABLE [Parties] ADD [IsActive] bit NOT NULL DEFAULT CAST(1 AS bit);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711112611_AddPartyBranchesAndDetails'
+)
+BEGIN
+    ALTER TABLE [Parties] ADD [Remarks] nvarchar(1000) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711112611_AddPartyBranchesAndDetails'
+)
+BEGIN
+    CREATE TABLE [PartyBranches] (
+        [Id] int NOT NULL IDENTITY,
+        [PartyId] int NOT NULL,
+        [BranchName] nvarchar(150) NOT NULL,
+        [IsPrimary] bit NOT NULL,
+        [IsActive] bit NOT NULL,
+        [AddressLine1] nvarchar(300) NOT NULL,
+        [AddressLine2] nvarchar(300) NULL,
+        [City] nvarchar(100) NOT NULL,
+        [State] nvarchar(100) NULL,
+        [PinCode] nvarchar(15) NULL,
+        [Country] nvarchar(80) NOT NULL,
+        [Gstin] nvarchar(20) NULL,
+        [Phone] nvarchar(30) NULL,
+        [Email] nvarchar(150) NULL,
+        [ContactPersonName] nvarchar(150) NULL,
+        [CustomsRegistrationNo] nvarchar(50) NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        [UpdatedAt] datetime2 NULL,
+        CONSTRAINT [PK_PartyBranches] PRIMARY KEY ([Id]),
+        CONSTRAINT [FK_PartyBranches_Parties_PartyId] FOREIGN KEY ([PartyId]) REFERENCES [Parties] ([Id]) ON DELETE CASCADE
+    );
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711112611_AddPartyBranchesAndDetails'
+)
+BEGIN
+
+    INSERT INTO [PartyBranches] ([PartyId],[BranchName],[IsPrimary],[IsActive],[AddressLine1],[City],[Country],[Gstin],[Phone],[Email],[CreatedAt],[UpdatedAt])
+    SELECT [Id], 'Head Office', 1, 1, [City], [City], 'India', [Gstin], [Phone], [Email], [CreatedAt], [UpdatedAt]
+    FROM [Parties];
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711112611_AddPartyBranchesAndDetails'
+)
+BEGIN
+    DECLARE @var3 sysname;
+    SELECT @var3 = [d].[name]
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[Parties]') AND [c].[name] = N'City');
+    IF @var3 IS NOT NULL EXEC(N'ALTER TABLE [Parties] DROP CONSTRAINT [' + @var3 + '];');
+    ALTER TABLE [Parties] DROP COLUMN [City];
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711112611_AddPartyBranchesAndDetails'
+)
+BEGIN
+    DECLARE @var4 sysname;
+    SELECT @var4 = [d].[name]
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[Parties]') AND [c].[name] = N'Phone');
+    IF @var4 IS NOT NULL EXEC(N'ALTER TABLE [Parties] DROP CONSTRAINT [' + @var4 + '];');
+    ALTER TABLE [Parties] DROP COLUMN [Phone];
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711112611_AddPartyBranchesAndDetails'
+)
+BEGIN
+    DECLARE @var5 sysname;
+    SELECT @var5 = [d].[name]
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[Parties]') AND [c].[name] = N'Email');
+    IF @var5 IS NOT NULL EXEC(N'ALTER TABLE [Parties] DROP CONSTRAINT [' + @var5 + '];');
+    ALTER TABLE [Parties] DROP COLUMN [Email];
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711112611_AddPartyBranchesAndDetails'
+)
+BEGIN
+    DECLARE @var6 sysname;
+    SELECT @var6 = [d].[name]
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[Parties]') AND [c].[name] = N'Gstin');
+    IF @var6 IS NOT NULL EXEC(N'ALTER TABLE [Parties] DROP CONSTRAINT [' + @var6 + '];');
+    ALTER TABLE [Parties] DROP COLUMN [Gstin];
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711112611_AddPartyBranchesAndDetails'
+)
+BEGIN
+    EXEC(N'CREATE UNIQUE INDEX [IX_Parties_CinNumber] ON [Parties] ([CinNumber]) WHERE [CinNumber] IS NOT NULL');
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711112611_AddPartyBranchesAndDetails'
+)
+BEGIN
+    EXEC(N'CREATE UNIQUE INDEX [IX_Parties_IecCode] ON [Parties] ([IecCode]) WHERE [IecCode] IS NOT NULL');
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711112611_AddPartyBranchesAndDetails'
+)
+BEGIN
+    EXEC(N'CREATE UNIQUE INDEX [IX_Parties_Pan] ON [Parties] ([Pan]) WHERE [Pan] IS NOT NULL');
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711112611_AddPartyBranchesAndDetails'
+)
+BEGIN
+    EXEC(N'CREATE UNIQUE INDEX [IX_PartyBranches_Gstin] ON [PartyBranches] ([Gstin]) WHERE [Gstin] IS NOT NULL');
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711112611_AddPartyBranchesAndDetails'
+)
+BEGIN
+    CREATE INDEX [IX_PartyBranches_PartyId] ON [PartyBranches] ([PartyId]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711112611_AddPartyBranchesAndDetails'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260711112611_AddPartyBranchesAndDetails', N'8.0.11');
 END;
 GO
 

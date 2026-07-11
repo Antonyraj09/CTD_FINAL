@@ -1,0 +1,166 @@
+@using CTD_FINAL.Entities
+@using CTD_FINAL.Enums
+@model Party?
+@{
+    ViewData["Title"] = Model is null ? "New Party" : $"Edit Party — {Model.Name}";
+    var branchInit = (Model?.Branches ?? new List<PartyBranch>())
+        .Select(b => new
+        {
+            branchName = b.BranchName, isPrimary = b.IsPrimary, isActive = b.IsActive,
+            addressLine1 = b.AddressLine1, addressLine2 = b.AddressLine2, city = b.City,
+            state = b.State, pinCode = b.PinCode, country = b.Country, gstin = b.Gstin,
+            phone = b.Phone, email = b.Email, contactPersonName = b.ContactPersonName,
+            customsRegistrationNo = b.CustomsRegistrationNo
+        }).ToList();
+}
+<div class="section-head">
+    <div>
+        <h2>@(Model is null ? "New Party" : $"Edit Party — {Model.Name}")</h2>
+        <p>Company identity, statutory registration, and branch/GSTIN details</p>
+    </div>
+    <div class="section-actions">
+        <a class="btn btn-outline btn-sm" asp-controller="Party" asp-action="Index">Cancel</a>
+        <button type="button" class="btn btn-amber btn-sm" id="partySaveBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
+            Save Party
+        </button>
+    </div>
+</div>
+
+<form id="partyForm" data-record-id="@(Model?.Id ?? 0)">
+<div class="erp-form-body" style="padding:0;">
+
+    <!-- ============ SECTION A: COMPANY IDENTITY ============ -->
+    <div class="erp-section">
+        <div class="erp-section-head">
+            <div class="section-letter">A</div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Company Identity
+        </div>
+        <div class="erp-section-body">
+            <div class="form-grid cols-4">
+                <div class="field span-2"><label>Party Legal Name <span class="req">*</span></label><input type="text" id="p_name" value="@Model?.Name" placeholder="e.g. Himalaya Steel Traders Pvt Ltd"></div>
+                <div class="field span-2"><label>Trade Name</label><input type="text" id="p_tradeName" value="@Model?.TradeName" placeholder="Trading as, if different"></div>
+                <div class="field">
+                    <label>Constitution</label>
+                    <select id="p_constitution">
+                        @foreach (var c in Enum.GetValues<PartyConstitution>())
+                        {
+                            <option value="@c" selected="@(Model != null && Model.Constitution == c)">@c</option>
+                        }
+                    </select>
+                </div>
+                <div class="field"><label>PAN</label><input type="text" id="p_pan" value="@Model?.Pan" placeholder="10-character PAN" maxlength="10" style="text-transform:uppercase;"></div>
+                <div class="field"><label>IEC Code</label><input type="text" id="p_iecCode" value="@Model?.IecCode" placeholder="DGFT Import Export Code"></div>
+                <div class="field"><label>CIN Number</label><input type="text" id="p_cinNumber" value="@Model?.CinNumber" placeholder="Corporate Identification No."></div>
+                <div class="field">
+                    <label>Status</label>
+                    <div class="toggle-field" style="padding-top:10px;">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="p_isActive" checked="@(Model is null || Model.IsActive)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span class="toggle-label">Active</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ SECTION B: ROLES & CUSTOMS REGISTRATION ============ -->
+    <div class="erp-section">
+        <div class="erp-section-head">
+            <div class="section-letter">B</div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>
+            Roles &amp; Customs Registration
+        </div>
+        <div class="erp-section-body">
+            <div class="form-grid cols-4" style="margin-bottom:16px;">
+                <div class="field">
+                    <label class="toggle-label" style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600;">
+                        <input type="checkbox" id="p_isImporter" checked="@(Model?.IsImporter == true)" style="width:16px;height:16px;accent-color:var(--transit-green);"> Importer
+                    </label>
+                </div>
+                <div class="field">
+                    <label class="toggle-label" style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600;">
+                        <input type="checkbox" id="p_isTransporter" checked="@(Model?.IsTransporter == true)" style="width:16px;height:16px;accent-color:var(--transit-green);"> Transporter
+                    </label>
+                </div>
+                <div class="field">
+                    <label class="toggle-label" style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600;">
+                        <input type="checkbox" id="p_isAgent" checked="@(Model?.IsAgent == true)" style="width:16px;height:16px;accent-color:var(--transit-green);"> Agent (CHA)
+                    </label>
+                </div>
+            </div>
+            <div class="form-grid cols-4">
+                <div class="field"><label>CHA License No. <span style="font-weight:400;color:var(--ink-400);">(Agent)</span></label><input type="text" id="p_license" value="@Model?.License"></div>
+                <div class="field"><label>License Valid Upto</label><input type="date" id="p_licenseValidUpto" value="@(Model?.LicenseValidUpto?.ToString("yyyy-MM-dd"))"></div>
+                <div class="field"><label>Fleet Details <span style="font-weight:400;color:var(--ink-400);">(Transporter)</span></label><input type="text" id="p_fleet" value="@Model?.Fleet" placeholder="e.g. 42 Trailers"></div>
+                <div class="field"></div>
+                <div class="field">
+                    <label>AEO Status</label>
+                    <select id="p_aeoStatus">
+                        @foreach (var s in Enum.GetValues<AeoStatus>())
+                        {
+                            <option value="@s" selected="@(Model != null && Model.AeoStatus == s)">@s</option>
+                        }
+                    </select>
+                </div>
+                <div class="field span-2"><label>AEO Certificate No.</label><input type="text" id="p_aeoCertificateNo" value="@Model?.AeoCertificateNo"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ SECTION C: BANKING & CONTACT ============ -->
+    <div class="erp-section">
+        <div class="erp-section-head">
+            <div class="section-letter">C</div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            Banking &amp; Contact
+        </div>
+        <div class="erp-section-body">
+            <div class="form-grid cols-4">
+                <div class="field"><label>Bank Name</label><input type="text" id="p_bankName" value="@Model?.BankName"></div>
+                <div class="field"><label>Account Number</label><input type="text" id="p_bankAccountNo" value="@Model?.BankAccountNo"></div>
+                <div class="field"><label>IFSC Code</label><input type="text" id="p_bankIfsc" value="@Model?.BankIfsc"></div>
+                <div class="field"><label>AD Code</label><input type="text" id="p_adCode" value="@Model?.AdCode" placeholder="Authorized Dealer Code"></div>
+                <div class="field"><label>Primary Contact Name</label><input type="text" id="p_contactPersonName" value="@Model?.ContactPersonName"></div>
+                <div class="field"><label>Designation</label><input type="text" id="p_contactPersonDesignation" value="@Model?.ContactPersonDesignation"></div>
+                <div class="field"><label>Contact Phone</label><input type="text" id="p_contactPersonPhone" value="@Model?.ContactPersonPhone"></div>
+                <div class="field"><label>Contact Email</label><input type="email" id="p_contactPersonEmail" value="@Model?.ContactPersonEmail"></div>
+                <div class="field span-2"><label>Website</label><input type="text" id="p_website" value="@Model?.Website" placeholder="https://…"></div>
+                <div class="field span-2"><label>Remarks</label><textarea id="p_remarks" style="min-height:44px;">@Model?.Remarks</textarea></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ SECTION D: BRANCHES ============ -->
+    <div class="erp-section">
+        <div class="erp-section-head">
+            <div class="section-letter">D</div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            Branches &amp; GSTIN Registration
+        </div>
+        <div class="erp-section-body">
+            <p style="font-size:12px;color:var(--ink-400);margin:0 0 12px;">GST registration in India is issued per state — add one branch per registered place of business. At least one branch is required; the first is marked Primary by default.</p>
+            <div id="branchesContainer"></div>
+            <button type="button" class="btn btn-outline btn-sm" id="addBranchBtn" style="margin-top:6px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                Add Branch
+            </button>
+        </div>
+    </div>
+
+    <div style="display:flex;gap:12px;justify-content:flex-end;padding-top:8px;">
+        <a class="btn btn-outline" asp-controller="Party" asp-action="Index">Cancel</a>
+        <button type="button" class="btn btn-amber" onclick="document.getElementById('partySaveBtn').click()">Save Party</button>
+    </div>
+
+</div>
+</form>
+
+<script id="branchDataInit" type="application/json">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(branchInit))</script>
+
+@section Scripts {
+    <script src="~/js/party-edit.js" asp-append-version="true"></script>
+}
