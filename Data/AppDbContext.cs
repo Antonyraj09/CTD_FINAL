@@ -10,9 +10,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, 
     {
     }
 
-    public DbSet<Importer> Importers => Set<Importer>();
-    public DbSet<Agent> Agents => Set<Agent>();
-    public DbSet<Transporter> Transporters => Set<Transporter>();
+    public DbSet<Party> Parties => Set<Party>();
     public DbSet<Commodity> Commodities => Set<Commodity>();
     public DbSet<TransitRoute> TransitRoutes => Set<TransitRoute>();
     public DbSet<BorderPoint> BorderPoints => Set<BorderPoint>();

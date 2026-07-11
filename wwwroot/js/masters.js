@@ -46,11 +46,20 @@
     const data = { tab: activeTab };
     if (id) data.id = id;
     let missing = null;
+    let anyRoleChecked = false;
+    let hasRoleCheckboxes = false;
     inputs.forEach(input => {
+      if (input.type === "checkbox") {
+        hasRoleCheckboxes = true;
+        data[input.name] = input.checked;
+        if (input.checked) anyRoleChecked = true;
+        return;
+      }
       data[input.name] = input.value.trim();
       if (input.closest(".field")?.querySelector(".req") && !input.value.trim()) missing = input.previousElementSibling?.textContent || input.name;
     });
     if (missing) { toast("Missing fields", "Please complete all required fields", "error"); return; }
+    if (hasRoleCheckboxes && !anyRoleChecked) { toast("Select a role", "Tick at least one of Importer / Transporter / Agent", "error"); return; }
 
     try {
       const result = await postForm("/Masters/Save", data);

@@ -17,13 +17,13 @@ public class CtdJob : BaseEntity
 
     // Step 1: Job Information
     public int? ImporterId { get; set; }
-    public Importer? Importer { get; set; }
+    public Party? Importer { get; set; }
 
     public int? AgentId { get; set; }
-    public Agent? Agent { get; set; }
+    public Party? Agent { get; set; }
 
     public int? TransporterId { get; set; }
-    public Transporter? Transporter { get; set; }
+    public Party? Transporter { get; set; }
 
     [StringLength(80)]
     public string OriginCountry { get; set; } = "India";

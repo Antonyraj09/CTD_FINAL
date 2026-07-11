@@ -9,11 +9,24 @@
     @for (int i = 0; i < cfg.Fields.Count; i++)
     {
         var f = cfg.Fields[i];
-        var val = record != null ? MasterRegistry.GetString(record, f.Key) : "";
         var span2 = isLast && i == cfg.Fields.Count - 1;
-        <div class="field @(span2 ? "span-2" : "")">
-            <label>@f.Label @(f.Required ? Html.Raw("<span class=\"req\">*</span>") : null)</label>
-            <input type="@f.InputType" id="mf_@f.Key" name="@f.Key" value="@val">
-        </div>
+        if (f.InputType == "checkbox")
+        {
+            var isChecked = record != null && MasterRegistry.GetBool(record, f.Key);
+            <div class="field @(span2 ? "span-2" : "")" style="display:flex;align-items:flex-end;padding-bottom:2px;">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin:0;font-weight:600;">
+                    <input type="checkbox" id="mf_@f.Key" name="@f.Key" value="true" checked="@(isChecked ? "checked" : null)" style="width:16px;height:16px;accent-color:var(--transit-green);">
+                    @f.Label
+                </label>
+            </div>
+        }
+        else
+        {
+            var val = record != null ? MasterRegistry.GetString(record, f.Key) : "";
+            <div class="field @(span2 ? "span-2" : "")">
+                <label>@f.Label @(f.Required ? Html.Raw("<span class=\"req\">*</span>") : null)</label>
+                <input type="@f.InputType" id="mf_@f.Key" name="@f.Key" value="@val">
+            </div>
+        }
     }
 </div>

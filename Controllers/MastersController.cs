@@ -26,7 +26,7 @@ public class MastersController : Controller
         _auditService = auditService;
     }
 
-    public IActionResult Index(string tab = "importer")
+    public IActionResult Index(string tab = "party")
     {
         var cfg = MasterRegistry.Get(tab);
         ViewData["Title"] = "Master Data — Setup";
