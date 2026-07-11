@@ -984,3 +984,295 @@ GO
 COMMIT;
 GO
 
+BEGIN TRANSACTION;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711105120_MergePartyMaster'
+)
+BEGIN
+    CREATE TABLE [Parties] (
+        [Id] int NOT NULL IDENTITY,
+        [Name] nvarchar(200) NOT NULL,
+        [City] nvarchar(100) NOT NULL,
+        [Phone] nvarchar(30) NULL,
+        [Email] nvarchar(150) NULL,
+        [IsImporter] bit NOT NULL,
+        [IsTransporter] bit NOT NULL,
+        [IsAgent] bit NOT NULL,
+        [Gstin] nvarchar(20) NULL,
+        [License] nvarchar(50) NULL,
+        [Fleet] nvarchar(100) NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        [UpdatedAt] datetime2 NULL,
+        CONSTRAINT [PK_Parties] PRIMARY KEY ([Id])
+    );
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711105120_MergePartyMaster'
+)
+BEGIN
+    ALTER TABLE [CtdJobs] DROP CONSTRAINT [FK_CtdJobs_Agents_AgentId];
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711105120_MergePartyMaster'
+)
+BEGIN
+    ALTER TABLE [CtdJobs] DROP CONSTRAINT [FK_CtdJobs_Importers_ImporterId];
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711105120_MergePartyMaster'
+)
+BEGIN
+    ALTER TABLE [CtdJobs] DROP CONSTRAINT [FK_CtdJobs_Transporters_TransporterId];
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711105120_MergePartyMaster'
+)
+BEGIN
+    ALTER TABLE [Parties] ADD [LegacyImporterId] int NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711105120_MergePartyMaster'
+)
+BEGIN
+    ALTER TABLE [Parties] ADD [LegacyAgentId] int NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711105120_MergePartyMaster'
+)
+BEGIN
+    ALTER TABLE [Parties] ADD [LegacyTransporterId] int NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711105120_MergePartyMaster'
+)
+BEGIN
+
+    INSERT INTO [Parties] ([Name],[City],[Phone],[Email],[IsImporter],[IsTransporter],[IsAgent],[Gstin],[License],[Fleet],[CreatedAt],[UpdatedAt],[LegacyImporterId])
+    SELECT [Name],[City],[Phone],[Email],1,0,0,[Gstin],NULL,NULL,[CreatedAt],[UpdatedAt],[Id]
+    FROM [Importers];
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711105120_MergePartyMaster'
+)
+BEGIN
+
+    INSERT INTO [Parties] ([Name],[City],[Phone],[Email],[IsImporter],[IsTransporter],[IsAgent],[Gstin],[License],[Fleet],[CreatedAt],[UpdatedAt],[LegacyAgentId])
+    SELECT [Name],[City],[Phone],[Email],0,0,1,NULL,[License],NULL,[CreatedAt],[UpdatedAt],[Id]
+    FROM [Agents];
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711105120_MergePartyMaster'
+)
+BEGIN
+
+    INSERT INTO [Parties] ([Name],[City],[Phone],[Email],[IsImporter],[IsTransporter],[IsAgent],[Gstin],[License],[Fleet],[CreatedAt],[UpdatedAt],[LegacyTransporterId])
+    SELECT [Name],[City],[Phone],[Email],0,1,0,NULL,NULL,[Fleet],[CreatedAt],[UpdatedAt],[Id]
+    FROM [Transporters];
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711105120_MergePartyMaster'
+)
+BEGIN
+
+    UPDATE j SET j.[ImporterId] = p.[Id]
+    FROM [CtdJobs] j
+    JOIN [Parties] p ON p.[LegacyImporterId] = j.[ImporterId];
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711105120_MergePartyMaster'
+)
+BEGIN
+
+    UPDATE j SET j.[AgentId] = p.[Id]
+    FROM [CtdJobs] j
+    JOIN [Parties] p ON p.[LegacyAgentId] = j.[AgentId];
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711105120_MergePartyMaster'
+)
+BEGIN
+
+    UPDATE j SET j.[TransporterId] = p.[Id]
+    FROM [CtdJobs] j
+    JOIN [Parties] p ON p.[LegacyTransporterId] = j.[TransporterId];
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711105120_MergePartyMaster'
+)
+BEGIN
+    DECLARE @var0 sysname;
+    SELECT @var0 = [d].[name]
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[Parties]') AND [c].[name] = N'LegacyImporterId');
+    IF @var0 IS NOT NULL EXEC(N'ALTER TABLE [Parties] DROP CONSTRAINT [' + @var0 + '];');
+    ALTER TABLE [Parties] DROP COLUMN [LegacyImporterId];
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711105120_MergePartyMaster'
+)
+BEGIN
+    DECLARE @var1 sysname;
+    SELECT @var1 = [d].[name]
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[Parties]') AND [c].[name] = N'LegacyAgentId');
+    IF @var1 IS NOT NULL EXEC(N'ALTER TABLE [Parties] DROP CONSTRAINT [' + @var1 + '];');
+    ALTER TABLE [Parties] DROP COLUMN [LegacyAgentId];
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711105120_MergePartyMaster'
+)
+BEGIN
+    DECLARE @var2 sysname;
+    SELECT @var2 = [d].[name]
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[Parties]') AND [c].[name] = N'LegacyTransporterId');
+    IF @var2 IS NOT NULL EXEC(N'ALTER TABLE [Parties] DROP CONSTRAINT [' + @var2 + '];');
+    ALTER TABLE [Parties] DROP COLUMN [LegacyTransporterId];
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711105120_MergePartyMaster'
+)
+BEGIN
+    DROP TABLE [Agents];
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711105120_MergePartyMaster'
+)
+BEGIN
+    DROP TABLE [Importers];
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711105120_MergePartyMaster'
+)
+BEGIN
+    DROP TABLE [Transporters];
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711105120_MergePartyMaster'
+)
+BEGIN
+    EXEC(N'CREATE UNIQUE INDEX [IX_Parties_Gstin] ON [Parties] ([Gstin]) WHERE [Gstin] IS NOT NULL');
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711105120_MergePartyMaster'
+)
+BEGIN
+    EXEC(N'CREATE UNIQUE INDEX [IX_Parties_License] ON [Parties] ([License]) WHERE [License] IS NOT NULL');
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711105120_MergePartyMaster'
+)
+BEGIN
+    CREATE INDEX [IX_Parties_Name] ON [Parties] ([Name]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711105120_MergePartyMaster'
+)
+BEGIN
+    ALTER TABLE [CtdJobs] ADD CONSTRAINT [FK_CtdJobs_Parties_AgentId] FOREIGN KEY ([AgentId]) REFERENCES [Parties] ([Id]) ON DELETE NO ACTION;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711105120_MergePartyMaster'
+)
+BEGIN
+    ALTER TABLE [CtdJobs] ADD CONSTRAINT [FK_CtdJobs_Parties_ImporterId] FOREIGN KEY ([ImporterId]) REFERENCES [Parties] ([Id]) ON DELETE NO ACTION;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711105120_MergePartyMaster'
+)
+BEGIN
+    ALTER TABLE [CtdJobs] ADD CONSTRAINT [FK_CtdJobs_Parties_TransporterId] FOREIGN KEY ([TransporterId]) REFERENCES [Parties] ([Id]) ON DELETE NO ACTION;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711105120_MergePartyMaster'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260711105120_MergePartyMaster', N'8.0.11');
+END;
+GO
+
+COMMIT;
+GO
+

@@ -2,7 +2,7 @@
 
 A production-grade ASP.NET Core 8 MVC + SQL Server application for managing CTD (customs transit declaration) jobs — India–Nepal transit permits — end to end: job creation through CTD generation, tracking, delivery, billing and document archival, plus master data, users/roles, audit history, reporting, and system-generated alerts.
 
-This is a single-project restructure of the original multi-project [CtdSuite](../CTD_NEW) Clean Architecture solution — same business logic, same database schema, same screens and behavior, reorganized into one ASP.NET Core MVC project with folders instead of separate Core/Infrastructure/Shared class libraries.
+This is a single-project restructure of the original multi-project [CtdSuite](../CTD_NEW) Clean Architecture solution — same business logic, same screens and behavior, reorganized into one ASP.NET Core MVC project with folders instead of separate Core/Infrastructure/Shared class libraries. One deliberate schema difference from CtdSuite: Importer, Agent and Transporter are unified into a single **Party** master (`Entities/Party.cs`) with `IsImporter`/`IsTransporter`/`IsAgent` role flags, so one company record can hold any combination of roles instead of needing a separate record — and separate identity — in three different tables. `Data/Migrations/*_MergePartyMaster.cs` migrates any existing Importer/Agent/Transporter data into the unified table and remaps `CtdJobs`' existing FK values, so upgrading an installation with real data doesn't lose any job's importer/agent/transporter links.
 
 ## Project layout
 

@@ -11,12 +11,12 @@ namespace CTD_FINAL.Controllers;
 public class DashboardController : Controller
 {
     private readonly IDashboardService _dashboardService;
-    private readonly IGenericRepository<CTD_FINAL.Entities.Importer> _importerRepository;
+    private readonly IGenericRepository<CTD_FINAL.Entities.Party> _partyRepository;
 
-    public DashboardController(IDashboardService dashboardService, IGenericRepository<CTD_FINAL.Entities.Importer> importerRepository)
+    public DashboardController(IDashboardService dashboardService, IGenericRepository<CTD_FINAL.Entities.Party> partyRepository)
     {
         _dashboardService = dashboardService;
-        _importerRepository = importerRepository;
+        _partyRepository = partyRepository;
     }
 
     [RequirePermission(PermissionKeys.DashboardView)]
@@ -35,7 +35,7 @@ public class DashboardController : Controller
         ViewData["Breadcrumb"] = "CTD Suite / Overview";
         ViewData["ActiveNav"] = "customerDashboard";
 
-        var importers = await _importerRepository.GetAllAsync();
+        var importers = await _partyRepository.FindAsync(p => p.IsImporter);
         ViewBag.Importers = importers.OrderBy(i => i.Name).ToList();
         ViewBag.SelectedImporterId = importerId ?? importers.FirstOrDefault()?.Id ?? 0;
 

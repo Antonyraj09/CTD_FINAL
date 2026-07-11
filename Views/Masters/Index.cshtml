@@ -1,29 +1,21 @@
 @using CTD_FINAL.Infrastructure.Masters
 @{
     ViewData["Title"] = "Master Data — Setup";
-    var activeTab = ViewData["ActiveTab"] as string ?? "importer";
+    var activeTab = ViewData["ActiveTab"] as string ?? "party";
 }
 <div class="section-head">
     <div>
         <h2>Master Data</h2>
-        <p>Manage reference data used across CTD jobs</p>
+        <p>Manage reference data used across CTD jobs. Importer, Agent and Transporter are unified into one Party master — tick any combination of roles on a record.</p>
     </div>
 </div>
 
 <div class="master-layout">
     <div class="panel" style="padding:12px;align-self:start;">
         <div class="master-tab-list" id="masterTabList">
-            <div class="master-tab @(activeTab == "importer" ? "active" : "")" data-master="importer">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                Importer <span class="cnt" id="cnt_importer">0</span>
-            </div>
-            <div class="master-tab @(activeTab == "agent" ? "active" : "")" data-master="agent">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                Agent <span class="cnt" id="cnt_agent">0</span>
-            </div>
-            <div class="master-tab @(activeTab == "transporter" ? "active" : "")" data-master="transporter">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-                Transporter <span class="cnt" id="cnt_transporter">0</span>
+            <div class="master-tab @(activeTab == "party" ? "active" : "")" data-master="party">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                Party <span class="cnt" id="cnt_party">0</span>
             </div>
             <div class="master-tab @(activeTab == "commodity" ? "active" : "")" data-master="commodity">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41 13.42 20.6a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82Z"/><line x1="7" y1="7" x2="7" y2="7"/></svg>

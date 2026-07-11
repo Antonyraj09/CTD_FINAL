@@ -17,9 +17,7 @@ public class JobsController : Controller
     private readonly IDocumentService _documentService;
     private readonly IPermissionService _permissionService;
     private readonly INumberSequenceService _numberSequenceService;
-    private readonly IGenericRepository<Importer> _importers;
-    private readonly IGenericRepository<Agent> _agents;
-    private readonly IGenericRepository<Transporter> _transporters;
+    private readonly IGenericRepository<Party> _parties;
     private readonly IGenericRepository<BorderPoint> _borderPoints;
     private readonly IGenericRepository<Commodity> _commodities;
     private readonly IGenericRepository<CustomsHouse> _customsHouses;
@@ -27,7 +25,7 @@ public class JobsController : Controller
 
     public JobsController(IJobService jobService, IDocumentService documentService, IPermissionService permissionService,
         INumberSequenceService numberSequenceService,
-        IGenericRepository<Importer> importers, IGenericRepository<Agent> agents, IGenericRepository<Transporter> transporters,
+        IGenericRepository<Party> parties,
         IGenericRepository<BorderPoint> borderPoints, IGenericRepository<Commodity> commodities,
         IGenericRepository<CustomsHouse> customsHouses, IGenericRepository<TransitRoute> transitRoutes)
     {
@@ -35,9 +33,7 @@ public class JobsController : Controller
         _documentService = documentService;
         _permissionService = permissionService;
         _numberSequenceService = numberSequenceService;
-        _importers = importers;
-        _agents = agents;
-        _transporters = transporters;
+        _parties = parties;
         _borderPoints = borderPoints;
         _commodities = commodities;
         _customsHouses = customsHouses;
@@ -61,9 +57,9 @@ public class JobsController : Controller
         var model = new JobWizardViewModel
         {
             Job = job,
-            Importers = await _importers.GetAllAsync(),
-            Agents = await _agents.GetAllAsync(),
-            Transporters = await _transporters.GetAllAsync(),
+            Importers = await _parties.FindAsync(p => p.IsImporter),
+            Agents = await _parties.FindAsync(p => p.IsAgent),
+            Transporters = await _parties.FindAsync(p => p.IsTransporter),
             BorderPoints = await _borderPoints.GetAllAsync(),
             Commodities = await _commodities.GetAllAsync(),
             CustomsHouses = await _customsHouses.GetAllAsync(),
@@ -234,7 +230,7 @@ public class JobsController : Controller
         ViewData["Breadcrumb"] = "CTD Suite / Operations";
         ViewData["ActiveNav"] = "tracking";
         ViewData["ActiveModule"] = "jobs";
-        ViewBag.Importers = await _importers.GetAllAsync();
+        ViewBag.Importers = await _parties.FindAsync(p => p.IsImporter);
         return View();
     }
 

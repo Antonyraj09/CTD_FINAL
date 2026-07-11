@@ -24,9 +24,12 @@ public class CtdJobConfiguration : IEntityTypeConfiguration<CtdJob>
         b.Property(x => x.Tax).HasPrecision(18, 2);
         b.Property(x => x.Total).HasPrecision(18, 2);
 
-        b.HasOne(x => x.Importer).WithMany(i => i.Jobs).HasForeignKey(x => x.ImporterId).OnDelete(DeleteBehavior.Restrict);
-        b.HasOne(x => x.Agent).WithMany(a => a.Jobs).HasForeignKey(x => x.AgentId).OnDelete(DeleteBehavior.Restrict);
-        b.HasOne(x => x.Transporter).WithMany(t => t.Jobs).HasForeignKey(x => x.TransporterId).OnDelete(DeleteBehavior.Restrict);
+        // Importer/Agent/Transporter are three independent FKs onto the same unified Party
+        // table (a party may play more than one role); no inverse Jobs collection on Party
+        // since a single "Jobs" navigation would be ambiguous across three relationships.
+        b.HasOne(x => x.Importer).WithMany().HasForeignKey(x => x.ImporterId).OnDelete(DeleteBehavior.Restrict);
+        b.HasOne(x => x.Agent).WithMany().HasForeignKey(x => x.AgentId).OnDelete(DeleteBehavior.Restrict);
+        b.HasOne(x => x.Transporter).WithMany().HasForeignKey(x => x.TransporterId).OnDelete(DeleteBehavior.Restrict);
         b.HasOne(x => x.BorderPoint).WithMany(bp => bp.Jobs).HasForeignKey(x => x.BorderPointId).OnDelete(DeleteBehavior.Restrict);
         b.HasOne(x => x.Commodity).WithMany(c => c.Jobs).HasForeignKey(x => x.CommodityId).OnDelete(DeleteBehavior.Restrict);
         b.HasOne(x => x.CustomsHouse).WithMany(c => c.Jobs).HasForeignKey(x => x.CustomsHouseId).OnDelete(DeleteBehavior.Restrict);

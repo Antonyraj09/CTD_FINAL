@@ -158,7 +158,7 @@ public class JobService : IJobService
 
     private async Task TriggerAutoAlertAsync(CtdJob job, WorkflowStatus prevStatus, CancellationToken ct)
     {
-        var importerName = job.Importer?.Name ?? (await _context.Importers.FindAsync(new object?[] { job.ImporterId }, ct))?.Name ?? "Importer";
+        var importerName = job.Importer?.Name ?? (await _context.Parties.FindAsync(new object?[] { job.ImporterId }, ct))?.Name ?? "Importer";
 
         if (!string.IsNullOrEmpty(job.CtdNumber) && prevStatus != WorkflowStatus.Approved && job.Status == WorkflowStatus.Approved)
             await _alertService.NotifyAsync(AlertChannel.Email, importerName, "CTD Generated", job.JobNo, ct);

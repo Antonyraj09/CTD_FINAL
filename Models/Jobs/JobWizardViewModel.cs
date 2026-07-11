@@ -8,9 +8,9 @@ public class JobWizardViewModel
     public CtdJob? Job { get; set; }
     public bool IsNew => Job is null;
 
-    public IReadOnlyList<Importer> Importers { get; set; } = Array.Empty<Importer>();
-    public IReadOnlyList<Agent> Agents { get; set; } = Array.Empty<Agent>();
-    public IReadOnlyList<Transporter> Transporters { get; set; } = Array.Empty<Transporter>();
+    public IReadOnlyList<Party> Importers { get; set; } = Array.Empty<Party>();
+    public IReadOnlyList<Party> Agents { get; set; } = Array.Empty<Party>();
+    public IReadOnlyList<Party> Transporters { get; set; } = Array.Empty<Party>();
     public IReadOnlyList<BorderPoint> BorderPoints { get; set; } = Array.Empty<BorderPoint>();
     public IReadOnlyList<Commodity> Commodities { get; set; } = Array.Empty<Commodity>();
     public IReadOnlyList<CustomsHouse> CustomsHouses { get; set; } = Array.Empty<CustomsHouse>();

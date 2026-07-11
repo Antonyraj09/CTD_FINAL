@@ -25,43 +25,22 @@ public static class MasterRegistry
 {
     public static readonly Dictionary<string, MasterTabConfig> Tabs = new()
     {
-        ["importer"] = new MasterTabConfig
+        ["party"] = new MasterTabConfig
         {
-            Key = "importer", EntityType = typeof(Importer), Title = "Importer Master", EntityLabel = "Importer",
-            Columns = new() { ("Name", "Importer Name"), ("Gstin", "GSTIN"), ("City", "City"), ("Phone", "Phone"), ("Email", "Email") },
+            Key = "party", EntityType = typeof(Party), Title = "Party Master", EntityLabel = "Party",
+            Columns = new() { ("Name", "Party Name"), ("Roles", "Role(s)"), ("City", "City"), ("Phone", "Phone"), ("Email", "Email") },
             Fields = new()
             {
-                new("Name", "Importer Name", "text", true),
-                new("Gstin", "GSTIN", "text", true),
+                new("Name", "Party Name", "text", true),
                 new("City", "City", "text", true),
                 new("Phone", "Phone", "text", false),
                 new("Email", "Email", "email", false),
-            }
-        },
-        ["agent"] = new MasterTabConfig
-        {
-            Key = "agent", EntityType = typeof(Agent), Title = "Agent (CHA) Master", EntityLabel = "Agent",
-            Columns = new() { ("Name", "Agent Name"), ("License", "CHA License"), ("City", "City"), ("Phone", "Phone"), ("Email", "Email") },
-            Fields = new()
-            {
-                new("Name", "Agent Name", "text", true),
-                new("License", "CHA License No.", "text", true),
-                new("City", "City", "text", true),
-                new("Phone", "Phone", "text", false),
-                new("Email", "Email", "email", false),
-            }
-        },
-        ["transporter"] = new MasterTabConfig
-        {
-            Key = "transporter", EntityType = typeof(Transporter), Title = "Transporter Master", EntityLabel = "Transporter",
-            Columns = new() { ("Name", "Transporter Name"), ("Fleet", "Fleet"), ("City", "City"), ("Phone", "Phone"), ("Email", "Email") },
-            Fields = new()
-            {
-                new("Name", "Transporter Name", "text", true),
-                new("Fleet", "Fleet Details", "text", false),
-                new("City", "City", "text", true),
-                new("Phone", "Phone", "text", false),
-                new("Email", "Email", "email", false),
+                new("IsImporter", "Importer", "checkbox", false),
+                new("IsTransporter", "Transporter", "checkbox", false),
+                new("IsAgent", "Agent", "checkbox", false),
+                new("Gstin", "GSTIN (Importer)", "text", false),
+                new("License", "CHA License No. (Agent)", "text", false),
+                new("Fleet", "Fleet Details (Transporter)", "text", false),
             }
         },
         ["commodity"] = new MasterTabConfig
@@ -107,12 +86,18 @@ public static class MasterRegistry
     };
 
     public static MasterTabConfig Get(string tab) =>
-        Tabs.TryGetValue(tab, out var cfg) ? cfg : Tabs["importer"];
+        Tabs.TryGetValue(tab, out var cfg) ? cfg : Tabs["party"];
 
     public static string GetString(object entity, string propName)
     {
         var prop = entity.GetType().GetProperty(propName, BindingFlags.Public | BindingFlags.Instance);
         return prop?.GetValue(entity)?.ToString() ?? string.Empty;
+    }
+
+    public static bool GetBool(object entity, string propName)
+    {
+        var prop = entity.GetType().GetProperty(propName, BindingFlags.Public | BindingFlags.Instance);
+        return prop?.GetValue(entity) is true;
     }
 
     public static int GetId(object entity) => (int)(entity.GetType().GetProperty("Id")!.GetValue(entity) ?? 0);
@@ -123,6 +108,13 @@ public static class MasterRegistry
         {
             var prop = entity.GetType().GetProperty(field.Key, BindingFlags.Public | BindingFlags.Instance);
             if (prop is null) continue;
+
+            if (field.InputType == "checkbox")
+            {
+                prop.SetValue(entity, form[field.Key].ToString() == "true");
+                continue;
+            }
+
             var value = form[field.Key].ToString();
             prop.SetValue(entity, string.IsNullOrEmpty(value) ? null : value);
         }
@@ -135,6 +127,13 @@ public static class MasterRegistry
             if (string.IsNullOrWhiteSpace(form[field.Key]))
                 return (false, field.Label);
         }
+
+        // A checkbox group (e.g. Party's Importer/Transporter/Agent role flags) is only
+        // meaningful if at least one box in the group is checked.
+        var checkboxFields = fields.Where(f => f.InputType == "checkbox").ToList();
+        if (checkboxFields.Count > 0 && !checkboxFields.Any(f => form[f.Key].ToString() == "true"))
+            return (false, "At least one role (" + string.Join(" / ", checkboxFields.Select(f => f.Label)) + ")");
+
         return (true, null);
     }
 }

@@ -4,28 +4,14 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace CTD_FINAL.Data.Configurations;
 
-public class ImporterConfiguration : IEntityTypeConfiguration<Importer>
+public class PartyConfiguration : IEntityTypeConfiguration<Party>
 {
-    public void Configure(EntityTypeBuilder<Importer> b)
+    public void Configure(EntityTypeBuilder<Party> b)
     {
+        // Unique indexes tolerate many NULLs (SQL Server treats each NULL as distinct),
+        // so rows that aren't tagged Importer/Agent leave Gstin/License blank safely.
         b.HasIndex(x => x.Gstin).IsUnique();
-        b.HasIndex(x => x.Name);
-    }
-}
-
-public class AgentConfiguration : IEntityTypeConfiguration<Agent>
-{
-    public void Configure(EntityTypeBuilder<Agent> b)
-    {
         b.HasIndex(x => x.License).IsUnique();
-        b.HasIndex(x => x.Name);
-    }
-}
-
-public class TransporterConfiguration : IEntityTypeConfiguration<Transporter>
-{
-    public void Configure(EntityTypeBuilder<Transporter> b)
-    {
         b.HasIndex(x => x.Name);
     }
 }
