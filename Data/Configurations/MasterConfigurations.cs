@@ -9,10 +9,24 @@ public class PartyConfiguration : IEntityTypeConfiguration<Party>
     public void Configure(EntityTypeBuilder<Party> b)
     {
         // Unique indexes tolerate many NULLs (SQL Server treats each NULL as distinct),
-        // so rows that aren't tagged Importer/Agent leave Gstin/License blank safely.
-        b.HasIndex(x => x.Gstin).IsUnique();
+        // so rows that aren't tagged Importer/Agent leave Pan/License blank safely.
+        b.HasIndex(x => x.Pan).IsUnique();
+        b.HasIndex(x => x.IecCode).IsUnique();
+        b.HasIndex(x => x.CinNumber).IsUnique();
         b.HasIndex(x => x.License).IsUnique();
         b.HasIndex(x => x.Name);
+
+        b.HasMany(x => x.Branches).WithOne(br => br.Party).HasForeignKey(br => br.PartyId).OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+public class PartyBranchConfiguration : IEntityTypeConfiguration<PartyBranch>
+{
+    public void Configure(EntityTypeBuilder<PartyBranch> b)
+    {
+        // Same GSTIN can't legitimately appear on two different branches (even across parties).
+        b.HasIndex(x => x.Gstin).IsUnique();
+        b.HasIndex(x => x.PartyId);
     }
 }
 

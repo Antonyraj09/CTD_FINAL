@@ -55,6 +55,7 @@ builder.Services.AddScoped<IJobService, JobService>();
 builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddScoped<IJobIsneService, JobIsneService>();
 builder.Services.AddScoped<IReportService, ReportService>();
+builder.Services.AddScoped<IPartyService, PartyService>();
 
 builder.Services.AddScoped<IUserClaimsPrincipalFactory<ApplicationUser>, AppUserClaimsPrincipalFactory>();
 

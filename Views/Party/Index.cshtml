@@ -1,0 +1,29 @@
+@{
+    ViewData["Title"] = "Party Master";
+}
+<div class="section-head">
+    <div>
+        <h2>Party Master</h2>
+        <p>Importers, agents (CHA) and transporters — one record per company, with statutory registration and branch/GSTIN details</p>
+    </div>
+    <div class="section-actions">
+        <a class="btn btn-amber btn-sm" asp-controller="Party" asp-action="Edit">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+            Add New Party
+        </a>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="table-toolbar">
+        <div class="table-search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="text" id="party_search" placeholder="Search by name, PAN, IEC, GSTIN, city…">
+        </div>
+    </div>
+    <div class="table-scroll" id="partyTableContainer"><!-- loaded via AJAX --></div>
+</div>
+
+@section Scripts {
+    <script src="~/js/party-list.js" asp-append-version="true"></script>
+}

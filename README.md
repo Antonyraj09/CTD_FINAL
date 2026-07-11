@@ -2,7 +2,19 @@
 
 A production-grade ASP.NET Core 8 MVC + SQL Server application for managing CTD (customs transit declaration) jobs — India–Nepal transit permits — end to end: job creation through CTD generation, tracking, delivery, billing and document archival, plus master data, users/roles, audit history, reporting, and system-generated alerts.
 
-This is a single-project restructure of the original multi-project [CtdSuite](../CTD_NEW) Clean Architecture solution — same business logic, same screens and behavior, reorganized into one ASP.NET Core MVC project with folders instead of separate Core/Infrastructure/Shared class libraries. One deliberate schema difference from CtdSuite: Importer, Agent and Transporter are unified into a single **Party** master (`Entities/Party.cs`) with `IsImporter`/`IsTransporter`/`IsAgent` role flags, so one company record can hold any combination of roles instead of needing a separate record — and separate identity — in three different tables. `Data/Migrations/*_MergePartyMaster.cs` migrates any existing Importer/Agent/Transporter data into the unified table and remaps `CtdJobs`' existing FK values, so upgrading an installation with real data doesn't lose any job's importer/agent/transporter links.
+This is a single-project restructure of the original multi-project [CtdSuite](../CTD_NEW) Clean Architecture solution — same business logic, same screens and behavior, reorganized into one ASP.NET Core MVC project with folders instead of separate Core/Infrastructure/Shared class libraries. One deliberate schema difference from CtdSuite: Importer, Agent and Transporter are unified into a single **Party** master (`Entities/Party.cs`) with `IsImporter`/`IsTransporter`/`IsAgent` role flags, so one company record can hold any combination of roles instead of needing a separate record — and separate identity — in three different tables.
+
+### Party Master
+
+Party has its own dedicated screen (`Controllers/PartyController.cs`, `Views/Party/`) rather than the generic Masters modal — it needs a repeatable branches grid, which the generic single-entity Masters CRUD system doesn't support. Fields:
+
+- **Identity**: legal name, trade name, constitution (Proprietorship/Partnership/LLP/Pvt Ltd/...), PAN, IEC code (DGFT Import Export Code), CIN.
+- **Roles**: Importer/Transporter/Agent checkboxes (any combination), CHA license + validity (Agent), fleet details (Transporter), AEO trust-status tier + certificate number.
+- **Banking**: bank name/account/IFSC, AD (Authorized Dealer) code for forex/shipping-bill declarations.
+- **Primary contact**: name, designation, phone, email, website.
+- **Branches** (`Entities/PartyBranch.cs`, one-to-many): a party can have any number of branches, each with its own address, city/state/PIN/country, **and its own GSTIN** — GST registration in India is issued per state/place of business, so a party operating from multiple states genuinely needs more than one GSTIN, not just one address field. Each branch also carries phone/email/contact person and an optional local customs-house registration reference. At least one branch is required per party; the first (or whichever is marked) is the primary.
+
+`Data/Migrations/*_MergePartyMaster.cs` and `*_AddPartyBranchesAndDetails.cs` migrate any existing Importer/Agent/Transporter data into the unified table (each becoming its own branch, carrying forward its city/phone/email/GSTIN) and remap `CtdJobs`' existing FK values, so upgrading an installation with real data doesn't lose any job's importer/agent/transporter links. Seed data intentionally stays minimal (legal name, role, one branch) — PAN/IEC/CIN/banking/AEO fields are left blank for real data entry via the UI rather than fabricated.
 
 ## Project layout
 

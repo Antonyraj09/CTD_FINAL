@@ -59,3 +59,25 @@ public enum ContainerStatus
     FCL = 0,
     LCL = 1
 }
+
+public enum PartyConstitution
+{
+    Proprietorship = 0,
+    Partnership = 1,
+    LLP = 2,
+    PrivateLimited = 3,
+    PublicLimited = 4,
+    HUF = 5,
+    Government = 6,
+    Other = 7
+}
+
+/// <summary>CBIC Authorized Economic Operator trust-status tier (customs fast-track clearance program).</summary>
+public enum AeoStatus
+{
+    None = 0,
+    AeoT1 = 1,
+    AeoT2 = 2,
+    AeoT3 = 3,
+    AeoLo = 4
+}

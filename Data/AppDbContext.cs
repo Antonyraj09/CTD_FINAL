@@ -11,6 +11,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, 
     }
 
     public DbSet<Party> Parties => Set<Party>();
+    public DbSet<PartyBranch> PartyBranches => Set<PartyBranch>();
     public DbSet<Commodity> Commodities => Set<Commodity>();
     public DbSet<TransitRoute> TransitRoutes => Set<TransitRoute>();
     public DbSet<BorderPoint> BorderPoints => Set<BorderPoint>();
