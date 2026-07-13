@@ -18,6 +18,7 @@ public class PartySaveRequest
     public string? License { get; set; }
     public DateTime? LicenseValidUpto { get; set; }
     public string? Fleet { get; set; }
+    public string? SubAgentCode { get; set; }
 
     public string AeoStatus { get; set; } = "None";
     public string? AeoCertificateNo { get; set; }

@@ -596,6 +596,32 @@ body{
 fieldset.form-section{border:1px solid var(--surface-border);border-radius:var(--r-lg);padding:20px;margin-bottom:18px;}
 fieldset.form-section legend{padding:0 10px;font-size:13px;font-weight:700;color:var(--navy-900);background:var(--surface-0);}
 
+/* ============================================================
+   TYPEABLE COMBO SELECT — progressive enhancement of native
+   <select> elements (see wwwroot/js/combobox.js) into a type-to-
+   filter dropdown. The original <select> stays in the DOM (hidden)
+   so every existing .value/change-event/form-submit contract on
+   it keeps working unchanged.
+   ============================================================ */
+.combo-select{display:none !important;}
+.combo-wrap{position:relative;width:100%;}
+.combo-wrap .combo-input{cursor:text;}
+.combo-wrap.disabled .combo-input{background:var(--surface-2);color:var(--ink-400);cursor:not-allowed;}
+.combo-caret{position:absolute;right:11px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--ink-400);transition:transform .15s;}
+.combo-wrap.open .combo-caret{transform:translateY(-50%) rotate(180deg);}
+.combo-menu{
+  position:absolute;top:calc(100% + 4px);left:0;right:0;
+  background:var(--surface-0);border:1px solid var(--surface-border-strong);
+  border-radius:var(--r-md);box-shadow:var(--shadow-md);
+  max-height:240px;overflow-y:auto;z-index:50;
+  display:none;padding:5px;
+}
+.combo-wrap.open .combo-menu{display:block;}
+.combo-option{padding:8px 10px;border-radius:7px;font-size:13px;color:var(--ink-900);cursor:pointer;}
+.combo-option.active{background:var(--amber-glow);color:#8a5c0c;}
+.combo-option.selected{font-weight:700;}
+.combo-option-empty{padding:10px;font-size:12.5px;color:var(--ink-400);text-align:center;}
+
 /* mini container grid in step 2 */
 .mini-table-wrap{border:1px solid var(--surface-border);border-radius:var(--r-md);overflow:hidden;}
 .mini-table{width:100%;font-size:12.8px;}

@@ -103,6 +103,7 @@ function openModal({ title, bodyHTML, footHTML, size, onOpen }) {
   box.classList.remove("modal-lg", "modal-sm");
   if (size) box.classList.add(size);
   modalOverlay().classList.add("open");
+  if (typeof enhanceSelects === "function") enhanceSelects($("#genericModalBody"));
   if (typeof onOpen === "function") onOpen();
 }
 function closeModal() { modalOverlay().classList.remove("open"); }

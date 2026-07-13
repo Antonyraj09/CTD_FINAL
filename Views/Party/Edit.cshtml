@@ -96,7 +96,16 @@
                 <div class="field"><label>CHA License No. <span style="font-weight:400;color:var(--ink-400);">(Agent)</span></label><input type="text" id="p_license" value="@Model?.License"></div>
                 <div class="field"><label>License Valid Upto</label><input type="date" id="p_licenseValidUpto" value="@(Model?.LicenseValidUpto?.ToString("yyyy-MM-dd"))"></div>
                 <div class="field"><label>Fleet Details <span style="font-weight:400;color:var(--ink-400);">(Transporter)</span></label><input type="text" id="p_fleet" value="@Model?.Fleet" placeholder="e.g. 42 Trailers"></div>
-                <div class="field"></div>
+                <div class="field">
+                    <label>Sub-Agent</label>
+                    <select id="p_subAgentCode">
+                        <option value="">— None —</option>
+                        @foreach (var sa in (List<SubAgent>)ViewBag.SubAgents)
+                        {
+                            <option value="@sa.SubAgentCode" selected="@(Model != null && Model.SubAgentCode == sa.SubAgentCode)">@sa.SubAgentCode — @sa.Name</option>
+                        }
+                    </select>
+                </div>
                 <div class="field">
                     <label>AEO Status</label>
                     <select id="p_aeoStatus">

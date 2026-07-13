@@ -67,6 +67,7 @@
   $("#trk_clearBtn").addEventListener("click", () => {
     ["trk_jobNo", "trk_ctdNo", "trk_container", "trk_dateFrom", "trk_dateTo"].forEach(id => $("#" + id).value = "");
     $("#trk_importer").value = ""; $("#trk_status").value = "";
+    refreshCombo("trk_importer"); refreshCombo("trk_status");
     $("#trk_quickSearch").value = "";
     state = { page: 1, sortKey: "jobDate", sortDir: "desc", quick: "" };
     load();

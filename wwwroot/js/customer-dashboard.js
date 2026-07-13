@@ -67,6 +67,7 @@
     const options = await getJson(`/Dashboard/CustomerJobOptions?importerId=${importerId}`);
     const timelineSelect = $("#custTimelineJobSelect");
     timelineSelect.innerHTML = options.length ? options.map(o => `<option value="${o.id}">${esc(o.label)}</option>`).join("") : `<option>No jobs</option>`;
+    refreshCombo(timelineSelect);
     await renderTimeline(options[0]?.id);
     timelineSelect.onchange = () => renderTimeline(Number(timelineSelect.value));
   }
