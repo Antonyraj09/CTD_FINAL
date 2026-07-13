@@ -66,6 +66,14 @@ public class JobIsneController : Controller
                 return Json(new { success = false, message = "CTD Number must be alphanumeric only — no special characters." });
         }
 
+        if (!string.IsNullOrEmpty(request.ContainerNo))
+        {
+            if (request.ContainerNo.Length > 15)
+                return Json(new { success = false, message = "Container Number cannot exceed 15 characters." });
+            if (!System.Text.RegularExpressions.Regex.IsMatch(request.ContainerNo, "^[a-zA-Z0-9]*$"))
+                return Json(new { success = false, message = "Container Number must be alphanumeric only — no special characters." });
+        }
+
         if (!Enum.TryParse<ContainerStatus>(request.ContainerStatus, true, out var containerStatus))
             containerStatus = ContainerStatus.FCL;
 
@@ -113,6 +121,9 @@ public class JobIsneController : Controller
             DueOriginalBl = request.DueOriginalBl,
             DueInsuranceCert = request.DueInsuranceCert,
             DueLcCopy = request.DueLcCopy,
+            DueLoa = request.DueLoa,
+            DueOrigin = request.DueOrigin,
+            DueProformaInvoice = request.DueProformaInvoice,
             MarksSerial = request.MarksSerial,
             ContainerNo = request.ContainerNo,
             ContainerStatus = containerStatus,

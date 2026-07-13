@@ -54,6 +54,9 @@ Other Job ISNE field changes in this pass:
 - **Country of CGN** / **Country of Origin**: changed from a fixed 11-country dropdown to free text (was `StringLength(4)`, sized for 2-letter ISO codes — widened to 100 now that it holds full country names).
 - **Route of Transit**: changed from free text to a dropdown sourced from the Transit Route master (`TransitRoute.Name`).
 - **ROT Date** and **Inward Date**: new fields, added next to ROT Number.
+- **Container Number**: capped at 15 alphanumeric characters, same strip-as-you-type + server-side re-check pattern as CTD Number.
+- **Miscellaneous Description auto-fill**: switching Container Status to FCL sets it to `SHIPPER'S LOAD & COUNT`; switching to LCL clears it. Only fires on a user-initiated status change (not on page load), so an existing job's custom Misc Description isn't silently overwritten when the form opens with FCL already selected.
+- **Due — LOA / Due — Certificate of Origin / Due — Proforma Invoice**: three new date fields in Transit & Delivery Details, alongside the existing Due-date fields (Packing List/Invoice/Original B/L/Insurance Certificate/LC Copy).
 
 ## Project layout
 

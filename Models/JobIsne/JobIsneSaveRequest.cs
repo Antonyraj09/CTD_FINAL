@@ -50,6 +50,9 @@ public class JobIsneSaveRequest
     public DateTime? DueOriginalBl { get; set; }
     public DateTime? DueInsuranceCert { get; set; }
     public DateTime? DueLcCopy { get; set; }
+    public DateTime? DueLoa { get; set; }
+    public DateTime? DueOrigin { get; set; }
+    public DateTime? DueProformaInvoice { get; set; }
 
     // Section D
     public string? MarksSerial { get; set; }
