@@ -196,7 +196,7 @@
             <a class="iconbtn-table" href="/Jobs/PrintSheet/${j.id}" target="_blank" title="Print"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg></a>
           </div>
         </td>
-      </tr>`).join("") : `<tr><td colspan="9" class="table-empty">No jobs yet. <a href="/Jobs/Wizard" style="color:var(--info-blue);cursor:pointer;">Create the first CTD job</a></td></tr>`;
+      </tr>`).join("") : `<tr><td colspan="9" class="table-empty">No jobs yet. <a href="/JobIsne" style="color:var(--info-blue);cursor:pointer;">Create the first CTD job</a></td></tr>`;
   }
 
   async function renderDashboard() {
