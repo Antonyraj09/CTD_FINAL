@@ -117,10 +117,10 @@ public static class DbInitializer
             // Minimal seed: legal name, role(s) and one head-office branch (city/phone/email/GSTIN
             // moved there — GST registration is per state in India, so it belongs on the branch, not
             // the party). PAN/IEC/CIN/banking/AEO are left blank for real data entry via the UI.
-            static Party Seed(string name, string city, string phone, string email, string? gstin = null,
+            static Party Seed(string code, string name, string city, string phone, string email, string? gstin = null,
                 bool importer = false, bool agent = false, bool transporter = false, string? license = null, string? fleet = null) => new()
             {
-                Name = name, IsImporter = importer, IsAgent = agent, IsTransporter = transporter,
+                PartyCode = code, Name = name, IsImporter = importer, IsAgent = agent, IsTransporter = transporter,
                 License = license, Fleet = fleet,
                 Branches = new List<PartyBranch>
                 {
@@ -130,25 +130,25 @@ public static class DbInitializer
 
             context.Parties.AddRange(
                 // Importers
-                Seed("Himalaya Steel Traders Pvt Ltd", "Patna", "+91 98230 11234", "ops@himalayasteel.com", "10AABCH5566D1Z3", importer: true),
-                Seed("Annapurna Foods Imports", "Raxaul", "+91 99110 44521", "contact@annapurnafoods.in", "22AAACA1234B1Z9", importer: true),
-                Seed("Everest Polymers Pvt Ltd", "Kolkata", "+91 98301 22390", "logistics@everestpolymers.com", "07AAFCE7788K1Z2", importer: true),
-                Seed("Kathmandu Auto Parts Co.", "Kolkata", "+91 98740 55210", "info@kathmanduauto.com.np", "19AAGCK9090M1Z1", importer: true),
-                Seed("Gorkha Cement Industries", "Patna", "+91 94310 88761", "procurement@gorkhacement.com", "10AAJCG4455L1Z6", importer: true),
-                Seed("Lumbini Pharma Distributors", "Gurugram", "+91 98100 67321", "supply@lumbinipharma.in", "06AAKCL2233N1Z4", importer: true),
+                Seed("IMP001", "Himalaya Steel Traders Pvt Ltd", "Patna", "+91 98230 11234", "ops@himalayasteel.com", "10AABCH5566D1Z3", importer: true),
+                Seed("IMP002", "Annapurna Foods Imports", "Raxaul", "+91 99110 44521", "contact@annapurnafoods.in", "22AAACA1234B1Z9", importer: true),
+                Seed("IMP003", "Everest Polymers Pvt Ltd", "Kolkata", "+91 98301 22390", "logistics@everestpolymers.com", "07AAFCE7788K1Z2", importer: true),
+                Seed("IMP004", "Kathmandu Auto Parts Co.", "Kolkata", "+91 98740 55210", "info@kathmanduauto.com.np", "19AAGCK9090M1Z1", importer: true),
+                Seed("IMP005", "Gorkha Cement Industries", "Patna", "+91 94310 88761", "procurement@gorkhacement.com", "10AAJCG4455L1Z6", importer: true),
+                Seed("IMP006", "Lumbini Pharma Distributors", "Gurugram", "+91 98100 67321", "supply@lumbinipharma.in", "06AAKCL2233N1Z4", importer: true),
 
                 // Agents (CHA)
-                Seed("Patel CHA Services", "Kolkata", "+91 98300 12233", "patel.cha@logimail.com", agent: true, license: "CHA/KOL/0091"),
-                Seed("Eastern Border Clearing Agency", "Raxaul", "+91 94300 99887", "ebca@logimail.com", agent: true, license: "CHA/RXL/0042"),
-                Seed("Siliguri Transit Consultants", "Siliguri", "+91 98765 44120", "siliguri.tc@logimail.com", agent: true, license: "CHA/SIL/0117"),
+                Seed("AGT001", "Patel CHA Services", "Kolkata", "+91 98300 12233", "patel.cha@logimail.com", agent: true, license: "CHA/KOL/0091"),
+                Seed("AGT002", "Eastern Border Clearing Agency", "Raxaul", "+91 94300 99887", "ebca@logimail.com", agent: true, license: "CHA/RXL/0042"),
+                Seed("AGT003", "Siliguri Transit Consultants", "Siliguri", "+91 98765 44120", "siliguri.tc@logimail.com", agent: true, license: "CHA/SIL/0117"),
                 // Also runs its own fleet across the border — demonstrates a party holding more than one role.
-                Seed("Birgunj Forwarding Associates", "Birgunj (Nepal liaison)", "+977 98410 23456", "bfa@logimail.com", agent: true, transporter: true, license: "CHA/BGJ/0205", fleet: "12 Trailers"),
+                Seed("AGT004", "Birgunj Forwarding Associates", "Birgunj (Nepal liaison)", "+977 98410 23456", "bfa@logimail.com", agent: true, transporter: true, license: "CHA/BGJ/0205", fleet: "12 Trailers"),
 
                 // Transporters
-                Seed("Himgiri Road Carriers", "Kolkata", "+91 98300 55678", "fleet@himgiritransport.com", transporter: true, fleet: "42 Trailers"),
-                Seed("National Highway Logistics Pvt Ltd", "Patna", "+91 99551 23410", "ops@nhlogistics.in", transporter: true, fleet: "68 Trailers"),
-                Seed("Saptkoshi Carriers", "Raxaul", "+91 94300 77654", "contact@saptkoshicarriers.com", transporter: true, fleet: "25 Trailers"),
-                Seed("Konkan Rail-Road Movers", "Kolkata", "+91 98301 99001", "krrm@logimail.com", transporter: true, fleet: "Rail Rake + 30 Trailers"));
+                Seed("TRN001", "Himgiri Road Carriers", "Kolkata", "+91 98300 55678", "fleet@himgiritransport.com", transporter: true, fleet: "42 Trailers"),
+                Seed("TRN002", "National Highway Logistics Pvt Ltd", "Patna", "+91 99551 23410", "ops@nhlogistics.in", transporter: true, fleet: "68 Trailers"),
+                Seed("TRN003", "Saptkoshi Carriers", "Raxaul", "+91 94300 77654", "contact@saptkoshicarriers.com", transporter: true, fleet: "25 Trailers"),
+                Seed("TRN004", "Konkan Rail-Road Movers", "Kolkata", "+91 98301 99001", "krrm@logimail.com", transporter: true, fleet: "Rail Rake + 30 Trailers"));
         }
 
         if (!await context.Commodities.AnyAsync())

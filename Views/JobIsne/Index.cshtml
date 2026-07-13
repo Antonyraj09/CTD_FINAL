@@ -1,9 +1,32 @@
+@using CTD_FINAL.Entities
 @model CTD_FINAL.Entities.JobIsne?
 @{
     ViewData["Title"] = Model is null ? "Job — ISNE (New)" : $"Job — ISNE ({Model.JobNumber})";
     string jobNumber = (string)ViewBag.NextJobNumber;
     string D(DateTime? d) => d?.ToString("yyyy-MM-dd") ?? "";
     string today = DateTime.Today.ToString("yyyy-MM-dd");
+
+    var parties = (List<Party>)ViewBag.Parties;
+    var subAgents = (List<SubAgent>)ViewBag.SubAgents;
+    var transitRoutes = (List<TransitRoute>)ViewBag.TransitRoutes;
+
+    // Client-side lookup data for the Party Code cascade (Party Name / Address / Sub-Agent
+    // auto-fill) — see wwwroot/js/job-isne.js. Party has no FK from JobIsne (free-text tag,
+    // same convention as PartyName/SubAgentCode elsewhere), so the lookup happens client-side
+    // against this embedded blob rather than a server round-trip.
+    var partyLookup = parties.Where(p => !string.IsNullOrEmpty(p.PartyCode)).Select(p => new
+    {
+        code = p.PartyCode,
+        name = p.Name,
+        subAgentCode = p.SubAgentCode,
+        branches = p.Branches.OrderByDescending(b => b.IsPrimary).Select(b => new
+        {
+            id = b.Id,
+            label = b.BranchName,
+            address = string.Join(", ", new[] { b.AddressLine1, b.AddressLine2, b.City, b.State, b.PinCode, b.Country }.Where(s => !string.IsNullOrWhiteSpace(s)))
+        }).ToList()
+    }).ToList();
+    var subAgentLookup = subAgents.Select(s => new { code = s.SubAgentCode, name = s.Name }).ToList();
 }
 
 <div class="erp-form-header">
@@ -61,11 +84,21 @@
                 </div>
                 <div class="field">
                     <label>Party Code <span class="req">*</span></label>
-                    <input type="text" id="isne_partyCode" placeholder="e.g. BS050" value="@Model?.PartyCode">
+                    <select id="isne_partyCode">
+                        <option value="">-- Select Party --</option>
+                        @foreach (var p in parties.Where(p => !string.IsNullOrEmpty(p.PartyCode)))
+                        {
+                            <option value="@p.PartyCode" selected="@(Model != null && Model.PartyCode == p.PartyCode)">@p.PartyCode — @p.Name</option>
+                        }
+                    </select>
                 </div>
                 <div class="field">
                     <label>Party Name <span class="req">*</span></label>
                     <input type="text" id="isne_partyName" placeholder="Importer / Consignee Name" value="@Model?.PartyName">
+                </div>
+                <div class="field" id="isne_branchField" style="display:none;">
+                    <label>Branch <span style="font-weight:400;color:var(--ink-400);">(multiple on file)</span></label>
+                    <select id="isne_branchSelect"></select>
                 </div>
                 <div class="field span-2">
                     <label>Address</label>
@@ -81,7 +114,7 @@
                 </div>
                 <div class="field">
                     <label>CTD Number</label>
-                    <input type="text" id="isne_ctdNumber" placeholder="CTD / Transit Number" value="@Model?.CtdNumber">
+                    <input type="text" id="isne_ctdNumber" placeholder="CTD / Transit Number (25 alphanumeric)" value="@Model?.CtdNumber">
                 </div>
                 <div class="field">
                     <label>CTD Date</label>
@@ -89,7 +122,7 @@
                 </div>
                 <div class="field">
                     <label>Vessel Name</label>
-                    <input type="text" id="isne_vesselName" placeholder="e.g. KOTA RIA" value="@Model?.VesselName">
+                    <input type="text" id="isne_vesselName" placeholder="e.g. KOTA RIA" maxlength="30" value="@Model?.VesselName">
                 </div>
                 <div class="field">
                     <label>Voyage Number</label>
@@ -97,7 +130,7 @@
                 </div>
                 <div class="field">
                     <label>Transshipment Vessel</label>
-                    <input type="text" id="isne_tsVessel" placeholder="T/S Vessel Name" value="@Model?.TsVessel">
+                    <input type="text" id="isne_tsVessel" placeholder="T/S Vessel Name" maxlength="30" value="@Model?.TsVessel">
                 </div>
                 <div class="field">
                     <label>T/S Vessel Voyage</label>
@@ -105,31 +138,33 @@
                 </div>
                 <div class="field">
                     <label>Country of CGN</label>
-                    <select id="isne_countryCGN">
-                        <option value="">-- Select Country --</option>
-                        @foreach (var c in new[] { ("CN","China"),("IN","India"),("SG","Singapore"),("MY","Malaysia"),("JP","Japan"),("KR","South Korea"),("TH","Thailand"),("US","United States"),("DE","Germany"),("GB","United Kingdom"),("NP","Nepal") })
-                        {
-                            <option value="@c.Item1" selected="@(Model?.CountryCgn == c.Item1)">@c.Item2</option>
-                        }
-                    </select>
+                    <input type="text" id="isne_countryCGN" placeholder="e.g. China" value="@Model?.CountryCgn">
                 </div>
                 <div class="field">
                     <label>Country of Origin</label>
-                    <select id="isne_countryOrigin">
-                        <option value="">-- Select Country --</option>
-                        @foreach (var c in new[] { ("CN","China"),("IN","India"),("SG","Singapore"),("MY","Malaysia"),("JP","Japan"),("KR","South Korea"),("TH","Thailand"),("US","United States"),("DE","Germany"),("GB","United Kingdom"),("NP","Nepal") })
-                        {
-                            <option value="@c.Item1" selected="@(Model?.CountryOrigin == c.Item1)">@c.Item2</option>
-                        }
-                    </select>
+                    <input type="text" id="isne_countryOrigin" placeholder="e.g. India" value="@Model?.CountryOrigin">
                 </div>
                 <div class="field">
                     <label>Route of Transit</label>
-                    <input type="text" id="isne_rot" placeholder="e.g. NAUTANWA" value="@Model?.RouteOfTransit">
+                    <select id="isne_rot">
+                        <option value="">-- Select Route --</option>
+                        @foreach (var r in transitRoutes)
+                        {
+                            <option value="@r.Name" selected="@(Model != null && Model.RouteOfTransit == r.Name)">@r.Name</option>
+                        }
+                    </select>
                 </div>
                 <div class="field">
                     <label>ROT Number</label>
                     <input type="text" id="isne_rotNo" placeholder="ROT Reference No." value="@Model?.RotNo">
+                </div>
+                <div class="field">
+                    <label>ROT Date</label>
+                    <input type="date" id="isne_rotDate" value="@D(Model?.RotDate)">
+                </div>
+                <div class="field">
+                    <label>Inward Date</label>
+                    <input type="date" id="isne_inwardDate" value="@D(Model?.InwardDate)">
                 </div>
                 <div class="field">
                     <label>Line Number</label>
@@ -138,6 +173,9 @@
             </div>
         </div>
     </div>
+
+    <script id="isnePartyLookupData" type="application/json">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(partyLookup))</script>
+    <script id="isneSubAgentLookupData" type="application/json">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(subAgentLookup))</script>
 
     <!-- ============ SECTION B: DOCUMENT INFORMATION ============ -->
     <div class="erp-section">

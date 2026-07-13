@@ -21,6 +21,8 @@ public class JobIsneSaveRequest
     public string? CountryOrigin { get; set; }
     public string? RouteOfTransit { get; set; }
     public string? RotNo { get; set; }
+    public DateTime? RotDate { get; set; }
+    public DateTime? InwardDate { get; set; }
     public string? LineNo { get; set; }
 
     // Section B

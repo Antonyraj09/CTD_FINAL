@@ -37,7 +37,23 @@ Party (`Entities/Party.cs`) now also carries a `SubAgentCode` — the local sub-
 
 ### Typeable combo-select (all dropdowns)
 
-Every `<select>` in the app is progressively enhanced client-side into a type-to-filter dropdown (`wwwroot/js/combobox.js` + the `.combo-*` rules in `wwwroot/css/site.css`) — type to filter options, click or Enter to pick, Esc/click-away to close. This is a pure UI-layer enhancement: the original `<select>` stays in the DOM (just hidden), so it keeps its `id`, its value, and fires real `change` events — every existing `$("#id").value` read and `addEventListener("change", ...)` across the codebase kept working unmodified. `combobox.js` runs once on page load and is also invoked from `openModal()` (`site.js`) so selects inside AJAX-loaded modals (Users, Masters, Alerts, Documents) get enhanced too. The one gap: a `<select>` whose *options* are replaced by JS after the page loads (not just its value) needs an explicit `refreshCombo(id)` call afterward so the visible label updates — already wired for Tracking's "Clear filters" buttons and the Customer Dashboard's shipment-timeline selector; keep this in mind if a new screen repopulates a select's options via JS. The CTD Job Wizard's per-container "Size" dropdown (rendered dynamically inside a dense table row) was left as a native `<select>` since that screen is no longer linked from navigation.
+Every `<select>` in the app is progressively enhanced client-side into a type-to-filter dropdown (`wwwroot/js/combobox.js` + the `.combo-*` rules in `wwwroot/css/site.css`) — type to filter options, click or Enter to pick, Esc/click-away to close. This is a pure UI-layer enhancement: the original `<select>` stays in the DOM (just hidden), so it keeps its `id`, its value, and fires real `change` events — every existing `$("#id").value` read and `addEventListener("change", ...)` across the codebase kept working unmodified. `combobox.js` runs once on page load and is also invoked from `openModal()` (`site.js`) so selects inside AJAX-loaded modals (Users, Masters, Alerts, Documents) get enhanced too. The one gap: a `<select>` whose *options* are replaced by JS after the page loads (not just its value) needs an explicit `refreshCombo(id)` call afterward so the visible label updates — already wired for Tracking's "Clear filters" buttons, the Customer Dashboard's shipment-timeline selector, and the Job ISNE form's Branch selector (below); keep this in mind if a new screen repopulates a select's options via JS. The CTD Job Wizard's per-container "Size" dropdown (rendered dynamically inside a dense table row) was left as a native `<select>` since that screen is no longer linked from navigation.
+
+### Job ISNE: Party Code cascade + field constraints
+
+Party (`Entities/Party.cs`) now also has a `PartyCode` (required going forward in the Party Edit UI, nullable at the DB level so pre-existing rows keep loading; unique, filtered index). The Job ISNE form's Party Code field (`Views/JobIsne/Index.cshtml`) is a dropdown sourced from the Party master instead of free text. Picking a party auto-fills Party Name, Sub-Agent Code/Name (via `Party.SubAgentCode` → Sub-Agent master lookup), and Address:
+
+- One branch on file → its address fills in directly.
+- More than one branch → a "Branch" dropdown appears (defaulting to the primary branch) so the user picks which branch's address to pull in.
+
+This only fires on a user-initiated change of Party Code — an existing job's saved Party Name/Address/Sub-Agent fields are left exactly as stored when the page loads, even if the party master has since changed, so opening an old job never silently rewrites its data. The lookup itself is entirely client-side against a JSON blob the controller embeds in the page (`partyLookup`/`subAgentLookup` in `JobIsneController.Index`) — JobIsne has no FK to Party (same free-text-tag convention as `PartyName`/`SubAgentCode` elsewhere), so there's no server round-trip on selection.
+
+Other Job ISNE field changes in this pass:
+- **CTD Number**: capped at 25 alphanumeric characters, special characters stripped as you type (`job-isne.js`) and re-validated server-side (`JobIsneController.Save`) since the client filter can be bypassed.
+- **Vessel Name** / **Transshipment Vessel**: capped at 30 characters (was 100).
+- **Country of CGN** / **Country of Origin**: changed from a fixed 11-country dropdown to free text (was `StringLength(4)`, sized for 2-letter ISO codes — widened to 100 now that it holds full country names).
+- **Route of Transit**: changed from free text to a dropdown sourced from the Transit Route master (`TransitRoute.Name`).
+- **ROT Date** and **Inward Date**: new fields, added next to ROT Number.
 
 ## Project layout
 

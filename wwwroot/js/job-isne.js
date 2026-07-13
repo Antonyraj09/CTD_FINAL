@@ -3,6 +3,64 @@
   if (!form) return;
   let recordId = Number(form.dataset.recordId) || 0;
 
+  /* ---------------- Party Code cascade: fetch Party Name / Address / Sub Agent
+     from the Party master when Party Code changes. If the party has more than
+     one branch, a Branch dropdown appears so the user picks which address to pull. ---------------- */
+  const partyLookup = JSON.parse($("#isnePartyLookupData")?.textContent || "[]");
+  const subAgentLookup = JSON.parse($("#isneSubAgentLookupData")?.textContent || "[]");
+  const partyByCode = {};
+  partyLookup.forEach(function (p) { partyByCode[p.code] = p; });
+  const subAgentNameByCode = {};
+  subAgentLookup.forEach(function (s) { subAgentNameByCode[s.code] = s.name; });
+
+  function populateBranchSelect(branches) {
+    const sel = $("#isne_branchSelect");
+    sel.innerHTML = branches.map(function (b) { return `<option value="${b.id}">${esc(b.label)}</option>`; }).join("");
+    if (typeof refreshCombo === "function") refreshCombo(sel);
+  }
+
+  function applyBranchAddress() {
+    const party = partyByCode[$("#isne_partyCode").value];
+    if (!party) return;
+    const branchId = Number($("#isne_branchSelect").value);
+    const branch = party.branches.find(function (b) { return b.id === branchId; }) || party.branches[0];
+    $("#isne_address").value = branch ? branch.address : "";
+  }
+
+  function onPartyCodeChange() {
+    const party = partyByCode[$("#isne_partyCode").value];
+    const branchField = $("#isne_branchField");
+    if (!party) { branchField.style.display = "none"; return; }
+
+    $("#isne_partyName").value = party.name;
+    $("#isne_subAgentCode").value = party.subAgentCode || "";
+    $("#isne_subAgentName").value = party.subAgentCode ? (subAgentNameByCode[party.subAgentCode] || "") : "";
+
+    if (party.branches.length > 1) {
+      branchField.style.display = "";
+      populateBranchSelect(party.branches);
+      applyBranchAddress();
+    } else {
+      branchField.style.display = "none";
+      $("#isne_address").value = party.branches.length ? party.branches[0].address : "";
+    }
+  }
+
+  // Only fires on a user-initiated change of Party Code — an existing job's saved
+  // Party Name/Address/Sub Agent fields are left exactly as stored on page load,
+  // even if the party master has since changed.
+  $("#isne_partyCode")?.addEventListener("change", onPartyCodeChange);
+  $("#isne_branchSelect")?.addEventListener("change", applyBranchAddress);
+
+  /* ---------------- CTD Number: fixed 25-char alphanumeric, no special characters ---------------- */
+  const ctdInput = $("#isne_ctdNumber");
+  if (ctdInput) {
+    ctdInput.addEventListener("input", function () {
+      const cleaned = ctdInput.value.replace(/[^a-zA-Z0-9]/g, "").slice(0, 25);
+      if (cleaned !== ctdInput.value) ctdInput.value = cleaned;
+    });
+  }
+
   /* ---------------- radio / size pill visuals ---------------- */
   $all('input[name="isneContainerStatus"]').forEach(function (radio) {
     radio.addEventListener("change", function () {
@@ -70,6 +128,8 @@
       countryOrigin: $("#isne_countryOrigin").value,
       routeOfTransit: $("#isne_rot").value,
       rotNo: $("#isne_rotNo").value,
+      rotDate: $("#isne_rotDate").value || null,
+      inwardDate: $("#isne_inwardDate").value || null,
       lineNo: $("#isne_lineNo").value,
       mblNo: $("#isne_mblNo").value,
       mblDate: $("#isne_mblDate").value || null,

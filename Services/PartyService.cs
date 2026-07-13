@@ -26,6 +26,7 @@ public class PartyService : IPartyService
         {
             var term = query.Trim();
             q = q.Where(p => p.Name.Contains(term)
+                || (p.PartyCode != null && p.PartyCode.Contains(term))
                 || (p.TradeName != null && p.TradeName.Contains(term))
                 || (p.Pan != null && p.Pan.Contains(term))
                 || (p.IecCode != null && p.IecCode.Contains(term))
