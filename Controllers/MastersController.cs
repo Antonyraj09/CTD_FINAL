@@ -73,20 +73,27 @@ public class MastersController : Controller
         object entity;
         bool isNew = !id.HasValue;
 
-        if (isNew)
+        try
         {
-            entity = Activator.CreateInstance(cfg.EntityType)!;
-            MasterRegistry.BindFromForm(entity, Request.Form, cfg.Fields);
-            dynamic newEntity = entity;
-            entity = await service.CreateAsync(newEntity, CancellationToken.None);
+            if (isNew)
+            {
+                entity = Activator.CreateInstance(cfg.EntityType)!;
+                MasterRegistry.BindFromForm(entity, Request.Form, cfg.Fields);
+                dynamic newEntity = entity;
+                entity = await service.CreateAsync(newEntity, CancellationToken.None);
+            }
+            else
+            {
+                entity = await service.GetByIdAsync(id!.Value, CancellationToken.None);
+                if (entity is null) return Json(new { success = false, message = "Record not found." });
+                MasterRegistry.BindFromForm(entity, Request.Form, cfg.Fields);
+                dynamic existingEntity = entity;
+                entity = await service.UpdateAsync(existingEntity, CancellationToken.None);
+            }
         }
-        else
+        catch (Microsoft.EntityFrameworkCore.DbUpdateException)
         {
-            entity = await service.GetByIdAsync(id!.Value, CancellationToken.None);
-            if (entity is null) return Json(new { success = false, message = "Record not found." });
-            MasterRegistry.BindFromForm(entity, Request.Form, cfg.Fields);
-            dynamic existingEntity = entity;
-            entity = await service.UpdateAsync(existingEntity, CancellationToken.None);
+            return Json(new { success = false, message = $"A {cfg.EntityLabel.ToLowerInvariant()} with this code/value already exists." });
         }
 
         var name = MasterRegistry.GetString(entity, "Name");

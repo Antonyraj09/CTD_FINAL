@@ -29,6 +29,10 @@ Tracking, the Dashboard, and Reports were originally built against `CtdJob` (the
 
 The old `CtdJob`/Wizard/`Jobs/Tracking` code is untouched and still functions — it's simply no longer linked from the sidebar or Dashboard.
 
+### Sub-Agent master
+
+A lightweight master (`Entities/SubAgent.cs`) for the local customs clearing sub-agents referenced by `JobIsne.SubAgentCode`/`SubAgentName` (free text, not an FK — same convention as `JobIsne.PartyName`). It lives in the generic Masters screen (`Controllers/MastersController.cs` + `Infrastructure/Masters/MasterRegistry.cs`, tab key `subagent`) alongside Commodity/Route/Border Point/Customs House rather than a dedicated screen, since — unlike Party — it's a flat record with no branches. Fields: Sub-Agent Code (unique) and Name, Address Line 1/2, City/State/PIN, Customs/CHA License No., PAN, GSTIN, contact person, phone, email. `MastersController.Save` now catches `DbUpdateException` (duplicate code) with a friendly error instead of a 500 — this was a latent gap in the generic Masters CRUD (only `Delete` handled `DbUpdateException` before) surfaced by adding SubAgent's unique code index.
+
 ## Project layout
 
 ```

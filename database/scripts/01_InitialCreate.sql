@@ -1,6 +1,7 @@
-﻿-- Required when running via sqlcmd: its default session has QUOTED_IDENTIFIER OFF, which
--- breaks the filtered unique indexes below (e.g. GSTIN/PAN "unique when not null"). Not
--- needed when EF Core applies this migration itself (Microsoft.Data.SqlClient defaults it ON).
+﻿-- sqlcmd's default session has QUOTED_IDENTIFIER OFF, which breaks the filtered
+-- unique indexes below (WHERE [X] IS NOT NULL). dotnet ef database update is
+-- unaffected (Microsoft.Data.SqlClient defaults it ON) but running this script
+-- directly via sqlcmd requires it explicitly.
 SET QUOTED_IDENTIFIER ON;
 GO
 
@@ -1619,6 +1620,67 @@ IF NOT EXISTS (
 BEGIN
     INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
     VALUES (N'20260711112611_AddPartyBranchesAndDetails', N'8.0.11');
+END;
+GO
+
+COMMIT;
+GO
+
+BEGIN TRANSACTION;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260713095009_AddSubAgentMaster'
+)
+BEGIN
+    CREATE TABLE [SubAgents] (
+        [Id] int NOT NULL IDENTITY,
+        [SubAgentCode] nvarchar(20) NOT NULL,
+        [Name] nvarchar(200) NOT NULL,
+        [AddressLine1] nvarchar(250) NOT NULL,
+        [AddressLine2] nvarchar(250) NULL,
+        [City] nvarchar(100) NULL,
+        [State] nvarchar(100) NULL,
+        [PinCode] nvarchar(12) NULL,
+        [LicenseNo] nvarchar(50) NULL,
+        [PanNo] nvarchar(10) NULL,
+        [GstinNo] nvarchar(15) NULL,
+        [ContactPersonName] nvarchar(150) NULL,
+        [Phone] nvarchar(20) NULL,
+        [Email] nvarchar(150) NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        [UpdatedAt] datetime2 NULL,
+        CONSTRAINT [PK_SubAgents] PRIMARY KEY ([Id])
+    );
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260713095009_AddSubAgentMaster'
+)
+BEGIN
+    CREATE INDEX [IX_SubAgents_Name] ON [SubAgents] ([Name]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260713095009_AddSubAgentMaster'
+)
+BEGIN
+    CREATE UNIQUE INDEX [IX_SubAgents_SubAgentCode] ON [SubAgents] ([SubAgentCode]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260713095009_AddSubAgentMaster'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260713095009_AddSubAgentMaster', N'8.0.11');
 END;
 GO
 
