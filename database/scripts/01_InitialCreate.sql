@@ -1712,3 +1712,146 @@ GO
 COMMIT;
 GO
 
+BEGIN TRANSACTION;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260713122631_AddPartyCodeAndJobIsneFieldChanges'
+)
+BEGIN
+    ALTER TABLE [Parties] ADD [PartyCode] nvarchar(30) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260713122631_AddPartyCodeAndJobIsneFieldChanges'
+)
+BEGIN
+    DECLARE @var7 sysname;
+    SELECT @var7 = [d].[name]
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[JobIsnes]') AND [c].[name] = N'VesselName');
+    IF @var7 IS NOT NULL EXEC(N'ALTER TABLE [JobIsnes] DROP CONSTRAINT [' + @var7 + '];');
+    ALTER TABLE [JobIsnes] ALTER COLUMN [VesselName] nvarchar(30) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260713122631_AddPartyCodeAndJobIsneFieldChanges'
+)
+BEGIN
+    DECLARE @var8 sysname;
+    SELECT @var8 = [d].[name]
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[JobIsnes]') AND [c].[name] = N'TsVessel');
+    IF @var8 IS NOT NULL EXEC(N'ALTER TABLE [JobIsnes] DROP CONSTRAINT [' + @var8 + '];');
+    ALTER TABLE [JobIsnes] ALTER COLUMN [TsVessel] nvarchar(30) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260713122631_AddPartyCodeAndJobIsneFieldChanges'
+)
+BEGIN
+    DECLARE @var9 sysname;
+    SELECT @var9 = [d].[name]
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[JobIsnes]') AND [c].[name] = N'CtdNumber');
+    IF @var9 IS NOT NULL EXEC(N'ALTER TABLE [JobIsnes] DROP CONSTRAINT [' + @var9 + '];');
+    ALTER TABLE [JobIsnes] ALTER COLUMN [CtdNumber] nvarchar(25) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260713122631_AddPartyCodeAndJobIsneFieldChanges'
+)
+BEGIN
+    ALTER TABLE [JobIsnes] ADD [InwardDate] datetime2 NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260713122631_AddPartyCodeAndJobIsneFieldChanges'
+)
+BEGIN
+    ALTER TABLE [JobIsnes] ADD [RotDate] datetime2 NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260713122631_AddPartyCodeAndJobIsneFieldChanges'
+)
+BEGIN
+    EXEC(N'CREATE UNIQUE INDEX [IX_Parties_PartyCode] ON [Parties] ([PartyCode]) WHERE [PartyCode] IS NOT NULL');
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260713122631_AddPartyCodeAndJobIsneFieldChanges'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260713122631_AddPartyCodeAndJobIsneFieldChanges', N'8.0.11');
+END;
+GO
+
+COMMIT;
+GO
+
+BEGIN TRANSACTION;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260713123009_WidenJobIsneCountryFields'
+)
+BEGIN
+    DECLARE @var10 sysname;
+    SELECT @var10 = [d].[name]
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[JobIsnes]') AND [c].[name] = N'CountryOrigin');
+    IF @var10 IS NOT NULL EXEC(N'ALTER TABLE [JobIsnes] DROP CONSTRAINT [' + @var10 + '];');
+    ALTER TABLE [JobIsnes] ALTER COLUMN [CountryOrigin] nvarchar(100) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260713123009_WidenJobIsneCountryFields'
+)
+BEGIN
+    DECLARE @var11 sysname;
+    SELECT @var11 = [d].[name]
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[JobIsnes]') AND [c].[name] = N'CountryCgn');
+    IF @var11 IS NOT NULL EXEC(N'ALTER TABLE [JobIsnes] DROP CONSTRAINT [' + @var11 + '];');
+    ALTER TABLE [JobIsnes] ALTER COLUMN [CountryCgn] nvarchar(100) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260713123009_WidenJobIsneCountryFields'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260713123009_WidenJobIsneCountryFields', N'8.0.11');
+END;
+GO
+
+COMMIT;
+GO
+

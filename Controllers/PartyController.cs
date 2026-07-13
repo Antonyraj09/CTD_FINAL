@@ -62,6 +62,9 @@ public class PartyController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Save([FromBody] PartySaveRequest request)
     {
+        if (string.IsNullOrWhiteSpace(request.PartyCode))
+            return Json(new { success = false, message = "Party code is required." });
+
         if (string.IsNullOrWhiteSpace(request.Name))
             return Json(new { success = false, message = "Party name is required." });
 
@@ -78,6 +81,7 @@ public class PartyController : Controller
         var party = new Party
         {
             Id = request.Id,
+            PartyCode = request.PartyCode.Trim(),
             Name = request.Name,
             TradeName = request.TradeName,
             Constitution = ParseConstitution(request.Constitution),
@@ -131,7 +135,7 @@ public class PartyController : Controller
         }
         catch (Microsoft.EntityFrameworkCore.DbUpdateException ex) when (ex.InnerException?.Message.Contains("IX_Parties") == true || ex.InnerException?.Message.Contains("IX_PartyBranches") == true)
         {
-            return Json(new { success = false, message = "PAN, IEC, CIN, License and GSTIN must each be unique — one of these is already used by another record." });
+            return Json(new { success = false, message = "Party Code, PAN, IEC, CIN, License and GSTIN must each be unique — one of these is already used by another record." });
         }
     }
 

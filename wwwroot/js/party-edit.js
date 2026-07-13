@@ -88,6 +88,7 @@
   function gatherRequest() {
     return {
       id: recordId,
+      partyCode: $("#p_partyCode").value.trim(),
       name: $("#p_name").value.trim(),
       tradeName: $("#p_tradeName").value.trim(),
       constitution: $("#p_constitution").value,
@@ -119,6 +120,7 @@
   }
 
   function validate() {
+    if (!$("#p_partyCode").value.trim()) { toast("Missing information", "Party code is required", "error"); return false; }
     if (!$("#p_name").value.trim()) { toast("Missing information", "Party legal name is required", "error"); return false; }
     if (!$("#p_isImporter").checked && !$("#p_isTransporter").checked && !$("#p_isAgent").checked) {
       toast("Select a role", "Tick at least one of Importer / Transporter / Agent", "error"); return false;

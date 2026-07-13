@@ -10,6 +10,7 @@ public class PartyConfiguration : IEntityTypeConfiguration<Party>
     {
         // Unique indexes tolerate many NULLs (SQL Server treats each NULL as distinct),
         // so rows that aren't tagged Importer/Agent leave Pan/License blank safely.
+        b.HasIndex(x => x.PartyCode).IsUnique();
         b.HasIndex(x => x.Pan).IsUnique();
         b.HasIndex(x => x.IecCode).IsUnique();
         b.HasIndex(x => x.CinNumber).IsUnique();

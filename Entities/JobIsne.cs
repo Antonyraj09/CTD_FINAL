@@ -32,27 +32,28 @@ public class JobIsne : BaseEntity
     [StringLength(200)]
     public string? SubAgentName { get; set; }
 
-    [StringLength(40)]
+    /// <summary>Fixed 25-character alphanumeric CTD/transit number — no special characters.</summary>
+    [StringLength(25), RegularExpression("^[a-zA-Z0-9]*$", ErrorMessage = "CTD Number must be alphanumeric only.")]
     public string? CtdNumber { get; set; }
 
     public DateTime? CtdDate { get; set; }
 
-    [StringLength(100)]
+    [StringLength(30)]
     public string? VesselName { get; set; }
 
     [StringLength(30)]
     public string? VoyageNo { get; set; }
 
-    [StringLength(100)]
+    [StringLength(30)]
     public string? TsVessel { get; set; }
 
     [StringLength(30)]
     public string? TsVoyage { get; set; }
 
-    [StringLength(4)]
+    [StringLength(100)]
     public string? CountryCgn { get; set; }
 
-    [StringLength(4)]
+    [StringLength(100)]
     public string? CountryOrigin { get; set; }
 
     [StringLength(100)]
@@ -60,6 +61,10 @@ public class JobIsne : BaseEntity
 
     [StringLength(40)]
     public string? RotNo { get; set; }
+
+    public DateTime? RotDate { get; set; }
+
+    public DateTime? InwardDate { get; set; }
 
     [StringLength(40)]
     public string? LineNo { get; set; }

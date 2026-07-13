@@ -15,6 +15,12 @@ namespace CTD_FINAL.Entities;
 /// </summary>
 public class Party : BaseEntity
 {
+    /// <summary>Short lookup code used to find this party from the Job ISNE form's
+    /// Party Code dropdown. Nullable at the DB level so existing rows created before
+    /// this field existed still load; enforced as required going forward in the UI.</summary>
+    [StringLength(30)]
+    public string? PartyCode { get; set; }
+
     [Required, StringLength(200)]
     public string Name { get; set; } = string.Empty;
 

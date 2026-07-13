@@ -7,6 +7,7 @@ using CTD_FINAL.Infrastructure.Authorization;
 using CTD_FINAL.Models.JobIsne;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace CTD_FINAL.Controllers;
 
@@ -14,8 +15,18 @@ namespace CTD_FINAL.Controllers;
 public class JobIsneController : Controller
 {
     private readonly IJobIsneService _jobIsneService;
+    private readonly IGenericRepository<Party> _parties;
+    private readonly IGenericRepository<SubAgent> _subAgents;
+    private readonly IGenericRepository<TransitRoute> _transitRoutes;
 
-    public JobIsneController(IJobIsneService jobIsneService) => _jobIsneService = jobIsneService;
+    public JobIsneController(IJobIsneService jobIsneService, IGenericRepository<Party> parties,
+        IGenericRepository<SubAgent> subAgents, IGenericRepository<TransitRoute> transitRoutes)
+    {
+        _jobIsneService = jobIsneService;
+        _parties = parties;
+        _subAgents = subAgents;
+        _transitRoutes = transitRoutes;
+    }
 
     private string CurrentUserName => User.FindFirst("FullName")?.Value ?? User.Identity?.Name ?? "System";
 
@@ -30,6 +41,12 @@ public class JobIsneController : Controller
 
         JobIsne? record = id.HasValue ? await _jobIsneService.GetByIdAsync(id.Value) : null;
         ViewBag.NextJobNumber = record?.JobNumber ?? await _jobIsneService.PeekNextJobNumberAsync();
+
+        var parties = await _parties.Query().Include(p => p.Branches).Where(p => p.IsActive).OrderBy(p => p.Name).ToListAsync();
+        ViewBag.Parties = parties;
+        ViewBag.SubAgents = (await _subAgents.GetAllAsync()).OrderBy(s => s.Name).ToList();
+        ViewBag.TransitRoutes = (await _transitRoutes.GetAllAsync()).OrderBy(r => r.Name).ToList();
+
         return View(record);
     }
 
@@ -40,6 +57,14 @@ public class JobIsneController : Controller
     {
         if (string.IsNullOrWhiteSpace(request.PartyCode) || string.IsNullOrWhiteSpace(request.PartyName))
             return Json(new { success = false, message = "Party Code and Party Name are required." });
+
+        if (!string.IsNullOrEmpty(request.CtdNumber))
+        {
+            if (request.CtdNumber.Length > 25)
+                return Json(new { success = false, message = "CTD Number cannot exceed 25 characters." });
+            if (!System.Text.RegularExpressions.Regex.IsMatch(request.CtdNumber, "^[a-zA-Z0-9]*$"))
+                return Json(new { success = false, message = "CTD Number must be alphanumeric only — no special characters." });
+        }
 
         if (!Enum.TryParse<ContainerStatus>(request.ContainerStatus, true, out var containerStatus))
             containerStatus = ContainerStatus.FCL;
@@ -63,6 +88,8 @@ public class JobIsneController : Controller
             CountryOrigin = request.CountryOrigin,
             RouteOfTransit = request.RouteOfTransit,
             RotNo = request.RotNo,
+            RotDate = request.RotDate,
+            InwardDate = request.InwardDate,
             LineNo = request.LineNo,
             MblNo = request.MblNo,
             MblDate = request.MblDate,
