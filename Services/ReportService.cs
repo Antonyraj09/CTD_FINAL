@@ -1,11 +1,18 @@
 using CTD_FINAL.DTOs;
-using CTD_FINAL.Enums;
+using CTD_FINAL.Entities;
+using CTD_FINAL.Helpers;
 using CTD_FINAL.Interfaces;
 using CTD_FINAL.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace CTD_FINAL.Services;
 
+/// <summary>
+/// Reads from JobIsne, not CtdJob. JobIsne has no WorkflowStatus/BillingStatus/BorderPoint
+/// FK/ServiceCharge-Transport-Tax fields, so reports that depended on those are repurposed
+/// around what JobIsne actually has — see Helpers/JobIsneStatus.cs for the pseudo-status,
+/// and the Commercial Value Summary report (formerly Billing Summary) below.
+/// </summary>
 public class ReportService : IReportService
 {
     private readonly AppDbContext _context;
@@ -18,16 +25,13 @@ public class ReportService : IReportService
         "ctdRegister" => await CtdRegisterAsync(ct),
         "pendingCtd" => await PendingCtdAsync(ct),
         "containerMovement" => await ContainerMovementAsync(ct),
-        "deliveryStatus" => await DeliveryStatusAsync(ct),
-        "customerRevenue" => await CustomerRevenueAsync(ct),
-        "billingSummary" => await BillingSummaryAsync(ct),
+        "deliveryStatus" => await ArrivalStatusAsync(ct),
+        "customerRevenue" => await CustomerDutyAsync(ct),
+        "billingSummary" => await CommercialValueSummaryAsync(ct),
         _ => null
     };
 
-    private IQueryable<CTD_FINAL.Entities.CtdJob> BaseQuery() =>
-        _context.CtdJobs.AsNoTracking()
-            .Include(j => j.Importer).Include(j => j.Transporter).Include(j => j.BorderPoint)
-            .Include(j => j.CustomsHouse).Include(j => j.Containers);
+    private IQueryable<JobIsne> BaseQuery() => _context.JobIsnes.AsNoTracking();
 
     private async Task<ReportResult> DailyJobAsync(CancellationToken ct)
     {
@@ -39,11 +43,11 @@ public class ReportService : IReportService
         return new ReportResult
         {
             Title = "Daily Job Report",
-            Columns = new[] { "Job No.", "Date", "Importer", "Transporter", "Border Point", "Status" },
+            Columns = new[] { "Job No.", "Date", "Party", "Sub-Agent", "Route of Transit", "Status" },
             Rows = jobs.Select(j => new[]
             {
-                j.JobNo, j.JobDate.ToString("d MMM yyyy"), j.Importer?.Name ?? "—", j.Transporter?.Name ?? "—",
-                j.BorderPoint?.Name ?? "—", j.Status.ToString()
+                j.JobNumber, j.JobDate.ToString("d MMM yyyy"), j.PartyName, j.SubAgentName ?? "—",
+                j.RouteOfTransit ?? "—", JobIsneStatus.Label(j)
             }).ToList()
         };
     }
@@ -56,11 +60,11 @@ public class ReportService : IReportService
         return new ReportResult
         {
             Title = "CTD Register",
-            Columns = new[] { "Job No.", "CTD No.", "CTD Type", "CTD Date", "Importer", "Customs House" },
+            Columns = new[] { "Job No.", "CTD No.", "CTD Date", "Party", "Customs Code", "Green CTD" },
             Rows = jobs.Select(j => new[]
             {
-                j.JobNo, j.CtdNumber ?? "—", j.CtdType.ToString(), j.CtdDate?.ToString("d MMM yyyy") ?? "—",
-                j.Importer?.Name ?? "—", j.CustomsHouse?.Name ?? "—"
+                j.JobNumber, j.CtdNumber ?? "—", j.CtdDate?.ToString("d MMM yyyy") ?? "—",
+                j.PartyName, j.CustomsCode ?? "—", j.GreenCtd ? "Yes" : "No"
             }).ToList()
         };
     }
@@ -68,91 +72,93 @@ public class ReportService : IReportService
     private async Task<ReportResult> PendingCtdAsync(CancellationToken ct)
     {
         var today = DateTime.UtcNow.Date;
-        var jobs = await BaseQuery()
-            .Where(j => j.Status == WorkflowStatus.Draft || j.Status == WorkflowStatus.Submitted)
-            .OrderBy(j => j.JobDate).ToListAsync(ct);
+        var jobs = await BaseQuery().Where(JobIsneStatus.IsPendingCtd).OrderBy(j => j.JobDate).ToListAsync(ct);
 
         return new ReportResult
         {
             Title = "Pending CTD Report",
-            Columns = new[] { "Job No.", "Date", "Importer", "Days Pending", "Status" },
+            Columns = new[] { "Job No.", "Date", "Party", "Days Pending", "Status" },
             Rows = jobs.Select(j => new[]
             {
-                j.JobNo, j.JobDate.ToString("d MMM yyyy"), j.Importer?.Name ?? "—",
-                $"{Math.Max(0, (today - j.JobDate.Date).Days)} days", j.Status.ToString()
+                j.JobNumber, j.JobDate.ToString("d MMM yyyy"), j.PartyName,
+                $"{Math.Max(0, (today - j.JobDate.Date).Days)} days", JobIsneStatus.Label(j)
             }).ToList()
         };
     }
 
     private async Task<ReportResult> ContainerMovementAsync(CancellationToken ct)
     {
-        var jobs = await BaseQuery().OrderByDescending(j => j.JobDate).ToListAsync(ct);
-        var rows = jobs.SelectMany(j => j.Containers.Select(c => new[]
-        {
-            c.ContainerNo, c.Size ?? "—", c.Seal ?? "—", c.Weight.ToString("N0"), j.JobNo, j.Status.ToString()
-        })).ToList();
+        var jobs = await BaseQuery().Where(j => j.ContainerNo != null && j.ContainerNo != "")
+            .OrderByDescending(j => j.JobDate).ToListAsync(ct);
 
         return new ReportResult
         {
             Title = "Container Movement Report",
-            Columns = new[] { "Container No.", "Size", "Seal", "Weight (kg)", "Job No.", "Status" },
-            Rows = rows
+            Columns = new[] { "Container No.", "Size", "Status Type", "Gross Weight (kg)", "Job No.", "Status" },
+            Rows = jobs.Select(j => new[]
+            {
+                j.ContainerNo!, j.ContainerSize, j.ContainerStatus.ToString(),
+                j.GrossWeight?.ToString("N0") ?? "—", j.JobNumber, JobIsneStatus.Label(j)
+            }).ToList()
         };
     }
 
-    private async Task<ReportResult> DeliveryStatusAsync(CancellationToken ct)
+    private async Task<ReportResult> ArrivalStatusAsync(CancellationToken ct)
     {
         var jobs = await BaseQuery().OrderByDescending(j => j.JobDate).ToListAsync(ct);
 
         return new ReportResult
         {
-            Title = "Delivery Status Report",
-            Columns = new[] { "Job No.", "Importer", "Border Point", "Arrival Date", "Delivery Date", "Delivery Status" },
+            Title = "Arrival Status Report",
+            Columns = new[] { "Job No.", "Party", "Route of Transit", "Vessel Arrival", "CTD Sent To", "Status" },
             Rows = jobs.Select(j => new[]
             {
-                j.JobNo, j.Importer?.Name ?? "—", j.BorderPoint?.Name ?? "—",
-                j.ArrivalDate?.ToString("d MMM yyyy") ?? "—", j.DeliveryDate?.ToString("d MMM yyyy") ?? "—",
-                j.DeliveryStatus.ToString()
+                j.JobNumber, j.PartyName, j.RouteOfTransit ?? "—",
+                j.VesselArrival?.ToString("d MMM yyyy") ?? "—", j.CtdSentTo ?? "—", JobIsneStatus.Label(j)
             }).ToList()
         };
     }
 
-    private async Task<ReportResult> CustomerRevenueAsync(CancellationToken ct)
+    private async Task<ReportResult> CustomerDutyAsync(CancellationToken ct)
     {
         var jobs = await BaseQuery().ToListAsync(ct);
-        var grouped = jobs.GroupBy(j => j.Importer?.Name ?? "—")
+        var grouped = jobs.GroupBy(j => j.PartyName)
             .Select(g => new
             {
                 Name = g.Key,
                 Jobs = g.Count(),
-                Revenue = g.Sum(j => j.Total),
-                Outstanding = g.Where(j => j.BillingStatus != BillingStatus.Paid).Sum(j => j.Total)
+                TotalDuty = g.Sum(j => j.DutyAmount ?? 0),
+                PendingDuty = g.Where(j => string.IsNullOrEmpty(j.CtdNumber)).Sum(j => j.DutyAmount ?? 0)
             })
-            .OrderByDescending(g => g.Revenue).ToList();
+            .OrderByDescending(g => g.TotalDuty).ToList();
 
         return new ReportResult
         {
-            Title = "Customer-wise Revenue Report",
-            Columns = new[] { "Importer", "Total Jobs", "Total Revenue", "Outstanding" },
+            Title = "Customer-wise Duty Report",
+            Columns = new[] { "Party", "Total Jobs", "Total Duty", "Duty Pending CTD" },
             Rows = grouped.Select(g => new[]
             {
-                g.Name, g.Jobs.ToString(), $"₹{g.Revenue:N2}", $"₹{g.Outstanding:N2}"
+                g.Name, g.Jobs.ToString(), $"₹{g.TotalDuty:N2}", $"₹{g.PendingDuty:N2}"
             }).ToList()
         };
     }
 
-    private async Task<ReportResult> BillingSummaryAsync(CancellationToken ct)
+    private async Task<ReportResult> CommercialValueSummaryAsync(CancellationToken ct)
     {
         var jobs = await BaseQuery().OrderByDescending(j => j.JobDate).ToListAsync(ct);
 
         return new ReportResult
         {
-            Title = "Billing Summary Report",
-            Columns = new[] { "Job No.", "Service", "Transport", "Other", "Tax", "Total", "Payment Status" },
+            Title = "Commercial Value Summary",
+            Columns = new[] { "Job No.", "FOB Value", "Freight", "CIF (₹)", "Duty Amount", "Green CTD" },
             Rows = jobs.Select(j => new[]
             {
-                j.JobNo, $"₹{j.ServiceCharge:N2}", $"₹{j.TransportCharge:N2}", $"₹{j.OtherCharge:N2}",
-                $"₹{j.Tax:N2}", $"₹{j.Total:N2}", j.BillingStatus.ToString()
+                j.JobNumber,
+                j.FobValue.HasValue ? $"{j.Currency} {j.FobValue:N2}" : "—",
+                j.Freight.HasValue ? $"{j.Currency} {j.Freight:N2}" : "—",
+                j.CifInr.HasValue ? $"₹{j.CifInr:N2}" : "—",
+                j.DutyAmount.HasValue ? $"₹{j.DutyAmount:N2}" : "—",
+                j.GreenCtd ? "Yes" : "No"
             }).ToList()
         };
     }

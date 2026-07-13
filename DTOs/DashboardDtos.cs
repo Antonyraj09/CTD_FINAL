@@ -1,20 +1,25 @@
 namespace CTD_FINAL.DTOs;
 
+// All figures below are derived from JobIsne — it has no WorkflowStatus/BillingStatus/
+// BorderPoint FK, so "status" here is the 3-state pseudo-status (Helpers/JobIsneStatus.cs),
+// "route" is the free-text RouteOfTransit field, and duty/commercial figures come from
+// DutyAmount/FobValue/CifInr rather than an invoice/billing total (JobIsne has none).
+
 public class DashboardKpiDto
 {
     public int Total { get; set; }
-    public int Active { get; set; }
-    public int Delivered { get; set; }
+    public int CtdIssued { get; set; }
+    public int Arrived { get; set; }
     public int PendingCtd { get; set; }
-    public int PendingBilling { get; set; }
-    public decimal Revenue { get; set; }
+    public int GreenCtdCount { get; set; }
+    public decimal TotalDuty { get; set; }
 }
 
 public class MonthlyPointDto
 {
     public string Label { get; set; } = string.Empty;
     public int Count { get; set; }
-    public decimal Revenue { get; set; }
+    public decimal TotalDuty { get; set; }
 }
 
 public class StatusCountDto
@@ -23,7 +28,7 @@ public class StatusCountDto
     public int Count { get; set; }
 }
 
-public class BorderPointCountDto
+public class RouteCountDto
 {
     public string Name { get; set; } = string.Empty;
     public int Count { get; set; }
@@ -41,21 +46,20 @@ public class RecentJobDto
     public int Id { get; set; }
     public string JobNo { get; set; } = string.Empty;
     public DateTime JobDate { get; set; }
-    public string ImporterName { get; set; } = string.Empty;
+    public string PartyName { get; set; } = string.Empty;
     public string? CtdNumber { get; set; }
     public int ContainerCount { get; set; }
     public string? ContainerSize { get; set; }
-    public string? BorderPoint { get; set; }
+    public string? Route { get; set; }
     public string Status { get; set; } = string.Empty;
-    public string BillingStatus { get; set; } = string.Empty;
 }
 
 public class CustomerKpiDto
 {
     public int TotalShipments { get; set; }
-    public int InTransit { get; set; }
-    public int Delivered { get; set; }
-    public int OutstandingInvoices { get; set; }
+    public int CtdIssued { get; set; }
+    public int Arrived { get; set; }
+    public int PendingCtd { get; set; }
 }
 
 public class CustomerShipmentDto
@@ -63,17 +67,17 @@ public class CustomerShipmentDto
     public int Id { get; set; }
     public string JobNo { get; set; } = string.Empty;
     public string? CtdNumber { get; set; }
-    public string Containers { get; set; } = string.Empty;
-    public string? BorderPoint { get; set; }
+    public string? Container { get; set; }
+    public string? Route { get; set; }
     public string Status { get; set; } = string.Empty;
-    public DateTime? ExpDeliveryDate { get; set; }
+    public DateTime? ArrivalDate { get; set; }
 }
 
-public class CustomerBillingDto
+public class CustomerCommercialDto
 {
-    public decimal TotalBilled { get; set; }
-    public decimal TotalPaid { get; set; }
-    public decimal Outstanding { get; set; }
+    public decimal TotalFobValue { get; set; }
+    public decimal TotalCifInr { get; set; }
+    public decimal TotalDuty { get; set; }
 }
 
 public class TimelineStepDto

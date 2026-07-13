@@ -1,9 +1,9 @@
 /* ============================================================
    OPERATIONS DASHBOARD — KPI cards, hand-built SVG charts, alerts,
-   recent jobs table. Ported from the prototype's renderDashboard()/
-   renderMainChart()/renderStatusDonut()/renderBorderPointBars()/
-   renderDashAlerts()/renderRecentJobsTable(), fed by JSON endpoints
-   on DashboardController instead of the in-memory JOBS array.
+   recent jobs table. Reads from JobIsne via DashboardController;
+   see Services/DashboardService.cs for the field mapping — JobIsne
+   has no workflow/billing/border-point data, so "status" is a
+   3-state pseudo-status and "revenue" figures are DutyAmount sums.
    ============================================================ */
 (function () {
   const kpiGrid = $("#kpiGrid");
@@ -12,12 +12,8 @@
   let monthlyData = null;
 
   function statusBadgeClass(status) {
-    const map = { Draft: "badge-draft", Submitted: "badge-submitted", Approved: "badge-approved", Transit: "badge-transit", Delivered: "badge-delivered", Closed: "badge-closed" };
+    const map = { "Pending CTD": "badge-draft", "CTD Issued": "badge-approved", "Arrived": "badge-delivered" };
     return map[status] || "badge-draft";
-  }
-  function billingBadgeClass(s) {
-    const map = { Paid: "badge-paid", Unpaid: "badge-unpaid", Partial: "badge-partial" };
-    return map[s] || "badge-unpaid";
   }
 
   async function renderKpis() {
@@ -25,15 +21,15 @@
     const cards = [
       { label: "Total Jobs", value: fmtNum(k.total), icoBg: "rgba(59,130,196,.1)", icoColor: "#3b82c4", bar: "#3b82c4",
         ico: '<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>' },
-      { label: "Active Transit", value: fmtNum(k.active), icoBg: "rgba(232,162,58,.13)", icoColor: "#c9831f", bar: "#e8a23a",
+      { label: "CTD Issued", value: fmtNum(k.ctdIssued), icoBg: "rgba(232,162,58,.13)", icoColor: "#c9831f", bar: "#e8a23a",
         ico: '<rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>' },
-      { label: "Delivered Jobs", value: fmtNum(k.delivered), icoBg: "rgba(31,157,107,.1)", icoColor: "#1a7e57", bar: "#1f9d6b",
+      { label: "Arrived", value: fmtNum(k.arrived), icoBg: "rgba(31,157,107,.1)", icoColor: "#1a7e57", bar: "#1f9d6b",
         ico: '<path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/>' },
       { label: "Pending CTD", value: fmtNum(k.pendingCtd), icoBg: "rgba(192,57,43,.1)", icoColor: "#a8332a", bar: "#c0392b",
         ico: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>' },
-      { label: "Pending Billing", value: fmtNum(k.pendingBilling), icoBg: "rgba(124,92,212,.1)", icoColor: "#6240b8", bar: "#7c5cd4",
+      { label: "Green CTD Jobs", value: fmtNum(k.greenCtdCount), icoBg: "rgba(124,92,212,.1)", icoColor: "#6240b8", bar: "#7c5cd4",
         ico: '<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>' },
-      { label: "Total Revenue (₹)", value: "₹" + (k.revenue / 100000).toFixed(1) + "L", icoBg: "rgba(16,23,42,.06)", icoColor: "#10172a", bar: "#10172a",
+      { label: "Total Duty (₹)", value: "₹" + (k.totalDuty / 100000).toFixed(1) + "L", icoBg: "rgba(16,23,42,.06)", icoColor: "#10172a", bar: "#10172a",
         ico: '<path d="M3 3v18h18"/><path d="M18.4 9 12 15.4 8.6 12 4 16.6"/>' },
     ];
     kpiGrid.innerHTML = cards.map((c, i) => `
@@ -54,7 +50,7 @@
     const svg = $("#mainChart");
     const W = 760, H = 280, padL = 46, padR = 14, padT = 18, padB = 34;
     const plotW = W - padL - padR, plotH = H - padT - padB;
-    const values = monthlyData.map(m => mode === "volume" ? m.count : m.revenue);
+    const values = monthlyData.map(m => mode === "volume" ? m.count : m.totalDuty);
     const maxV = Math.max(...values, 1) * 1.18;
     const barW = plotW / monthlyData.length * 0.46;
     const color = mode === "volume" ? "#e8a23a" : "#3b82c4";
@@ -86,7 +82,7 @@
     const dots = lineSegs.map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="#fff" stroke="${color}" stroke-width="2.5"/>`).join("");
     const valueLabels = monthlyData.map((m, i) => {
       const p = lineSegs[i];
-      const v = mode === "volume" ? m.count : ("₹" + (m.revenue / 100000).toFixed(1) + "L");
+      const v = mode === "volume" ? m.count : ("₹" + (m.totalDuty / 100000).toFixed(1) + "L");
       return `<text x="${p[0]}" y="${p[1] - 12}" font-size="11" fill="#10172a" text-anchor="middle" font-weight="700" font-family="Segoe UI, sans-serif">${v}</text>`;
     }).join("");
 
@@ -119,7 +115,7 @@
 
   async function renderStatusDonut() {
     const dist = await getJson("/Dashboard/StatusDistribution");
-    const colors = { Draft: "#838ca6", Submitted: "#3b82c4", Approved: "#7c5cd4", Transit: "#e8a23a", Delivered: "#1f9d6b", Closed: "#10172a" };
+    const colors = { "Pending CTD": "#838ca6", "CTD Issued": "#7c5cd4", "Arrived": "#1f9d6b" };
     const total = dist.reduce((s, d) => s + d.count, 0);
     $("#statusDonutTotal").textContent = total + " jobs total";
 
@@ -147,8 +143,8 @@
     }).join("");
   }
 
-  async function renderBorderPointBars() {
-    const data = await getJson("/Dashboard/BorderPointVolume");
+  async function renderRouteBars() {
+    const data = await getJson("/Dashboard/RouteVolume");
     const max = Math.max(...data.map(d => d.count), 1);
     const colors = ["#e8a23a", "#3b82c4", "#1f9d6b", "#7c5cd4", "#c0392b"];
     $("#borderPointBars").innerHTML = data.map((d, i) => `
@@ -184,24 +180,23 @@
       <tr data-job-id="${j.id}">
         <td class="cell-strong job-code">${esc(j.jobNo)}</td>
         <td>${fmtDate(j.jobDate)}</td>
-        <td>${esc(j.importerName)}</td>
+        <td>${esc(j.partyName)}</td>
         <td class="ctd-code">${esc(j.ctdNumber) || "—"}</td>
-        <td>${j.containerCount} × ${esc((j.containerSize || "").split(" ")[0] || "")}</td>
-        <td>${esc(j.borderPoint || "—")}</td>
+        <td>${j.containerCount ? "1 × " + esc((j.containerSize || "").split(" ")[0] || "") : "—"}</td>
+        <td>${esc(j.route || "—")}</td>
         <td><span class="badge ${statusBadgeClass(j.status)}">${j.status}</span></td>
-        <td><span class="badge ${billingBadgeClass(j.billingStatus)}">${j.billingStatus}</span></td>
         <td class="no-print">
           <div class="row-actions">
-            <a class="iconbtn-table" href="/Jobs/Wizard/${j.id}" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></a>
-            <a class="iconbtn-table" href="/Jobs/PrintSheet/${j.id}" target="_blank" title="Print"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg></a>
+            <a class="iconbtn-table" href="/JobIsne/Index?id=${j.id}" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></a>
+            <a class="iconbtn-table" href="/JobIsne/Print/${j.id}" target="_blank" title="Print"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg></a>
           </div>
         </td>
-      </tr>`).join("") : `<tr><td colspan="9" class="table-empty">No jobs yet. <a href="/JobIsne" style="color:var(--info-blue);cursor:pointer;">Create the first CTD job</a></td></tr>`;
+      </tr>`).join("") : `<tr><td colspan="8" class="table-empty">No jobs yet. <a href="/JobIsne" style="color:var(--info-blue);cursor:pointer;">Create the first CTD job</a></td></tr>`;
   }
 
   async function renderDashboard() {
     $("#dashDate").textContent = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-    await Promise.all([renderKpis(), loadChart(), renderStatusDonut(), renderBorderPointBars(), renderDashAlerts(), renderRecentJobsTable()]);
+    await Promise.all([renderKpis(), loadChart(), renderStatusDonut(), renderRouteBars(), renderDashAlerts(), renderRecentJobsTable()]);
   }
 
   $("#dashRefreshBtn")?.addEventListener("click", () => {

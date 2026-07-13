@@ -58,7 +58,7 @@ public class DashboardController : Controller
 
     [HttpGet]
     [RequirePermission(PermissionKeys.DashboardView)]
-    public async Task<IActionResult> BorderPointVolume() => Json(await _dashboardService.GetBorderPointVolumeAsync());
+    public async Task<IActionResult> RouteVolume() => Json(await _dashboardService.GetRouteVolumeAsync());
 
     [HttpGet]
     [RequirePermission(PermissionKeys.DashboardView)]
@@ -78,7 +78,7 @@ public class DashboardController : Controller
 
     [HttpGet]
     [RequirePermission(PermissionKeys.CustomerDashboardView)]
-    public async Task<IActionResult> CustomerBilling(int importerId) => Json(await _dashboardService.GetCustomerBillingAsync(importerId));
+    public async Task<IActionResult> CustomerCommercial(int importerId) => Json(await _dashboardService.GetCustomerCommercialAsync(importerId));
 
     [HttpGet]
     [RequirePermission(PermissionKeys.CustomerDashboardView)]
