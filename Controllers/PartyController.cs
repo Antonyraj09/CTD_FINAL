@@ -16,11 +16,13 @@ public class PartyController : Controller
 {
     private readonly IPartyService _partyService;
     private readonly IAuditService _auditService;
+    private readonly IGenericRepository<SubAgent> _subAgents;
 
-    public PartyController(IPartyService partyService, IAuditService auditService)
+    public PartyController(IPartyService partyService, IAuditService auditService, IGenericRepository<SubAgent> subAgents)
     {
         _partyService = partyService;
         _auditService = auditService;
+        _subAgents = subAgents;
     }
 
     private string CurrentUserName => User.FindFirst("FullName")?.Value ?? User.Identity?.Name ?? "System";
@@ -49,6 +51,9 @@ public class PartyController : Controller
 
         Party? party = id.HasValue ? await _partyService.GetByIdAsync(id.Value) : null;
         if (id.HasValue && party is null) return NotFound();
+
+        var subAgents = await _subAgents.GetAllAsync();
+        ViewBag.SubAgents = subAgents.OrderBy(s => s.Name).ToList();
 
         return View(party);
     }
@@ -85,6 +90,7 @@ public class PartyController : Controller
             License = NullIfEmpty(request.License),
             LicenseValidUpto = request.LicenseValidUpto,
             Fleet = NullIfEmpty(request.Fleet),
+            SubAgentCode = NullIfEmpty(request.SubAgentCode),
             AeoStatus = ParseAeoStatus(request.AeoStatus),
             AeoCertificateNo = NullIfEmpty(request.AeoCertificateNo),
             BankName = NullIfEmpty(request.BankName),

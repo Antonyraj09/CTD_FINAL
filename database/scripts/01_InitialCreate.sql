@@ -1687,3 +1687,28 @@ GO
 COMMIT;
 GO
 
+BEGIN TRANSACTION;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260713113924_AddSubAgentCodeToParty'
+)
+BEGIN
+    ALTER TABLE [Parties] ADD [SubAgentCode] nvarchar(20) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260713113924_AddSubAgentCodeToParty'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260713113924_AddSubAgentCodeToParty', N'8.0.11');
+END;
+GO
+
+COMMIT;
+GO
+

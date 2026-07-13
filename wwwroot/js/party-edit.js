@@ -100,6 +100,7 @@
       license: $("#p_license").value.trim(),
       licenseValidUpto: $("#p_licenseValidUpto").value || null,
       fleet: $("#p_fleet").value.trim(),
+      subAgentCode: $("#p_subAgentCode").value,
       aeoStatus: $("#p_aeoStatus").value,
       aeoCertificateNo: $("#p_aeoCertificateNo").value.trim(),
       bankName: $("#p_bankName").value.trim(),

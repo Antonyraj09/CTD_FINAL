@@ -49,6 +49,12 @@ public class Party : BaseEntity
     [StringLength(100)]
     public string? Fleet { get; set; }
 
+    /// <summary>The local customs clearing sub-agent this party normally works through.
+    /// A loose reference to SubAgent.SubAgentCode (not an FK), matching the same
+    /// free-text-tag convention JobIsne uses for SubAgentCode/PartyName.</summary>
+    [StringLength(20)]
+    public string? SubAgentCode { get; set; }
+
     /// <summary>CBIC Authorized Economic Operator status — grants faster customs clearance.</summary>
     public AeoStatus AeoStatus { get; set; } = AeoStatus.None;
 
