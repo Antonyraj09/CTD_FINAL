@@ -16,6 +16,19 @@ Party has its own dedicated screen (`Controllers/PartyController.cs`, `Views/Par
 
 `Data/Migrations/*_MergePartyMaster.cs` and `*_AddPartyBranchesAndDetails.cs` migrate any existing Importer/Agent/Transporter data into the unified table (each becoming its own branch, carrying forward its city/phone/email/GSTIN) and remap `CtdJobs`' existing FK values, so upgrading an installation with real data doesn't lose any job's importer/agent/transporter links. Seed data intentionally stays minimal (legal name, role, one branch) — PAN/IEC/CIN/banking/AEO fields are left blank for real data entry via the UI rather than fabricated.
 
+### Job ISNE is now the primary job record
+
+Tracking, the Dashboard, and Reports were originally built against `CtdJob` (the 4-step Wizard's entity — `Status`/`BillingStatus` enums, a `BorderPoint` FK, a `Containers` collection, service/transport/tax charge fields). They now read from **`JobIsne`** instead (`Entities/JobIsne.cs`, the ~60-field ERP-style job form) — the Wizard/`CtdJob` path is no longer linked from navigation. `JobIsne` has a different, flatter shape than `CtdJob`, so the screens were rebuilt around what it actually has rather than faking the missing concepts:
+
+- **Status**: JobIsne has no `WorkflowStatus` enum, so `Helpers/JobIsneStatus.cs` derives an honest 3-state pseudo-status from the fields that exist — **Pending CTD** (no CTD number yet), **CTD Issued** (`CtdNumber` set, no `VesselArrival`), **Arrived** (`VesselArrival` set).
+- **Border point**: JobIsne has no `BorderPoint` FK, only a free-text `RouteOfTransit` field — that's what Tracking's filter, the Dashboard's route-volume chart, and the reports group/display now use.
+- **Revenue/billing**: JobIsne has no `ServiceCharge`/`TransportCharge`/`Tax`/`Total`/`BillingStatus`. Dashboard KPIs and the Monthly chart use `SUM(DutyAmount)` labeled "Total Duty" instead of "Revenue"; the "Billing Summary" report is now **Commercial Value Summary** (FOB/Freight/CIF/Duty per job); "Customer-wise Revenue" is now **Customer-wise Duty**; the Customer Dashboard's "Billing Snapshot" is now a **Commercial Value Snapshot** (FOB/CIF/Duty totals, no billed/paid/outstanding since there's nothing to bill against).
+- **Customer Dashboard bridging**: JobIsne has no FK to `Party` — only free-text `PartyCode`/`PartyName` — so the Customer Dashboard's `importerId` (a `Party.Id`) is bridged by matching that party's legal name against `JobIsne.PartyName` (`DashboardService.JobsForImporterAsync`), not a real foreign key.
+- **Invoice generation** (`JobsController.Invoice`/`InvoicePrint`) has no JobIsne equivalent — JobIsne carries no service/transport/tax charge fields to invoice against — and is left as dead code reachable only from the now-unlinked Wizard, rather than fabricated.
+- Document Archive needed no changes: `GeneratedDocument.JobNo` was already a free-text field with no FK to `CtdJob`, so it works with `JobIsne.JobNumber` as-is.
+
+The old `CtdJob`/Wizard/`Jobs/Tracking` code is untouched and still functions — it's simply no longer linked from the sidebar or Dashboard.
+
 ## Project layout
 
 ```

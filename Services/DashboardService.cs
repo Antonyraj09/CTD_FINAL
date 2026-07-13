@@ -1,34 +1,36 @@
 using CTD_FINAL.DTOs;
 using CTD_FINAL.Entities;
-using CTD_FINAL.Enums;
+using CTD_FINAL.Helpers;
 using CTD_FINAL.Interfaces;
 using CTD_FINAL.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace CTD_FINAL.Services;
 
+/// <summary>
+/// Reads from JobIsne, not CtdJob — JobIsne has no WorkflowStatus/BillingStatus/BorderPoint FK,
+/// so every figure here is an honest derivation from the fields JobIsne actually has:
+/// see Helpers/JobIsneStatus.cs for the 3-state pseudo-status, RouteOfTransit (free text)
+/// stands in for border point, and DutyAmount/FobValue/CifInr stand in for revenue/billing.
+/// </summary>
 public class DashboardService : IDashboardService
 {
-    private static readonly WorkflowStatus[] ActiveStatuses = { WorkflowStatus.Submitted, WorkflowStatus.Approved, WorkflowStatus.Transit };
-    private static readonly WorkflowStatus[] DeliveredStatuses = { WorkflowStatus.Delivered, WorkflowStatus.Closed };
-
     private readonly AppDbContext _context;
 
     public DashboardService(AppDbContext context) => _context = context;
 
     public async Task<DashboardKpiDto> GetKpisAsync(CancellationToken ct = default)
     {
-        var jobs = _context.CtdJobs.AsNoTracking();
-        var today = DateTime.UtcNow.Date;
+        var jobs = _context.JobIsnes.AsNoTracking();
 
         return new DashboardKpiDto
         {
             Total = await jobs.CountAsync(ct),
-            Active = await jobs.CountAsync(j => ActiveStatuses.Contains(j.Status), ct),
-            Delivered = await jobs.CountAsync(j => DeliveredStatuses.Contains(j.Status), ct),
-            PendingCtd = await jobs.CountAsync(j => j.Status == WorkflowStatus.Draft || (j.Status == WorkflowStatus.Submitted && j.CtdNumber == null), ct),
-            PendingBilling = await jobs.CountAsync(j => j.BillingStatus != BillingStatus.Paid, ct),
-            Revenue = await jobs.SumAsync(j => (decimal?)j.Total, ct) ?? 0
+            CtdIssued = await jobs.CountAsync(JobIsneStatus.IsCtdIssued, ct),
+            Arrived = await jobs.CountAsync(JobIsneStatus.IsArrived, ct),
+            PendingCtd = await jobs.CountAsync(JobIsneStatus.IsPendingCtd, ct),
+            GreenCtdCount = await jobs.CountAsync(j => j.GreenCtd, ct),
+            TotalDuty = await jobs.SumAsync(j => (decimal?)j.DutyAmount, ct) ?? 0
         };
     }
 
@@ -43,45 +45,40 @@ public class DashboardService : IDashboardService
         }
 
         var earliest = new DateTime(buckets[0].Year, buckets[0].Month, 1);
-        var jobs = await _context.CtdJobs.AsNoTracking()
+        var jobs = await _context.JobIsnes.AsNoTracking()
             .Where(j => j.JobDate >= earliest)
-            .Select(j => new { j.JobDate, j.Total })
+            .Select(j => new { j.JobDate, j.DutyAmount })
             .ToListAsync(ct);
 
         return buckets.Select(b => new MonthlyPointDto
         {
             Label = b.Label,
             Count = jobs.Count(j => j.JobDate.Year == b.Year && j.JobDate.Month == b.Month),
-            Revenue = jobs.Where(j => j.JobDate.Year == b.Year && j.JobDate.Month == b.Month).Sum(j => j.Total)
+            TotalDuty = jobs.Where(j => j.JobDate.Year == b.Year && j.JobDate.Month == b.Month).Sum(j => j.DutyAmount ?? 0)
         }).ToList();
     }
 
     public async Task<IReadOnlyList<StatusCountDto>> GetStatusDistributionAsync(CancellationToken ct = default)
     {
-        var counts = await _context.CtdJobs.AsNoTracking()
-            .GroupBy(j => j.Status)
-            .Select(g => new { Status = g.Key, Count = g.Count() })
-            .ToListAsync(ct);
-
-        return Enum.GetValues<WorkflowStatus>()
-            .Select(s => new StatusCountDto { Status = s.ToString(), Count = counts.FirstOrDefault(c => c.Status == s)?.Count ?? 0 })
-            .ToList();
+        var jobs = _context.JobIsnes.AsNoTracking();
+        return new List<StatusCountDto>
+        {
+            new() { Status = JobIsneStatus.PendingCtd, Count = await jobs.CountAsync(JobIsneStatus.IsPendingCtd, ct) },
+            new() { Status = JobIsneStatus.CtdIssued, Count = await jobs.CountAsync(JobIsneStatus.IsCtdIssued, ct) },
+            new() { Status = JobIsneStatus.Arrived, Count = await jobs.CountAsync(JobIsneStatus.IsArrived, ct) },
+        };
     }
 
-    public async Task<IReadOnlyList<BorderPointCountDto>> GetBorderPointVolumeAsync(CancellationToken ct = default)
+    public async Task<IReadOnlyList<RouteCountDto>> GetRouteVolumeAsync(CancellationToken ct = default)
     {
-        var borderPoints = await _context.BorderPoints.AsNoTracking().ToListAsync(ct);
-        var counts = await _context.CtdJobs.AsNoTracking()
-            .Where(j => j.BorderPointId != null)
-            .GroupBy(j => j.BorderPointId)
-            .Select(g => new { BorderPointId = g.Key, Count = g.Count() })
+        var counts = await _context.JobIsnes.AsNoTracking()
+            .GroupBy(j => j.RouteOfTransit)
+            .Select(g => new { Route = g.Key, Count = g.Count() })
+            .OrderByDescending(g => g.Count)
+            .Take(6)
             .ToListAsync(ct);
 
-        return borderPoints.Select(b => new BorderPointCountDto
-        {
-            Name = b.Name,
-            Count = counts.FirstOrDefault(c => c.BorderPointId == b.Id)?.Count ?? 0
-        }).ToList();
+        return counts.Select(c => new RouteCountDto { Name = string.IsNullOrWhiteSpace(c.Route) ? "Unspecified" : c.Route!, Count = c.Count }).ToList();
     }
 
     public async Task<IReadOnlyList<DashboardAlertDto>> GetAlertsAsync(CancellationToken ct = default)
@@ -89,40 +86,47 @@ public class DashboardService : IDashboardService
         var today = DateTime.UtcNow.Date;
         var alerts = new List<DashboardAlertDto>();
 
-        var pendingCtd = await _context.CtdJobs.AsNoTracking()
-            .Include(j => j.Importer)
-            .Where(j => j.Status == WorkflowStatus.Draft || j.Status == WorkflowStatus.Submitted)
+        var pendingCtd = await _context.JobIsnes.AsNoTracking()
+            .Where(JobIsneStatus.IsPendingCtd)
             .OrderByDescending(j => j.JobDate)
             .Take(4)
             .ToListAsync(ct);
         alerts.AddRange(pendingCtd.Select(j => new DashboardAlertDto
         {
             Type = "warning",
-            Title = $"CTD pending — {j.JobNo}",
-            Sub = $"{j.Importer?.Name} · filed {j.JobDate:d MMM yyyy}"
+            Title = $"CTD pending — {j.JobNumber}",
+            Sub = $"{j.PartyName} · filed {j.JobDate:d MMM yyyy}"
         }));
 
-        var overdue = await _context.CtdJobs.AsNoTracking()
-            .Where(j => j.ExpDeliveryDate != null && j.Status != WorkflowStatus.Delivered && j.Status != WorkflowStatus.Closed && j.ExpDeliveryDate < today)
-            .Take(3)
-            .ToListAsync(ct);
-        alerts.AddRange(overdue.Select(j => new DashboardAlertDto
+        var overdueDocs = pendingCtd
+            .Select(j => new
+            {
+                Job = j,
+                Earliest = new[] { j.DuePackingList, j.DueInvoice, j.DueOriginalBl, j.DueInsuranceCert, j.DueLcCopy }
+                    .Where(d => d.HasValue && d.Value.Date < today)
+                    .OrderBy(d => d)
+                    .FirstOrDefault()
+            })
+            .Where(x => x.Earliest.HasValue)
+            .OrderBy(x => x.Earliest)
+            .Take(3);
+        alerts.AddRange(overdueDocs.Select(x => new DashboardAlertDto
         {
             Type = "error",
-            Title = $"Delivery overdue — {j.JobNo}",
-            Sub = $"Expected {j.ExpDeliveryDate:d MMM yyyy} · {j.BorderPoint?.Name}"
+            Title = $"Document overdue — {x.Job.JobNumber}",
+            Sub = $"Due {x.Earliest:d MMM yyyy} · {x.Job.PartyName}"
         }));
 
-        var unpaid = await _context.CtdJobs.AsNoTracking()
-            .Include(j => j.Importer)
-            .Where(j => j.BillingStatus == BillingStatus.Unpaid && (j.Status == WorkflowStatus.Delivered || j.Status == WorkflowStatus.Closed))
+        var expiringLc = await _context.JobIsnes.AsNoTracking()
+            .Where(j => j.ShipmentExpiry != null && j.ShipmentExpiry >= today && j.ShipmentExpiry <= today.AddDays(7))
+            .OrderBy(j => j.ShipmentExpiry)
             .Take(3)
             .ToListAsync(ct);
-        alerts.AddRange(unpaid.Select(j => new DashboardAlertDto
+        alerts.AddRange(expiringLc.Select(j => new DashboardAlertDto
         {
             Type = "info",
-            Title = $"Billing pending — {j.JobNo}",
-            Sub = $"₹{j.Total:N2} due from {j.Importer?.Name}"
+            Title = $"LC shipment expiry approaching — {j.JobNumber}",
+            Sub = $"Expires {j.ShipmentExpiry:d MMM yyyy} · {j.PartyName}"
         }));
 
         return alerts.Take(6).ToList();
@@ -130,10 +134,7 @@ public class DashboardService : IDashboardService
 
     public async Task<IReadOnlyList<RecentJobDto>> GetRecentJobsAsync(int count = 8, CancellationToken ct = default)
     {
-        var jobs = await _context.CtdJobs.AsNoTracking()
-            .Include(j => j.Importer)
-            .Include(j => j.BorderPoint)
-            .Include(j => j.Containers)
+        var jobs = await _context.JobIsnes.AsNoTracking()
             .OrderByDescending(j => j.JobDate)
             .Take(count)
             .ToListAsync(ct);
@@ -141,81 +142,83 @@ public class DashboardService : IDashboardService
         return jobs.Select(j => new RecentJobDto
         {
             Id = j.Id,
-            JobNo = j.JobNo,
+            JobNo = j.JobNumber,
             JobDate = j.JobDate,
-            ImporterName = j.Importer?.Name ?? "Unassigned",
+            PartyName = j.PartyName,
             CtdNumber = j.CtdNumber,
-            ContainerCount = j.Containers.Count,
-            ContainerSize = j.Containers.FirstOrDefault()?.Size,
-            BorderPoint = j.BorderPoint?.Name,
-            Status = j.Status.ToString(),
-            BillingStatus = j.BillingStatus.ToString()
+            ContainerCount = string.IsNullOrWhiteSpace(j.ContainerNo) ? 0 : 1,
+            ContainerSize = j.ContainerSize,
+            Route = j.RouteOfTransit,
+            Status = JobIsneStatus.Label(j)
         }).ToList();
     }
 
     public async Task<CustomerKpiDto> GetCustomerKpisAsync(int importerId, CancellationToken ct = default)
     {
-        var jobs = _context.CtdJobs.AsNoTracking().Where(j => j.ImporterId == importerId);
+        var jobs = await JobsForImporterAsync(importerId, ct);
         return new CustomerKpiDto
         {
-            TotalShipments = await jobs.CountAsync(ct),
-            InTransit = await jobs.CountAsync(j => ActiveStatuses.Contains(j.Status), ct),
-            Delivered = await jobs.CountAsync(j => DeliveredStatuses.Contains(j.Status), ct),
-            OutstandingInvoices = await jobs.CountAsync(j => j.BillingStatus != BillingStatus.Paid, ct)
+            TotalShipments = jobs.Count,
+            CtdIssued = jobs.Count(j => JobIsneStatus.Label(j) == JobIsneStatus.CtdIssued),
+            Arrived = jobs.Count(j => JobIsneStatus.Label(j) == JobIsneStatus.Arrived),
+            PendingCtd = jobs.Count(j => JobIsneStatus.Label(j) == JobIsneStatus.PendingCtd)
         };
     }
 
     public async Task<IReadOnlyList<CustomerShipmentDto>> GetCustomerShipmentsAsync(int importerId, CancellationToken ct = default)
     {
-        var jobs = await _context.CtdJobs.AsNoTracking()
-            .Include(j => j.BorderPoint)
-            .Include(j => j.Containers)
-            .Where(j => j.ImporterId == importerId && j.Status != WorkflowStatus.Closed)
-            .OrderByDescending(j => j.JobDate)
-            .Take(10)
-            .ToListAsync(ct);
-
-        return jobs.Select(j => new CustomerShipmentDto
+        var jobs = await JobsForImporterAsync(importerId, ct);
+        return jobs.OrderByDescending(j => j.JobDate).Take(10).Select(j => new CustomerShipmentDto
         {
             Id = j.Id,
-            JobNo = j.JobNo,
+            JobNo = j.JobNumber,
             CtdNumber = j.CtdNumber,
-            Containers = string.Join(", ", j.Containers.Select(c => c.ContainerNo)),
-            BorderPoint = j.BorderPoint?.Name,
-            Status = j.Status.ToString(),
-            ExpDeliveryDate = j.ExpDeliveryDate
+            Container = j.ContainerNo,
+            Route = j.RouteOfTransit,
+            Status = JobIsneStatus.Label(j),
+            ArrivalDate = j.VesselArrival
         }).ToList();
     }
 
-    public async Task<CustomerBillingDto> GetCustomerBillingAsync(int importerId, CancellationToken ct = default)
+    public async Task<CustomerCommercialDto> GetCustomerCommercialAsync(int importerId, CancellationToken ct = default)
     {
-        var jobs = await _context.CtdJobs.AsNoTracking().Where(j => j.ImporterId == importerId).ToListAsync(ct);
-        var billed = jobs.Sum(j => j.Total);
-        var paid = jobs.Where(j => j.BillingStatus == BillingStatus.Paid).Sum(j => j.Total);
-        return new CustomerBillingDto { TotalBilled = billed, TotalPaid = paid, Outstanding = billed - paid };
+        var jobs = await JobsForImporterAsync(importerId, ct);
+        return new CustomerCommercialDto
+        {
+            TotalFobValue = jobs.Sum(j => j.FobValue ?? 0),
+            TotalCifInr = jobs.Sum(j => j.CifInr ?? 0),
+            TotalDuty = jobs.Sum(j => j.DutyAmount ?? 0)
+        };
     }
 
     public async Task<IReadOnlyList<TimelineStepDto>> GetShipmentTimelineAsync(int jobId, CancellationToken ct = default)
     {
-        var job = await _context.CtdJobs.AsNoTracking().Include(j => j.BorderPoint).FirstOrDefaultAsync(j => j.Id == jobId, ct);
+        var job = await _context.JobIsnes.AsNoTracking().FirstOrDefaultAsync(j => j.Id == jobId, ct);
         if (job is null) return Array.Empty<TimelineStepDto>();
 
-        var steps = new (WorkflowStatus Key, string Label, DateTime? Date)[]
+        var steps = new (string Label, DateTime? Date)[]
         {
-            (WorkflowStatus.Draft, "Job Created", job.JobDate),
-            (WorkflowStatus.Submitted, "Submitted to Customs", job.CtdDate),
-            (WorkflowStatus.Approved, $"CTD Approved · {job.CtdNumber ?? "Pending"}", job.CtdDate),
-            (WorkflowStatus.Transit, $"In Transit · {job.BorderPoint?.Name}", job.ArrivalDate),
-            (WorkflowStatus.Delivered, "Delivered in Nepal", job.DeliveryDate),
-            (WorkflowStatus.Closed, "Job Closed & Billed", job.Status == WorkflowStatus.Closed ? job.UpdatedAt : null),
+            ("Job Created", job.JobDate),
+            (!string.IsNullOrEmpty(job.CtdNumber) ? $"CTD Issued · {job.CtdNumber}" : "CTD Pending", job.CtdDate),
+            ("Vessel Arrived", job.VesselArrival),
         };
 
-        int currentIdx = (int)job.Status;
-        return steps.Select(s =>
+        int currentIdx = string.IsNullOrEmpty(job.CtdNumber) ? 0 : (job.VesselArrival is null ? 1 : 2);
+        return steps.Select((s, i) => new TimelineStepDto
         {
-            int stepIdx = (int)s.Key;
-            var cls = stepIdx < currentIdx ? "done" : (stepIdx == currentIdx ? "current" : "");
-            return new TimelineStepDto { Label = s.Label, Date = s.Date, CssClass = cls };
+            Label = s.Label,
+            Date = s.Date,
+            CssClass = i < currentIdx ? "done" : (i == currentIdx ? "current" : "")
         }).ToList();
+    }
+
+    // JobIsne has no FK to Party — it only carries a free-text PartyName — so the
+    // Customer Dashboard's importerId (a Party.Id) is bridged by matching that party's
+    // legal name against JobIsne.PartyName rather than a real foreign key.
+    private async Task<List<JobIsne>> JobsForImporterAsync(int importerId, CancellationToken ct)
+    {
+        var party = await _context.Parties.AsNoTracking().FirstOrDefaultAsync(p => p.Id == importerId, ct);
+        if (party is null) return new List<JobIsne>();
+        return await _context.JobIsnes.AsNoTracking().Where(j => j.PartyName == party.Name).ToListAsync(ct);
     }
 }

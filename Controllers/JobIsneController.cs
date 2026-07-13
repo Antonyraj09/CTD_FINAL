@@ -1,3 +1,4 @@
+using CTD_FINAL.DTOs;
 using CTD_FINAL.Entities;
 using CTD_FINAL.Enums;
 using CTD_FINAL.Interfaces;
@@ -10,7 +11,6 @@ using Microsoft.AspNetCore.Mvc;
 namespace CTD_FINAL.Controllers;
 
 [Authorize]
-[RequirePermission(PermissionKeys.JobIsneManage)]
 public class JobIsneController : Controller
 {
     private readonly IJobIsneService _jobIsneService;
@@ -20,6 +20,7 @@ public class JobIsneController : Controller
     private string CurrentUserName => User.FindFirst("FullName")?.Value ?? User.Identity?.Name ?? "System";
 
     [HttpGet]
+    [RequirePermission(PermissionKeys.JobIsneManage)]
     public async Task<IActionResult> Index(int? id)
     {
         ViewData["Title"] = "Job — ISNE";
@@ -34,6 +35,7 @@ public class JobIsneController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [RequirePermission(PermissionKeys.JobIsneManage)]
     public async Task<IActionResult> Save([FromBody] JobIsneSaveRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.PartyCode) || string.IsNullOrWhiteSpace(request.PartyName))
@@ -128,6 +130,7 @@ public class JobIsneController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [RequirePermission(PermissionKeys.JobIsneManage)]
     public async Task<IActionResult> Delete(int id)
     {
         var deleted = await _jobIsneService.DeleteAsync(id, CurrentUserName);
@@ -135,10 +138,37 @@ public class JobIsneController : Controller
     }
 
     [HttpGet]
+    [RequirePermission(PermissionKeys.JobIsneManage)]
     public async Task<IActionResult> Print(int id)
     {
         var record = await _jobIsneService.GetByIdAsync(id);
         if (record is null) return NotFound();
         return View(record);
+    }
+
+    [RequirePermission(PermissionKeys.TrackingView)]
+    public IActionResult Tracking()
+    {
+        ViewData["Title"] = "CTD Tracking";
+        ViewData["Breadcrumb"] = "CTD Suite / Operations";
+        ViewData["ActiveNav"] = "tracking";
+        ViewData["ActiveModule"] = "jobs";
+        return View();
+    }
+
+    [HttpGet]
+    [RequirePermission(PermissionKeys.TrackingView)]
+    public async Task<IActionResult> TrackingTable(string? jobNo, string? ctdNo, string? partyName, string? container,
+        DateTime? dateFrom, DateTime? dateTo, string? status, string? quick, string sortKey = "jobDate", string sortDir = "desc", int page = 1)
+    {
+        var filter = new JobIsneTrackingFilter
+        {
+            JobNo = jobNo, CtdNo = ctdNo, PartyName = partyName, Container = container,
+            DateFrom = dateFrom, DateTo = dateTo, Status = status, Quick = quick, SortKey = sortKey, SortDir = sortDir
+        };
+        var result = await _jobIsneService.SearchAsync(filter, page, 8);
+        ViewData["SortKey"] = sortKey;
+        ViewData["SortDir"] = sortDir;
+        return PartialView("_TrackingTable", result);
     }
 }
