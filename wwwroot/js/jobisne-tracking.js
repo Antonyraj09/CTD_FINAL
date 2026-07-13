@@ -26,8 +26,16 @@
   }
 
   async function load() {
-    container.innerHTML = await getHtml(`/JobIsne/TrackingTable?${buildQuery()}`);
-    bindTableEvents();
+    try {
+      container.innerHTML = await getHtml(`/JobIsne/TrackingTable?${buildQuery()}`);
+      bindTableEvents();
+    } catch (err) {
+      console.error("CTD Tracking: failed to load jobs", err);
+      container.innerHTML = `<div class="table-empty" style="padding:30px;">
+        <p>Could not load jobs. Please refresh the page and try again.</p>
+        <p style="font-size:11px;color:var(--ink-400);">${esc(err.message || String(err))}</p>
+      </div>`;
+    }
   }
 
   function bindTableEvents() {
