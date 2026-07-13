@@ -63,3 +63,12 @@ public class CustomsHouseConfiguration : IEntityTypeConfiguration<CustomsHouse>
         b.HasIndex(x => x.Name);
     }
 }
+
+public class SubAgentConfiguration : IEntityTypeConfiguration<SubAgent>
+{
+    public void Configure(EntityTypeBuilder<SubAgent> b)
+    {
+        b.HasIndex(x => x.SubAgentCode).IsUnique();
+        b.HasIndex(x => x.Name);
+    }
+}

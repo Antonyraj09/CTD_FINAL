@@ -16,6 +16,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, 
     public DbSet<TransitRoute> TransitRoutes => Set<TransitRoute>();
     public DbSet<BorderPoint> BorderPoints => Set<BorderPoint>();
     public DbSet<CustomsHouse> CustomsHouses => Set<CustomsHouse>();
+    public DbSet<SubAgent> SubAgents => Set<SubAgent>();
 
     public DbSet<CtdJob> CtdJobs => Set<CtdJob>();
     public DbSet<JobContainer> JobContainers => Set<JobContainer>();

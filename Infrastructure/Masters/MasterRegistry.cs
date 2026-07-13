@@ -65,6 +65,27 @@ public static class MasterRegistry
                 new("Code", "Code", "text", true),
             }
         },
+        ["subagent"] = new MasterTabConfig
+        {
+            Key = "subagent", EntityType = typeof(SubAgent), Title = "Sub-Agent Master", EntityLabel = "Sub-Agent",
+            Columns = new() { ("Name", "Sub-Agent Name"), ("SubAgentCode", "Code"), ("City", "City"), ("LicenseNo", "License No."), ("Phone", "Phone") },
+            Fields = new()
+            {
+                new("SubAgentCode", "Sub-Agent Code", "text", true),
+                new("Name", "Sub-Agent Name", "text", true),
+                new("AddressLine1", "Address Line 1", "text", true),
+                new("AddressLine2", "Address Line 2", "text", false),
+                new("City", "City", "text", false),
+                new("State", "State", "text", false),
+                new("PinCode", "PIN Code", "text", false),
+                new("LicenseNo", "Customs / CHA License No.", "text", false),
+                new("PanNo", "PAN No.", "text", false),
+                new("GstinNo", "GSTIN", "text", false),
+                new("ContactPersonName", "Contact Person", "text", false),
+                new("Phone", "Phone", "text", false),
+                new("Email", "Email", "email", false),
+            }
+        },
     };
 
     public static MasterTabConfig Get(string tab) =>
