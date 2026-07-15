@@ -1,0 +1,95 @@
+@using CTD_FINAL.Entities
+@model JobIsne
+@{
+    Layout = null;
+    string D(DateTime? d) => d?.ToString("dd/MM/yyyy") ?? "";
+    string V(object? v) => v?.ToString() ?? "";
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>CTD Submission (Nepal) - @Model.JobNumber</title>
+    <style>
+        @@page { size: A4; margin: 14mm; }
+        body { font-family: Arial, Helvetica, sans-serif; color: #10172a; font-size: 12.5px; }
+        .box { border: 1.5px solid #10172a; padding: 14px 18px; }
+        .hdr { text-align: center; margin-bottom: 10px; }
+        .hdr .title { font-size: 15px; font-weight: 700; letter-spacing: .04em; }
+        .hdr .subtitle { font-size: 12.5px; font-weight: 700; margin-top: 2px; }
+        .hdr .note { font-size: 10.5px; font-style: italic; margin-top: 2px; }
+        .refline { display: flex; justify-content: flex-end; gap: 22px; font-size: 11.5px; font-weight: 600; margin: 6px 0 12px; border-bottom: 1px solid #10172a; padding-bottom: 8px; }
+        .refline span { border-bottom: 1px solid #10172a; padding-bottom: 1px; min-width: 60px; display: inline-block; }
+        ol.items { list-style: none; counter-reset: item; margin: 0; padding: 0; }
+        ol.items > li { counter-increment: item; margin-bottom: 9px; line-height: 1.55; }
+        ol.items > li::before { content: counter(item) ". "; font-weight: 700; }
+        .lbl { font-weight: 700; }
+        .val { border-bottom: 1px dotted #10172a; padding: 0 3px; }
+        .footer { margin-top: 16px; font-size: 10px; color: #888; text-align: right; }
+        @@media print { .no-print { display: none; } }
+    </style>
+</head>
+<body onload="window.print()">
+    <div class="box">
+        <div class="hdr">
+            <div class="title">ANNEXURE - A</div>
+            <div class="subtitle">DATA SHEET FOR SUBMISSION OF CTD FOR NEPAL TRANSIT CARGO</div>
+            <div class="note">(FILL UP USING BLOCK LETTERS)</div>
+        </div>
+
+        <div class="refline">
+            <div>JOB NO: <span>@Model.JobNumber</span></div>
+            <div>CTD NO: <span>@V(Model.CtdNumber)</span></div>
+            <div>DT: <span>@D(Model.CtdDate)</span></div>
+        </div>
+
+        <ol class="items">
+            <li><span class="lbl">CHA CODE:</span> <span class="val">@V(Model.SubAgentCode)</span> &nbsp; <span class="lbl">CHA NAME:</span> <span class="val">@V(Model.SubAgentName)</span></li>
+            <li><span class="lbl">EXIT CUSTOMS SITE:</span> <span class="val">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> (PL TICK) &nbsp;&nbsp; <span class="lbl">ROUTE OF TRANSIT:</span> <span class="val">@V(Model.RouteOfTransit)</span></li>
+            <li><span class="lbl">IMPORTER'S CODE:</span> <span class="val">@V(Model.PartyCode)</span></li>
+            <li>
+                <span class="lbl">IMPORTER'S NAME &amp; ADDRESS:</span> <span class="val">@V(Model.PartyName)@(string.IsNullOrWhiteSpace(Model.Address) ? "" : ", " + Model.Address)</span><br />
+                <span class="lbl">NOTIFY NAME AND ADDRESS:</span> <span class="val">SAME AS ABOVE</span>
+            </li>
+            <li><span class="lbl">INVOICE NO:</span> <span class="val">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> &nbsp;&nbsp; <span class="lbl">DATE:</span> <span class="val">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></li>
+            <li><span class="lbl">CERTIFICATE OF ORIGIN:</span> <span class="val">@V(Model.CountryOrigin)</span> &nbsp;&nbsp; <span class="lbl">DATE:</span> <span class="val">@D(Model.DueOrigin)</span></li>
+            <li>
+                <span class="lbl">LC/CI NO:</span> <span class="val">@V(Model.LcNo)</span> &nbsp;&nbsp; <span class="lbl">DATE:</span> <span class="val">@D(Model.LcDate)</span><br />
+                <span class="lbl">COUNTRY OF ORIGIN:</span> <span class="val">@V(Model.CountryOrigin)</span> &nbsp;&nbsp;
+                <span class="lbl">COUNTRY OF CONSIGNMENT:</span> <span class="val">@V(Model.CountryCgn)</span> &nbsp;&nbsp;
+                <span class="lbl">CURRENCY CODE:</span> <span class="val">@V(Model.Currency)</span>
+            </li>
+            <li><span class="lbl">INS. POLICY NO:</span> <span class="val">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> &nbsp;&nbsp; <span class="lbl">DATE:</span> <span class="val">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> &nbsp;&nbsp; <span class="lbl">EXP DATE:</span> <span class="val">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></li>
+            <li><span class="lbl">INSURANCE COMPANY NAME &amp; ADD:</span> <span class="val">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></li>
+            <li>
+                <span class="lbl">IGM NO. FOR CTD ITS SCHEDULE NO (LOCAL):</span> <span class="val">@V(Model.RotNo)</span> &nbsp;&nbsp; <span class="lbl">DATE:</span> <span class="val">@D(Model.RotDate)</span><br />
+                <span class="lbl">LINE NO:</span> <span class="val">@V(Model.LineNo)</span> &nbsp;&nbsp; <span class="lbl">BILL NO:</span> <span class="val">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> &nbsp;&nbsp; <span class="lbl">DATE:</span> <span class="val">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </li>
+            <li>
+                <span class="lbl">MBL NO:</span> <span class="val">@V(Model.MblNo)</span> &nbsp;&nbsp; <span class="lbl">DATE:</span> <span class="val">@D(Model.MblDate)</span> &nbsp;&nbsp;
+                <span class="lbl">HBL NO:</span> <span class="val">@V(Model.HblNo)</span> &nbsp;&nbsp; <span class="lbl">DATE:</span> <span class="val">@D(Model.HblDate)</span>
+            </li>
+            <li>
+                <span class="lbl">TOTAL PACKAGE:</span> <span class="val">@(Model.NoPackages > 0 ? Model.NoPackages.ToString() : "")</span> &nbsp;&nbsp;
+                <span class="lbl">PACKAGE CODE:</span> <span class="val">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> &nbsp;&nbsp;
+                <span class="lbl">TARE WT:</span> <span class="val">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </li>
+            <li>
+                <span class="lbl">GROSS WT:</span> <span class="val">@V(Model.GrossWeight)</span> &nbsp;&nbsp;
+                <span class="lbl">NET WT:</span> <span class="val">@V(Model.NetWeight)</span> &nbsp;&nbsp;
+                <span class="lbl">EXCHANGE RATE:</span> <span class="val">@V(Model.ExchangeRate)</span>
+            </li>
+            <li>
+                <span class="lbl">CONTAINER NO / SHIPPER SEAL NO:</span> <span class="val">@V(Model.ContainerStatus)@(string.IsNullOrWhiteSpace(Model.ContainerNo) ? "" : " / " + Model.ContainerNo)</span> &nbsp;&nbsp;
+                <span class="lbl">SEAL:</span> <span class="val">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            </li>
+            <li>
+                <span class="lbl">ITEM NO:</span> <span class="val">1</span> &nbsp;&nbsp;
+                <span class="lbl">CTH:</span> <span class="val">@V(Model.CustomsCode)</span> &nbsp;&nbsp;
+                <span class="lbl">SENSITIVE:</span> <span class="val">&nbsp;&nbsp;&nbsp;</span>
+            </li>
+        </ol>
+    </div>
+    <p class="footer">Printed from CTD Management System &middot; @DateTime.Now.ToString("g")</p>
+</body>
+</html>

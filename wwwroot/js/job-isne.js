@@ -273,6 +273,13 @@
     });
   }
 
+  const ctdSubmissionBtn = $("#isneCtdSubmissionBtn");
+  if (ctdSubmissionBtn && !ctdSubmissionBtn.disabled) {
+    ctdSubmissionBtn.addEventListener("click", function () {
+      window.open("/JobIsne/CtdSubmission/" + recordId, "_blank");
+    });
+  }
+
   $("#isneCancelBtn").addEventListener("click", function () {
     window.location.href = "/Dashboard/Index";
   });
