@@ -184,6 +184,21 @@ public class JobIsneController : Controller
         return View(record);
     }
 
+    /// <summary>
+    /// "ANNEXURE - A" data sheet for CTD submission to Nepal customs. Fields JobIsne
+    /// doesn't capture (Invoice No/Date, Insurance Policy details, Package Code, Tare
+    /// Weight, Seal No, Sensitive flag) are left as blank fill-in lines rather than
+    /// guessed — same convention the paper form itself uses for optional fields.
+    /// </summary>
+    [HttpGet]
+    [RequirePermission(PermissionKeys.JobIsneManage)]
+    public async Task<IActionResult> CtdSubmission(int id)
+    {
+        var record = await _jobIsneService.GetByIdAsync(id);
+        if (record is null) return NotFound();
+        return View(record);
+    }
+
     [RequirePermission(PermissionKeys.TrackingView)]
     public IActionResult Tracking()
     {

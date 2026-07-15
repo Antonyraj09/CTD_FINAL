@@ -58,6 +58,10 @@ Other Job ISNE field changes in this pass:
 - **Miscellaneous Description auto-fill**: switching Container Status to FCL sets it to `SHIPPER'S LOAD & COUNT`; switching to LCL clears it. Only fires on a user-initiated status change (not on page load), so an existing job's custom Misc Description isn't silently overwritten when the form opens with FCL already selected.
 - **Due — LOA / Due — Certificate of Origin / Due — Proforma Invoice**: three new date fields in Transit & Delivery Details, alongside the existing Due-date fields (Packing List/Invoice/Original B/L/Insurance Certificate/LC Copy).
 
+### CTD Submission (Nepal) print output
+
+`JobIsneController.CtdSubmission(id)` / `Views/JobIsne/CtdSubmission.cshtml` renders the "ANNEXURE - A — Data Sheet for Submission of CTD for Nepal Transit Cargo" paper form, populated from a Job ISNE record (button on the Job ISNE screen and a row action on CTD Tracking, both open it in a new tab and trigger the print dialog, same pattern as the existing Print view). Field mapping: CHA Code/Name ← Sub-Agent Code/Name; Importer's Code/Name & Address ← Party Code/Name/Address; Certificate of Origin date ← the new Due — Certificate of Origin field; Country of Consignment ← Country of CGN; IGM/Schedule No ← ROT Number/Date; Line No ← Line Number. A handful of fields the paper form asks for have no equivalent anywhere in JobIsne — Invoice No/Date, Insurance Policy No/Date/Expiry, Insurance Company Name & Address, Bill No, Package Code, Tare Weight, Shipper Seal No, Sensitive flag — those are left as blank fill-in lines for manual completion rather than guessed, the same convention the paper form itself uses for its own optional fields.
+
 ## Project layout
 
 ```
