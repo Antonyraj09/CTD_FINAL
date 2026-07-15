@@ -108,9 +108,6 @@ public class JobIsneService : IJobIsneService
             _ => query.OrderByDescending(j => j.JobDate),
         };
 
-        var total = await query.CountAsync(ct);
-        var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync(ct);
-
-        return new PagedResult<JobIsne> { Items = items, TotalCount = total, Page = page, PageSize = pageSize };
+        return await query.ToPagedResultAsync(page, pageSize, ct);
     }
 }

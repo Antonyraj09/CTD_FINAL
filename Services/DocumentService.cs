@@ -1,5 +1,6 @@
 using CTD_FINAL.DTOs;
 using CTD_FINAL.Entities;
+using CTD_FINAL.Helpers;
 using CTD_FINAL.Interfaces;
 using CTD_FINAL.Data;
 using Microsoft.EntityFrameworkCore;
@@ -21,9 +22,7 @@ public class DocumentService : IDocumentService
         if (!string.IsNullOrWhiteSpace(type))
             q = q.Where(d => d.Type == type);
 
-        var total = await q.CountAsync(ct);
-        var items = await q.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync(ct);
-        return new PagedResult<GeneratedDocument> { Items = items, TotalCount = total, Page = page, PageSize = pageSize };
+        return await q.ToPagedResultAsync(page, pageSize, ct);
     }
 
     public async Task<GeneratedDocument?> GetByIdAsync(int id, CancellationToken ct = default) =>
