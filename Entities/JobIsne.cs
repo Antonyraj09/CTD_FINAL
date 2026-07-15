@@ -115,12 +115,16 @@ public class JobIsne : BaseEntity
     public DateTime? DueOriginalBl { get; set; }
     public DateTime? DueInsuranceCert { get; set; }
     public DateTime? DueLcCopy { get; set; }
+    public DateTime? DueLoa { get; set; }
+    public DateTime? DueOrigin { get; set; }
+    public DateTime? DueProformaInvoice { get; set; }
 
     // ---- Section D: Container & Cargo Details ----
     [StringLength(500)]
     public string? MarksSerial { get; set; }
 
-    [StringLength(200)]
+    /// <summary>Fixed 15-character alphanumeric container number — no special characters.</summary>
+    [StringLength(15), RegularExpression("^[a-zA-Z0-9]*$", ErrorMessage = "Container Number must be alphanumeric only.")]
     public string? ContainerNo { get; set; }
 
     public ContainerStatus ContainerStatus { get; set; } = ContainerStatus.FCL;

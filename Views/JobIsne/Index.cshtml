@@ -231,6 +231,9 @@
                 <div class="field"><label>Due — Original B/L Date</label><input type="date" id="isne_dueOriginalBL" value="@D(Model?.DueOriginalBl)"></div>
                 <div class="field"><label>Due — Insurance Certificate</label><input type="date" id="isne_dueInsuranceCert" value="@D(Model?.DueInsuranceCert)"></div>
                 <div class="field"><label>Due — LC Copy Date</label><input type="date" id="isne_dueLcCopy" value="@D(Model?.DueLcCopy)"></div>
+                <div class="field"><label>Due — LOA Date</label><input type="date" id="isne_dueLoa" value="@D(Model?.DueLoa)"></div>
+                <div class="field"><label>Due — Certificate of Origin</label><input type="date" id="isne_dueOrigin" value="@D(Model?.DueOrigin)"></div>
+                <div class="field"><label>Due — Proforma Invoice</label><input type="date" id="isne_dueProformaInvoice" value="@D(Model?.DueProformaInvoice)"></div>
             </div>
         </div>
     </div>
@@ -251,7 +254,7 @@
                     </div>
                     <div class="form-grid" style="grid-template-columns:1fr 1fr;gap:14px;">
                         <div class="field span-2"><label>Marks &amp; Serial Number</label><textarea id="isne_marksSerial" placeholder="e.g. N/M" style="min-height:64px;">@Model?.MarksSerial</textarea></div>
-                        <div class="field span-2"><label>Container Number</label><input type="text" id="isne_containerNo" placeholder="e.g. OCGU 2034526 / CNSHK2550527" value="@Model?.ContainerNo"></div>
+                        <div class="field span-2"><label>Container Number</label><input type="text" id="isne_containerNo" placeholder="e.g. OCGU2034526 (15 alphanumeric)" value="@Model?.ContainerNo"></div>
                         <div class="field span-2">
                             <label>Container Status</label>
                             <div class="radio-group">

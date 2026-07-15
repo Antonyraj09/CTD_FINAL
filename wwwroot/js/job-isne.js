@@ -61,6 +61,15 @@
     });
   }
 
+  /* ---------------- Container Number: fixed 15-char alphanumeric, no special characters ---------------- */
+  const containerNoInput = $("#isne_containerNo");
+  if (containerNoInput) {
+    containerNoInput.addEventListener("input", function () {
+      const cleaned = containerNoInput.value.replace(/[^a-zA-Z0-9]/g, "").slice(0, 15);
+      if (cleaned !== containerNoInput.value) containerNoInput.value = cleaned;
+    });
+  }
+
   /* ---------------- radio / size pill visuals ---------------- */
   $all('input[name="isneContainerStatus"]').forEach(function (radio) {
     radio.addEventListener("change", function () {
@@ -68,6 +77,11 @@
         const inp = elm.querySelector("input");
         elm.classList.toggle("checked", inp && inp.checked);
       });
+      // FCL implies "shipper's load & count" (the shipper packed/counted the whole
+      // container, so customs takes the declared count as-is); LCL doesn't, so clear it.
+      // Only fires on a user-initiated status change, not on page load, so an existing
+      // job's saved Misc Description isn't silently overwritten when the form opens.
+      $("#isne_miscDesc").value = radio.value === "FCL" ? "SHIPPER'S LOAD & COUNT" : "";
     });
   });
   $all("#isne_sizePillGroup .size-pill").forEach(function (pill) {
@@ -153,6 +167,9 @@
       dueOriginalBl: $("#isne_dueOriginalBL").value || null,
       dueInsuranceCert: $("#isne_dueInsuranceCert").value || null,
       dueLcCopy: $("#isne_dueLcCopy").value || null,
+      dueLoa: $("#isne_dueLoa").value || null,
+      dueOrigin: $("#isne_dueOrigin").value || null,
+      dueProformaInvoice: $("#isne_dueProformaInvoice").value || null,
       marksSerial: $("#isne_marksSerial").value,
       containerNo: $("#isne_containerNo").value,
       containerStatus: (document.querySelector('input[name="isneContainerStatus"]:checked') || {}).value || "FCL",
