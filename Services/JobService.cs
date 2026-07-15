@@ -1,6 +1,7 @@
 using CTD_FINAL.DTOs;
 using CTD_FINAL.Entities;
 using CTD_FINAL.Enums;
+using CTD_FINAL.Helpers;
 using CTD_FINAL.Interfaces;
 using CTD_FINAL.Data;
 using Microsoft.EntityFrameworkCore;
@@ -208,10 +209,7 @@ public class JobService : IJobService
             _ => query.OrderByDescending(j => j.JobDate),
         };
 
-        var total = await query.CountAsync(ct);
-        var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync(ct);
-
-        return new PagedResult<CtdJob> { Items = items, TotalCount = total, Page = page, PageSize = pageSize };
+        return await query.ToPagedResultAsync(page, pageSize, ct);
     }
 
     public async Task<CtdJob?> MarkDocumentGeneratedAsync(int jobId, string docType, CancellationToken ct = default)

@@ -89,7 +89,13 @@ database/scripts/ Idempotent SQL script generated from the EF Core migration
 ## Prerequisites
 
 - .NET 8 SDK
-- SQL Server 2019+ (local instance, LocalDB, or `mcr.microsoft.com/mssql/server:2022-latest` via Docker)
+- SQL Server 2008 SP1+ (local instance, LocalDB, or `mcr.microsoft.com/mssql/server:2022-latest` via Docker)
+
+### SQL Server 2008 compatibility
+
+This app targets old SQL Server installations, down to **SQL Server 2008 SP1**. That constrains what EF Core is allowed to generate — most notably, `Skip()`/`Take()` cannot translate to SQL Server's `OFFSET ... FETCH NEXT` syntax, since that was only added in SQL Server 2012. Every paginated list (`JobIsneService`, `JobService`, `DocumentService`, `AuditService`) uses `Helpers/PagingExtensions.cs`'s `ToPagedResultAsync()` instead, which pulls the full filtered/sorted result set into the app and pages it in memory. That's fine at this app's scale, but means it isn't the right pattern to copy for a table expected to grow into the millions of rows — a raw-SQL `ROW_NUMBER() OVER (...)` query would be the 2008-compatible way to keep pagination server-side, if that's ever needed.
+
+Everything else in the schema/queries (filtered unique indexes, `datetime2`, `GROUP BY`, `CROSS/OUTER APPLY` from `Include()`) has been in SQL Server since 2008 or earlier, so no other changes were needed for this — but this hasn't been exercised against a real SQL Server 2008 instance, only audited by inspecting the generated SQL and cross-checking against known SQL Server version history. If you hit another `Incorrect syntax near ...` error, it's almost certainly another EF Core LINQ translation using a newer T-SQL feature — check the exact SQL Server version the syntax was introduced in and report it back with the error text and the query that triggered it.
 
 ## First-time setup
 
