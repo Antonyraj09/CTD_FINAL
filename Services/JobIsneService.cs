@@ -68,6 +68,7 @@ public class JobIsneService : IJobIsneService
 
     public async Task<PagedResult<JobIsne>> SearchAsync(JobIsneTrackingFilter filter, int page, int pageSize, CancellationToken ct = default)
     {
+       
         var query = _context.JobIsnes.AsNoTracking().AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(filter.JobNo))
