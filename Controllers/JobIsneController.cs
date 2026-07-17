@@ -66,16 +66,17 @@ public class JobIsneController : Controller
                 return Json(new { success = false, message = "CTD Number must be alphanumeric only — no special characters." });
         }
 
-        if (!string.IsNullOrEmpty(request.ContainerNo))
+        foreach (var c in request.Containers)
         {
-            if (request.ContainerNo.Length > 15)
-                return Json(new { success = false, message = "Container Number cannot exceed 15 characters." });
-            if (!System.Text.RegularExpressions.Regex.IsMatch(request.ContainerNo, "^[a-zA-Z0-9]*$"))
-                return Json(new { success = false, message = "Container Number must be alphanumeric only — no special characters." });
+            if (string.IsNullOrEmpty(c.ContainerNo)) continue;
+            if (c.ContainerNo.Length > 15)
+                return Json(new { success = false, message = $"Container Number '{c.ContainerNo}' cannot exceed 15 characters." });
+            if (!System.Text.RegularExpressions.Regex.IsMatch(c.ContainerNo, "^[a-zA-Z0-9]*$"))
+                return Json(new { success = false, message = $"Container Number '{c.ContainerNo}' must be alphanumeric only — no special characters." });
         }
 
-        if (!Enum.TryParse<ContainerStatus>(request.ContainerStatus, true, out var containerStatus))
-            containerStatus = ContainerStatus.FCL;
+        if (!Enum.TryParse<ContainerStatus>(request.ShipmentType, true, out var shipmentType))
+            shipmentType = ContainerStatus.FCL;
 
         var entity = new JobIsne
         {
@@ -124,14 +125,8 @@ public class JobIsneController : Controller
             DueLoa = request.DueLoa,
             DueOrigin = request.DueOrigin,
             DueProformaInvoice = request.DueProformaInvoice,
-            MarksSerial = request.MarksSerial,
-            ContainerNo = request.ContainerNo,
-            ContainerStatus = containerStatus,
-            ContainerSize = request.ContainerSize,
-            NoPackages = request.NoPackages,
-            CustomsCode = request.CustomsCode,
+            ShipmentType = shipmentType,
             MiscDescription = request.MiscDescription,
-            Unit = request.Unit,
             CargoDescription = request.CargoDescription,
             Currency = request.Currency,
             ExchangeRate = request.ExchangeRate,
@@ -155,9 +150,28 @@ public class JobIsneController : Controller
             DutyAmount = request.DutyAmount
         };
 
+        var containers = request.Containers.Select(c =>
+        {
+            Enum.TryParse<ContainerStatus>(c.ShipmentType, true, out var rowShipmentType);
+            return new JobIsneContainer
+            {
+                ContainerNo = c.ContainerNo,
+                ContainerSize = c.ContainerSize,
+                ShipmentType = rowShipmentType,
+                NoPackages = c.NoPackages,
+                PackageType = c.PackageType,
+                GrossWeight = c.GrossWeight,
+                GrossWeightUnit = c.GrossWeightUnit,
+                NetWeight = c.NetWeight,
+                NetWeightUnit = c.NetWeightUnit,
+                MarksSerial = c.MarksSerial,
+                CustomsCode = c.CustomsCode
+            };
+        }).ToList();
+
         try
         {
-            var saved = await _jobIsneService.SaveAsync(entity, CurrentUserName);
+            var saved = await _jobIsneService.SaveAsync(entity, containers, CurrentUserName);
             return Json(new { success = true, id = saved.Id, jobNumber = saved.JobNumber, message = $"ISNE Job {saved.JobNumber} saved successfully" });
         }
         catch (InvalidOperationException ex)

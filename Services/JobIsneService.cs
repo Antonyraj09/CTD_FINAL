@@ -22,7 +22,9 @@ public class JobIsneService : IJobIsneService
     }
 
     public async Task<JobIsne?> GetByIdAsync(int id, CancellationToken ct = default) =>
-        await _context.JobIsnes.AsNoTracking().FirstOrDefaultAsync(j => j.Id == id, ct);
+        await _context.JobIsnes.AsNoTracking()
+            .Include(j => j.Containers.OrderBy(c => c.SortOrder))
+            .FirstOrDefaultAsync(j => j.Id == id, ct);
 
     public async Task<string> PeekNextJobNumberAsync(CancellationToken ct = default)
     {
@@ -31,24 +33,36 @@ public class JobIsneService : IJobIsneService
         return $"ISNE/{next:D4}/{DateTime.UtcNow.Year}";
     }
 
-    public async Task<JobIsne> SaveAsync(JobIsne record, string userName, CancellationToken ct = default)
+    public async Task<JobIsne> SaveAsync(JobIsne record, List<JobIsneContainer> containers, string userName, CancellationToken ct = default)
     {
+        for (var i = 0; i < containers.Count; i++) containers[i].SortOrder = i;
+
         if (record.Id == 0)
         {
             record.JobNumber = await _numberSequenceService.NextIsneJobNumberAsync(ct);
             record.CreatedBy = userName;
+            record.Containers = containers;
             _context.JobIsnes.Add(record);
             await _context.SaveChangesAsync(ct);
             await _auditService.LogAsync(AuditActionType.Created, userName, record.JobNumber, detail: "Job ISNE created");
             return record;
         }
 
-        var existing = await _context.JobIsnes.FirstOrDefaultAsync(j => j.Id == record.Id, ct)
+        var existing = await _context.JobIsnes.Include(j => j.Containers).FirstOrDefaultAsync(j => j.Id == record.Id, ct)
             ?? throw new InvalidOperationException($"Job ISNE #{record.Id} not found.");
 
         record.JobNumber = existing.JobNumber;
         record.CreatedBy = existing.CreatedBy;
         _context.Entry(existing).CurrentValues.SetValues(record);
+
+        _context.JobIsneContainers.RemoveRange(existing.Containers);
+        existing.Containers.Clear();
+        foreach (var c in containers)
+        {
+            c.Id = 0;
+            existing.Containers.Add(c);
+        }
+
         existing.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync(ct);
         await _auditService.LogAsync(AuditActionType.Updated, userName, existing.JobNumber, detail: "Job ISNE updated");
@@ -68,8 +82,7 @@ public class JobIsneService : IJobIsneService
 
     public async Task<PagedResult<JobIsne>> SearchAsync(JobIsneTrackingFilter filter, int page, int pageSize, CancellationToken ct = default)
     {
-       
-        var query = _context.JobIsnes.AsNoTracking().AsQueryable();
+        var query = _context.JobIsnes.AsNoTracking().Include(j => j.Containers).AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(filter.JobNo))
             query = query.Where(j => j.JobNumber.Contains(filter.JobNo));
@@ -78,7 +91,7 @@ public class JobIsneService : IJobIsneService
         if (!string.IsNullOrWhiteSpace(filter.PartyName))
             query = query.Where(j => j.PartyName.Contains(filter.PartyName));
         if (!string.IsNullOrWhiteSpace(filter.Container))
-            query = query.Where(j => j.ContainerNo != null && j.ContainerNo.Contains(filter.Container));
+            query = query.Where(j => j.Containers.Any(c => c.ContainerNo != null && c.ContainerNo.Contains(filter.Container)));
         if (filter.DateFrom.HasValue)
             query = query.Where(j => j.JobDate >= filter.DateFrom);
         if (filter.DateTo.HasValue)
@@ -95,7 +108,7 @@ public class JobIsneService : IJobIsneService
             var q = filter.Quick;
             query = query.Where(j => j.JobNumber.Contains(q) || j.PartyName.Contains(q)
                 || (j.CtdNumber != null && j.CtdNumber.Contains(q))
-                || (j.ContainerNo != null && j.ContainerNo.Contains(q))
+                || j.Containers.Any(c => c.ContainerNo != null && c.ContainerNo.Contains(q))
                 || (j.RouteOfTransit != null && j.RouteOfTransit.Contains(q)));
         }
 

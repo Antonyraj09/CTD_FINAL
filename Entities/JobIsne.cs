@@ -120,28 +120,13 @@ public class JobIsne : BaseEntity
     public DateTime? DueProformaInvoice { get; set; }
 
     // ---- Section D: Container & Cargo Details ----
-    [StringLength(500)]
-    public string? MarksSerial { get; set; }
+    /// <summary>Overall/default shipment type shown in Shipment Information; individual rows may still differ.</summary>
+    public ContainerStatus ShipmentType { get; set; } = ContainerStatus.FCL;
 
-    /// <summary>Fixed 15-character alphanumeric container number — no special characters.</summary>
-    [StringLength(15), RegularExpression("^[a-zA-Z0-9]*$", ErrorMessage = "Container Number must be alphanumeric only.")]
-    public string? ContainerNo { get; set; }
-
-    public ContainerStatus ContainerStatus { get; set; } = ContainerStatus.FCL;
-
-    [StringLength(10)]
-    public string ContainerSize { get; set; } = "20ft";
-
-    public int NoPackages { get; set; }
-
-    [StringLength(60)]
-    public string? CustomsCode { get; set; }
+    public ICollection<JobIsneContainer> Containers { get; set; } = new List<JobIsneContainer>();
 
     [StringLength(300)]
     public string? MiscDescription { get; set; }
-
-    [StringLength(200)]
-    public string? Unit { get; set; }
 
     [StringLength(1000)]
     public string? CargoDescription { get; set; }

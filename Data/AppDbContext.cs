@@ -22,6 +22,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, 
     public DbSet<JobContainer> JobContainers => Set<JobContainer>();
     public DbSet<JobChecklistItem> JobChecklistItems => Set<JobChecklistItem>();
     public DbSet<JobIsne> JobIsnes => Set<JobIsne>();
+    public DbSet<JobIsneContainer> JobIsneContainers => Set<JobIsneContainer>();
 
     public DbSet<GeneratedDocument> GeneratedDocuments => Set<GeneratedDocument>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();

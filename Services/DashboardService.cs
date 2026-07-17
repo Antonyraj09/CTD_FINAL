@@ -135,6 +135,7 @@ public class DashboardService : IDashboardService
     public async Task<IReadOnlyList<RecentJobDto>> GetRecentJobsAsync(int count = 8, CancellationToken ct = default)
     {
         var jobs = await _context.JobIsnes.AsNoTracking()
+            .Include(j => j.Containers)
             .OrderByDescending(j => j.JobDate)
             .Take(count)
             .ToListAsync(ct);
@@ -146,8 +147,8 @@ public class DashboardService : IDashboardService
             JobDate = j.JobDate,
             PartyName = j.PartyName,
             CtdNumber = j.CtdNumber,
-            ContainerCount = string.IsNullOrWhiteSpace(j.ContainerNo) ? 0 : 1,
-            ContainerSize = j.ContainerSize,
+            ContainerCount = j.Containers.Count,
+            ContainerSize = j.Containers.FirstOrDefault()?.ContainerSize,
             Route = j.RouteOfTransit,
             Status = JobIsneStatus.Label(j)
         }).ToList();
@@ -173,7 +174,7 @@ public class DashboardService : IDashboardService
             Id = j.Id,
             JobNo = j.JobNumber,
             CtdNumber = j.CtdNumber,
-            Container = j.ContainerNo,
+            Container = j.Containers.Count switch { 0 => null, 1 => j.Containers.First().ContainerNo, var n => $"{n} containers" },
             Route = j.RouteOfTransit,
             Status = JobIsneStatus.Label(j),
             ArrivalDate = j.VesselArrival
@@ -219,6 +220,6 @@ public class DashboardService : IDashboardService
     {
         var party = await _context.Parties.AsNoTracking().FirstOrDefaultAsync(p => p.Id == importerId, ct);
         if (party is null) return new List<JobIsne>();
-        return await _context.JobIsnes.AsNoTracking().Where(j => j.PartyName == party.Name).ToListAsync(ct);
+        return await _context.JobIsnes.AsNoTracking().Include(j => j.Containers).Where(j => j.PartyName == party.Name).ToListAsync(ct);
     }
 }

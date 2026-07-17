@@ -117,5 +117,18 @@ public class JobIsneConfiguration : IEntityTypeConfiguration<JobIsne>
         b.Property(x => x.NetWeight).HasPrecision(18, 3);
         b.Property(x => x.LcAmount).HasPrecision(18, 2);
         b.Property(x => x.DutyAmount).HasPrecision(18, 2);
+
+        b.HasMany(x => x.Containers).WithOne(c => c.JobIsne).HasForeignKey(c => c.JobIsneId).OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+public class JobIsneContainerConfiguration : IEntityTypeConfiguration<JobIsneContainer>
+{
+    public void Configure(EntityTypeBuilder<JobIsneContainer> b)
+    {
+        b.Property(x => x.GrossWeight).HasPrecision(18, 3);
+        b.Property(x => x.NetWeight).HasPrecision(18, 3);
+        b.HasIndex(x => x.JobIsneId);
+        b.HasIndex(x => x.ContainerNo);
     }
 }

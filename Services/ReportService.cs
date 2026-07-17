@@ -31,7 +31,10 @@ public class ReportService : IReportService
         _ => null
     };
 
-    private IQueryable<JobIsne> BaseQuery() => _context.JobIsnes.AsNoTracking();
+    private IQueryable<JobIsne> BaseQuery() => _context.JobIsnes.AsNoTracking().Include(j => j.Containers);
+
+    private static string CustomsCodesOf(JobIsne j) =>
+        string.Join(", ", j.Containers.Select(c => c.CustomsCode).Where(c => !string.IsNullOrWhiteSpace(c)).Distinct());
 
     private async Task<ReportResult> DailyJobAsync(CancellationToken ct)
     {
@@ -64,7 +67,7 @@ public class ReportService : IReportService
             Rows = jobs.Select(j => new[]
             {
                 j.JobNumber, j.CtdNumber ?? "—", j.CtdDate?.ToString("d MMM yyyy") ?? "—",
-                j.PartyName, j.CustomsCode ?? "—", j.GreenCtd ? "Yes" : "No"
+                j.PartyName, CustomsCodesOf(j) is var codes && codes.Length > 0 ? codes : "—", j.GreenCtd ? "Yes" : "No"
             }).ToList()
         };
     }
@@ -88,18 +91,20 @@ public class ReportService : IReportService
 
     private async Task<ReportResult> ContainerMovementAsync(CancellationToken ct)
     {
-        var jobs = await BaseQuery().Where(j => j.ContainerNo != null && j.ContainerNo != "")
+        var jobs = await BaseQuery().Where(j => j.Containers.Any(c => c.ContainerNo != null && c.ContainerNo != ""))
             .OrderByDescending(j => j.JobDate).ToListAsync(ct);
 
         return new ReportResult
         {
             Title = "Container Movement Report",
             Columns = new[] { "Container No.", "Size", "Status Type", "Gross Weight (kg)", "Job No.", "Status" },
-            Rows = jobs.Select(j => new[]
-            {
-                j.ContainerNo!, j.ContainerSize, j.ContainerStatus.ToString(),
-                j.GrossWeight?.ToString("N0") ?? "—", j.JobNumber, JobIsneStatus.Label(j)
-            }).ToList()
+            Rows = jobs.SelectMany(j => j.Containers
+                .Where(c => !string.IsNullOrEmpty(c.ContainerNo))
+                .Select(c => new[]
+                {
+                    c.ContainerNo!, c.ContainerSize, c.ShipmentType.ToString(),
+                    c.GrossWeight?.ToString("N0") ?? "—", j.JobNumber, JobIsneStatus.Label(j)
+                })).ToList()
         };
     }
 

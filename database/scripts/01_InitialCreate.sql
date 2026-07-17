@@ -1913,3 +1913,164 @@ GO
 COMMIT;
 GO
 
+BEGIN TRANSACTION;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260717145356_CombineJobIsneContainerGrid'
+)
+BEGIN
+    DECLARE @var13 sysname;
+    SELECT @var13 = [d].[name]
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[JobIsnes]') AND [c].[name] = N'ContainerNo');
+    IF @var13 IS NOT NULL EXEC(N'ALTER TABLE [JobIsnes] DROP CONSTRAINT [' + @var13 + '];');
+    ALTER TABLE [JobIsnes] DROP COLUMN [ContainerNo];
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260717145356_CombineJobIsneContainerGrid'
+)
+BEGIN
+    DECLARE @var14 sysname;
+    SELECT @var14 = [d].[name]
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[JobIsnes]') AND [c].[name] = N'ContainerSize');
+    IF @var14 IS NOT NULL EXEC(N'ALTER TABLE [JobIsnes] DROP CONSTRAINT [' + @var14 + '];');
+    ALTER TABLE [JobIsnes] DROP COLUMN [ContainerSize];
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260717145356_CombineJobIsneContainerGrid'
+)
+BEGIN
+    DECLARE @var15 sysname;
+    SELECT @var15 = [d].[name]
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[JobIsnes]') AND [c].[name] = N'CustomsCode');
+    IF @var15 IS NOT NULL EXEC(N'ALTER TABLE [JobIsnes] DROP CONSTRAINT [' + @var15 + '];');
+    ALTER TABLE [JobIsnes] DROP COLUMN [CustomsCode];
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260717145356_CombineJobIsneContainerGrid'
+)
+BEGIN
+    DECLARE @var16 sysname;
+    SELECT @var16 = [d].[name]
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[JobIsnes]') AND [c].[name] = N'MarksSerial');
+    IF @var16 IS NOT NULL EXEC(N'ALTER TABLE [JobIsnes] DROP CONSTRAINT [' + @var16 + '];');
+    ALTER TABLE [JobIsnes] DROP COLUMN [MarksSerial];
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260717145356_CombineJobIsneContainerGrid'
+)
+BEGIN
+    DECLARE @var17 sysname;
+    SELECT @var17 = [d].[name]
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[JobIsnes]') AND [c].[name] = N'Unit');
+    IF @var17 IS NOT NULL EXEC(N'ALTER TABLE [JobIsnes] DROP CONSTRAINT [' + @var17 + '];');
+    ALTER TABLE [JobIsnes] DROP COLUMN [Unit];
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260717145356_CombineJobIsneContainerGrid'
+)
+BEGIN
+    DECLARE @var18 sysname;
+    SELECT @var18 = [d].[name]
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[JobIsnes]') AND [c].[name] = N'NoPackages');
+    IF @var18 IS NOT NULL EXEC(N'ALTER TABLE [JobIsnes] DROP CONSTRAINT [' + @var18 + '];');
+    ALTER TABLE [JobIsnes] DROP COLUMN [NoPackages];
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260717145356_CombineJobIsneContainerGrid'
+)
+BEGIN
+    EXEC sp_rename N'[JobIsnes].[ContainerStatus]', N'ShipmentType', N'COLUMN';
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260717145356_CombineJobIsneContainerGrid'
+)
+BEGIN
+    CREATE TABLE [JobIsneContainers] (
+        [Id] int NOT NULL IDENTITY,
+        [JobIsneId] int NOT NULL,
+        [SortOrder] int NOT NULL,
+        [ContainerNo] nvarchar(15) NULL,
+        [ContainerSize] nvarchar(10) NOT NULL,
+        [ShipmentType] int NOT NULL,
+        [NoPackages] int NOT NULL,
+        [PackageType] nvarchar(40) NULL,
+        [GrossWeight] decimal(18,3) NULL,
+        [GrossWeightUnit] nvarchar(10) NOT NULL,
+        [NetWeight] decimal(18,3) NULL,
+        [NetWeightUnit] nvarchar(10) NOT NULL,
+        [MarksSerial] nvarchar(200) NULL,
+        [CustomsCode] nvarchar(60) NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        [UpdatedAt] datetime2 NULL,
+        CONSTRAINT [PK_JobIsneContainers] PRIMARY KEY ([Id]),
+        CONSTRAINT [FK_JobIsneContainers_JobIsnes_JobIsneId] FOREIGN KEY ([JobIsneId]) REFERENCES [JobIsnes] ([Id]) ON DELETE CASCADE
+    );
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260717145356_CombineJobIsneContainerGrid'
+)
+BEGIN
+    CREATE INDEX [IX_JobIsneContainers_ContainerNo] ON [JobIsneContainers] ([ContainerNo]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260717145356_CombineJobIsneContainerGrid'
+)
+BEGIN
+    CREATE INDEX [IX_JobIsneContainers_JobIsneId] ON [JobIsneContainers] ([JobIsneId]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260717145356_CombineJobIsneContainerGrid'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260717145356_CombineJobIsneContainerGrid', N'8.0.11');
+END;
+GO
+
+COMMIT;
+GO
+

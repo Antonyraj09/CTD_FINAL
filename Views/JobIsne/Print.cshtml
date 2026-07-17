@@ -17,9 +17,10 @@
         ("M B/L No", Model.MblNo),
         ("H B/L No", Model.HblNo),
         ("LC Number", Model.LcNo),
-        ("Container No", Model.ContainerNo),
-        ("No. of Packages", Model.NoPackages),
-        ("Customs Code", Model.CustomsCode),
+        ("Shipment Type", Model.ShipmentType),
+        ("No. of Containers", Model.Containers.Count),
+        ("Total Packages", Model.Containers.Sum(c => c.NoPackages)),
+        ("Misc Description", Model.MiscDescription),
         ("Cargo Description", Model.CargoDescription),
         ("Currency", Model.Currency),
         ("Exchange Rate", Model.ExchangeRate),
@@ -51,6 +52,26 @@
             <tr><td>@f.Label</td><td>@(f.Value ?? "—")</td></tr>
         }
     </table>
+    @if (Model.Containers.Any())
+    {
+        <h1 style="font-size:14px;">Containers</h1>
+        <table>
+            <tr><th>Container No.</th><th>Size</th><th>Type</th><th>Packages</th><th>Gross Wt.</th><th>Net Wt.</th><th>Marks &amp; Serial No.</th><th>Customs Code</th></tr>
+            @foreach (var c in Model.Containers)
+            {
+                <tr>
+                    <td>@(c.ContainerNo ?? "—")</td>
+                    <td>@c.ContainerSize</td>
+                    <td>@c.ShipmentType</td>
+                    <td>@c.NoPackages</td>
+                    <td>@(c.GrossWeight.HasValue ? $"{c.GrossWeight:N2} {c.GrossWeightUnit}" : "—")</td>
+                    <td>@(c.NetWeight.HasValue ? $"{c.NetWeight:N2} {c.NetWeightUnit}" : "—")</td>
+                    <td>@(c.MarksSerial ?? "—")</td>
+                    <td>@(c.CustomsCode ?? "—")</td>
+                </tr>
+            }
+        </table>
+    }
     <p style="font-size:11px;color:#999;">Printed from CTD Management System &middot; @DateTime.Now.ToString("g")</p>
 </body>
 </html>
