@@ -134,29 +134,28 @@ public class JobIsne : BaseEntity
     [StringLength(1000)]
     public string? CargoDescription { get; set; }
 
-    // ---- Section E: Entry for Data Sheet ----
-    /// <summary>Fixed "NP0000" prefix + exactly 4 numeric digits, e.g. NP00001234.</summary>
-    [Required, StringLength(10)]
-    [RegularExpression(@"^NP0000\d{4}$", ErrorMessage = "Importer Code must be NP0000 followed by exactly 4 digits.")]
-    public string ImporterCode { get; set; } = string.Empty;
+    // ---- Section E: Entry for Data Sheet (all optional) ----
+    /// <summary>Fixed "NP0000" prefix + exactly 4 numeric digits, e.g. NP00001234, when provided.</summary>
+    [StringLength(10)]
+    [RegularExpression(@"^(NP0000\d{4})?$", ErrorMessage = "Importer Code must be NP0000 followed by exactly 4 digits.")]
+    public string? ImporterCode { get; set; }
 
-    [Required, StringLength(20)]
-    public string InvoiceNumber { get; set; } = string.Empty;
+    [StringLength(20)]
+    public string? InvoiceNumber { get; set; }
 
-    public DateTime InvoiceDate { get; set; }
+    public DateTime? InvoiceDate { get; set; }
 
-    [Required, StringLength(30)]
-    public string CertificateOfOrigin { get; set; } = string.Empty;
+    [StringLength(30)]
+    public string? CertificateOfOrigin { get; set; }
 
-    public DateTime CertificateOfOriginDate { get; set; }
+    public DateTime? CertificateOfOriginDate { get; set; }
 
     public bool SensitiveCargo { get; set; }
 
-    /// <summary>Mandatory only when SensitiveCargo is true.</summary>
     [StringLength(200)]
     public string? InsuranceCompanyNameAddress { get; set; }
 
-    /// <summary>Mandatory only when SensitiveCargo is true. Distinct from Section F's CifFc (that's the shipment's own CIF-in-foreign-currency figure).</summary>
+    /// <summary>Distinct from Section F's CifFc (that's the shipment's own CIF-in-foreign-currency figure).</summary>
     public decimal? SensitiveCifValue { get; set; }
 
     // ---- Section F: Commercial Information ----

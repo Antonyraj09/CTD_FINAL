@@ -421,7 +421,7 @@
           customsCode: r.customsCode
         };
       }),
-      importerCode: "NP0000" + $("#isne_importerCodeSuffix").value,
+      importerCode: $("#isne_importerCodeSuffix").value ? "NP0000" + $("#isne_importerCodeSuffix").value : null,
       invoiceNumber: $("#isne_invoiceNumber").value,
       invoiceDate: $("#isne_invoiceDate").value || null,
       certificateOfOrigin: $("#isne_certOrigin").value,
@@ -453,10 +453,7 @@
   }
 
   function validateIsneForm() {
-    const required = [
-      "isne_jobDate", "isne_partyCode", "isne_partyName",
-      "isne_invoiceNumber", "isne_invoiceDate", "isne_certOrigin", "isne_certOriginDate"
-    ];
+    const required = ["isne_jobDate", "isne_partyCode", "isne_partyName"];
     let valid = true;
     required.forEach(function (id) {
       const elm = $("#" + id);
@@ -469,31 +466,25 @@
       }
     });
 
+    // Entry for Data Sheet fields are all optional — only flag Importer Code /
+    // CIF Value as invalid when something was actually typed but doesn't fit
+    // the expected format; an empty field is never blocking.
     const importerSuffixField = importerCodeSuffix?.closest(".field");
-    if (!/^\d{4}$/.test(importerCodeSuffix?.value || "")) {
+    const importerSuffixVal = importerCodeSuffix?.value || "";
+    if (importerSuffixVal && !/^\d{4}$/.test(importerSuffixVal)) {
       valid = false;
       if (importerSuffixField) importerSuffixField.classList.add("invalid");
     } else if (importerSuffixField) {
       importerSuffixField.classList.remove("invalid");
     }
 
-    if (sensitiveToggle?.checked) {
-      const insuranceField = $("#isne_insuranceCompanyAddress").closest(".field");
-      if (!$("#isne_insuranceCompanyAddress").value.trim()) {
-        valid = false;
-        if (insuranceField) insuranceField.classList.add("invalid");
-      } else if (insuranceField) {
-        insuranceField.classList.remove("invalid");
-      }
-
-      const cifField = $("#isne_sensitiveCifValue").closest(".field");
-      const cifValue = parseFloat($("#isne_sensitiveCifValue").value);
-      if (!(cifValue > 0)) {
-        valid = false;
-        if (cifField) cifField.classList.add("invalid");
-      } else if (cifField) {
-        cifField.classList.remove("invalid");
-      }
+    const cifField = $("#isne_sensitiveCifValue").closest(".field");
+    const cifRaw = $("#isne_sensitiveCifValue").value;
+    if (cifRaw && !(parseFloat(cifRaw) > 0)) {
+      valid = false;
+      if (cifField) cifField.classList.add("invalid");
+    } else if (cifField) {
+      cifField.classList.remove("invalid");
     }
 
     if (!validateContainerRows()) valid = false;

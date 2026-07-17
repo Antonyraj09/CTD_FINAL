@@ -60,11 +60,11 @@ public class JobIsneSaveRequest
     public string? CargoDescription { get; set; }
     public List<JobIsneContainerRequest> Containers { get; set; } = new();
 
-    // Section E: Entry for Data Sheet
-    public string ImporterCode { get; set; } = string.Empty;
-    public string InvoiceNumber { get; set; } = string.Empty;
+    // Section E: Entry for Data Sheet (all optional)
+    public string? ImporterCode { get; set; }
+    public string? InvoiceNumber { get; set; }
     public DateTime? InvoiceDate { get; set; }
-    public string CertificateOfOrigin { get; set; } = string.Empty;
+    public string? CertificateOfOrigin { get; set; }
     public DateTime? CertificateOfOriginDate { get; set; }
     public bool SensitiveCargo { get; set; }
     public string? InsuranceCompanyNameAddress { get; set; }

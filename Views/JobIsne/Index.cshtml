@@ -397,30 +397,30 @@
         <div class="erp-section-body">
             <div class="form-grid cols-4">
                 <div class="field">
-                    <label>Importer Code <span class="req">*</span></label>
+                    <label>Importer Code</label>
                     <div class="field-prefix-wrap">
                         <span class="field-prefix">@ImporterCodePrefix</span>
                         <input type="text" id="isne_importerCodeSuffix" inputmode="numeric" maxlength="4" placeholder="0000" value="@ImporterCodeSuffix(Model?.ImporterCode)">
                     </div>
                 </div>
                 <div class="field">
-                    <label>Invoice Number <span class="req">*</span></label>
+                    <label>Invoice Number</label>
                     <input type="text" id="isne_invoiceNumber" maxlength="20" placeholder="e.g. INV-2026-00123" value="@Model?.InvoiceNumber">
                 </div>
                 <div class="field">
-                    <label>Invoice Date <span class="req">*</span></label>
+                    <label>Invoice Date</label>
                     <input type="date" id="isne_invoiceDate" value="@D(Model?.InvoiceDate)">
                 </div>
                 <div class="field">
-                    <label>Certificate of Origin <span class="req">*</span></label>
+                    <label>Certificate of Origin</label>
                     <input type="text" id="isne_certOrigin" maxlength="30" placeholder="Certificate reference / name" value="@Model?.CertificateOfOrigin">
                 </div>
                 <div class="field">
-                    <label>Certificate of Origin Date <span class="req">*</span></label>
+                    <label>Certificate of Origin Date</label>
                     <input type="date" id="isne_certOriginDate" value="@D(Model?.CertificateOfOriginDate)">
                 </div>
                 <div class="field">
-                    <label>Sensitive Cargo <span class="req">*</span></label>
+                    <label>Sensitive Cargo</label>
                     <div class="toggle-field" style="padding-top:10px;">
                         <label class="toggle-switch">
                             <input type="checkbox" id="isne_sensitiveCargo" checked="@(Model?.SensitiveCargo == true)">
@@ -432,11 +432,11 @@
             </div>
             <div class="form-grid cols-2" id="isne_sensitiveFields" style="margin-top:14px;display:@(Model?.SensitiveCargo == true ? "grid" : "none");">
                 <div class="field">
-                    <label>Insurance Company Name &amp; Address <span class="req">*</span></label>
+                    <label>Insurance Company Name &amp; Address</label>
                     <textarea id="isne_insuranceCompanyAddress" maxlength="200" placeholder="Insurance company name and full address" style="min-height:80px;">@Model?.InsuranceCompanyNameAddress</textarea>
                 </div>
                 <div class="field">
-                    <label>CIF Value <span class="req">*</span></label>
+                    <label>CIF Value</label>
                     <input type="number" id="isne_sensitiveCifValue" placeholder="0.00" min="0" step="0.01" value="@Model?.SensitiveCifValue">
                 </div>
             </div>
