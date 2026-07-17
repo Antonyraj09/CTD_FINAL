@@ -5,6 +5,10 @@
     string jobNumber = (string)ViewBag.NextJobNumber;
     string D(DateTime? d) => d?.ToString("yyyy-MM-dd") ?? "";
     string today = DateTime.Today.ToString("yyyy-MM-dd");
+    const string ImporterCodePrefix = "NP0000";
+    string ImporterCodeSuffix(string? code) =>
+        !string.IsNullOrEmpty(code) && code.StartsWith(ImporterCodePrefix) && code.Length == ImporterCodePrefix.Length + 4
+            ? code.Substring(ImporterCodePrefix.Length) : "";
 
     var parties = (List<Party>)ViewBag.Parties;
     var subAgents = (List<SubAgent>)ViewBag.SubAgents;
@@ -382,10 +386,67 @@
     </div>
     <script id="isneContainerDataInit" type="application/json">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(containerInit))</script>
 
-    <!-- ============ SECTION E: COMMERCIAL INFORMATION ============ -->
+    <!-- ============ SECTION E: ENTRY FOR DATA SHEET ============ -->
+    <div class="erp-section collapsible" id="isne_dataSheetSection">
+        <div class="erp-section-head" data-collapse-toggle>
+            <div class="section-letter">E</div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
+            Entry for Data Sheet
+            <svg class="erp-section-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="erp-section-body">
+            <div class="form-grid cols-4">
+                <div class="field">
+                    <label>Importer Code <span class="req">*</span></label>
+                    <div class="field-prefix-wrap">
+                        <span class="field-prefix">@ImporterCodePrefix</span>
+                        <input type="text" id="isne_importerCodeSuffix" inputmode="numeric" maxlength="4" placeholder="0000" value="@ImporterCodeSuffix(Model?.ImporterCode)">
+                    </div>
+                </div>
+                <div class="field">
+                    <label>Invoice Number <span class="req">*</span></label>
+                    <input type="text" id="isne_invoiceNumber" maxlength="20" placeholder="e.g. INV-2026-00123" value="@Model?.InvoiceNumber">
+                </div>
+                <div class="field">
+                    <label>Invoice Date <span class="req">*</span></label>
+                    <input type="date" id="isne_invoiceDate" value="@D(Model?.InvoiceDate)">
+                </div>
+                <div class="field">
+                    <label>Certificate of Origin <span class="req">*</span></label>
+                    <input type="text" id="isne_certOrigin" maxlength="30" placeholder="Certificate reference / name" value="@Model?.CertificateOfOrigin">
+                </div>
+                <div class="field">
+                    <label>Certificate of Origin Date <span class="req">*</span></label>
+                    <input type="date" id="isne_certOriginDate" value="@D(Model?.CertificateOfOriginDate)">
+                </div>
+                <div class="field">
+                    <label>Sensitive Cargo <span class="req">*</span></label>
+                    <div class="toggle-field" style="padding-top:10px;">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="isne_sensitiveCargo" checked="@(Model?.SensitiveCargo == true)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span class="toggle-label" id="isne_sensitiveCargoLabel">@(Model?.SensitiveCargo == true ? "Yes" : "No")</span>
+                    </div>
+                </div>
+            </div>
+            <div class="form-grid cols-2" id="isne_sensitiveFields" style="margin-top:14px;display:@(Model?.SensitiveCargo == true ? "grid" : "none");">
+                <div class="field">
+                    <label>Insurance Company Name &amp; Address <span class="req">*</span></label>
+                    <textarea id="isne_insuranceCompanyAddress" maxlength="200" placeholder="Insurance company name and full address" style="min-height:80px;">@Model?.InsuranceCompanyNameAddress</textarea>
+                </div>
+                <div class="field">
+                    <label>CIF Value <span class="req">*</span></label>
+                    <input type="number" id="isne_sensitiveCifValue" placeholder="0.00" min="0" step="0.01" value="@Model?.SensitiveCifValue">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ SECTION F: COMMERCIAL INFORMATION ============ -->
     <div class="erp-section">
         <div class="erp-section-head">
-            <div class="section-letter">E</div>
+            <div class="section-letter">F</div>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
             Commercial Information
         </div>

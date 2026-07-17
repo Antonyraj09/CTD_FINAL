@@ -7,7 +7,10 @@ namespace CTD_FINAL.Entities;
 /// Detailed ERP-style "Job — ISNE" (Import Sea / Nepal Entry) form.
 /// Field-for-field mirror of the prototype's five-section static form
 /// (Sections A-E) which existed in the UI but had no backing store — this
-/// gives it real Create/Edit/Delete/Print functionality.
+/// gives it real Create/Edit/Delete/Print functionality. Section E ("Entry
+/// for Data Sheet") was added later to capture fields the Nepal CTD
+/// Submission paper form needs that nothing upstream of it ever collected;
+/// the original Section E (Commercial Information) shifted to Section F.
 /// </summary>
 public class JobIsne : BaseEntity
 {
@@ -131,7 +134,32 @@ public class JobIsne : BaseEntity
     [StringLength(1000)]
     public string? CargoDescription { get; set; }
 
-    // ---- Section E: Commercial Information ----
+    // ---- Section E: Entry for Data Sheet ----
+    /// <summary>Fixed "NP0000" prefix + exactly 4 numeric digits, e.g. NP00001234.</summary>
+    [Required, StringLength(10)]
+    [RegularExpression(@"^NP0000\d{4}$", ErrorMessage = "Importer Code must be NP0000 followed by exactly 4 digits.")]
+    public string ImporterCode { get; set; } = string.Empty;
+
+    [Required, StringLength(20)]
+    public string InvoiceNumber { get; set; } = string.Empty;
+
+    public DateTime InvoiceDate { get; set; }
+
+    [Required, StringLength(30)]
+    public string CertificateOfOrigin { get; set; } = string.Empty;
+
+    public DateTime CertificateOfOriginDate { get; set; }
+
+    public bool SensitiveCargo { get; set; }
+
+    /// <summary>Mandatory only when SensitiveCargo is true.</summary>
+    [StringLength(200)]
+    public string? InsuranceCompanyNameAddress { get; set; }
+
+    /// <summary>Mandatory only when SensitiveCargo is true. Distinct from Section F's CifFc (that's the shipment's own CIF-in-foreign-currency figure).</summary>
+    public decimal? SensitiveCifValue { get; set; }
+
+    // ---- Section F: Commercial Information ----
     [StringLength(5)]
     public string Currency { get; set; } = "USD";
 

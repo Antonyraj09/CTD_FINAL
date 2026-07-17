@@ -61,6 +61,35 @@
     });
   }
 
+  /* ---------------- collapsible sections ---------------- */
+  $all(".erp-section.collapsible > [data-collapse-toggle]").forEach(function (head) {
+    head.addEventListener("click", function () {
+      head.closest(".erp-section").classList.toggle("collapsed");
+    });
+  });
+
+  /* ---------------- Importer Code: fixed NP0000 prefix + exactly 4 numeric digits ---------------- */
+  const importerCodeSuffix = $("#isne_importerCodeSuffix");
+  if (importerCodeSuffix) {
+    importerCodeSuffix.addEventListener("input", function () {
+      const cleaned = importerCodeSuffix.value.replace(/[^0-9]/g, "").slice(0, 4);
+      if (cleaned !== importerCodeSuffix.value) importerCodeSuffix.value = cleaned;
+    });
+  }
+
+  /* ---------------- Sensitive Cargo: show/hide Insurance Company / CIF Value ---------------- */
+  const sensitiveToggle = $("#isne_sensitiveCargo");
+  if (sensitiveToggle) {
+    sensitiveToggle.addEventListener("change", function () {
+      $("#isne_sensitiveFields").style.display = sensitiveToggle.checked ? "grid" : "none";
+      $("#isne_sensitiveCargoLabel").textContent = sensitiveToggle.checked ? "Yes" : "No";
+      if (!sensitiveToggle.checked) {
+        $("#isne_insuranceCompanyAddress").closest(".field")?.classList.remove("invalid");
+        $("#isne_sensitiveCifValue").closest(".field")?.classList.remove("invalid");
+      }
+    });
+  }
+
   /* ---------------- shipment type radio visuals ---------------- */
   $all('input[name="isneShipmentType"]').forEach(function (radio) {
     radio.addEventListener("change", function () {
@@ -392,6 +421,14 @@
           customsCode: r.customsCode
         };
       }),
+      importerCode: "NP0000" + $("#isne_importerCodeSuffix").value,
+      invoiceNumber: $("#isne_invoiceNumber").value,
+      invoiceDate: $("#isne_invoiceDate").value || null,
+      certificateOfOrigin: $("#isne_certOrigin").value,
+      certificateOfOriginDate: $("#isne_certOriginDate").value || null,
+      sensitiveCargo: $("#isne_sensitiveCargo").checked,
+      insuranceCompanyNameAddress: $("#isne_insuranceCompanyAddress").value,
+      sensitiveCifValue: parseFloat($("#isne_sensitiveCifValue").value) || null,
       currency: $("#isne_currency").value,
       exchangeRate: parseFloat($("#isne_exchangeRate").value) || null,
       fobValue: parseFloat($("#isne_fobValue").value) || null,
@@ -416,7 +453,10 @@
   }
 
   function validateIsneForm() {
-    const required = ["isne_jobDate", "isne_partyCode", "isne_partyName"];
+    const required = [
+      "isne_jobDate", "isne_partyCode", "isne_partyName",
+      "isne_invoiceNumber", "isne_invoiceDate", "isne_certOrigin", "isne_certOriginDate"
+    ];
     let valid = true;
     required.forEach(function (id) {
       const elm = $("#" + id);
@@ -428,6 +468,33 @@
         field.classList.remove("invalid");
       }
     });
+
+    const importerSuffixField = importerCodeSuffix?.closest(".field");
+    if (!/^\d{4}$/.test(importerCodeSuffix?.value || "")) {
+      valid = false;
+      if (importerSuffixField) importerSuffixField.classList.add("invalid");
+    } else if (importerSuffixField) {
+      importerSuffixField.classList.remove("invalid");
+    }
+
+    if (sensitiveToggle?.checked) {
+      const insuranceField = $("#isne_insuranceCompanyAddress").closest(".field");
+      if (!$("#isne_insuranceCompanyAddress").value.trim()) {
+        valid = false;
+        if (insuranceField) insuranceField.classList.add("invalid");
+      } else if (insuranceField) {
+        insuranceField.classList.remove("invalid");
+      }
+
+      const cifField = $("#isne_sensitiveCifValue").closest(".field");
+      const cifValue = parseFloat($("#isne_sensitiveCifValue").value);
+      if (!(cifValue > 0)) {
+        valid = false;
+        if (cifField) cifField.classList.add("invalid");
+      } else if (cifField) {
+        cifField.classList.remove("invalid");
+      }
+    }
 
     if (!validateContainerRows()) valid = false;
 
