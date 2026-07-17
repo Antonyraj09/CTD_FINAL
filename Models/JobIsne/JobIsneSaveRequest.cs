@@ -60,7 +60,17 @@ public class JobIsneSaveRequest
     public string? CargoDescription { get; set; }
     public List<JobIsneContainerRequest> Containers { get; set; } = new();
 
-    // Section E
+    // Section E: Entry for Data Sheet
+    public string ImporterCode { get; set; } = string.Empty;
+    public string InvoiceNumber { get; set; } = string.Empty;
+    public DateTime? InvoiceDate { get; set; }
+    public string CertificateOfOrigin { get; set; } = string.Empty;
+    public DateTime? CertificateOfOriginDate { get; set; }
+    public bool SensitiveCargo { get; set; }
+    public string? InsuranceCompanyNameAddress { get; set; }
+    public decimal? SensitiveCifValue { get; set; }
+
+    // Section F
     public string Currency { get; set; } = "USD";
     public decimal? ExchangeRate { get; set; }
     public decimal? FobValue { get; set; }

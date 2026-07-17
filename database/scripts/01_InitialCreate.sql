@@ -2074,3 +2074,91 @@ GO
 COMMIT;
 GO
 
+BEGIN TRANSACTION;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260717152314_AddEntryForDataSheetFields'
+)
+BEGIN
+    ALTER TABLE [JobIsnes] ADD [CertificateOfOrigin] nvarchar(30) NOT NULL DEFAULT N'';
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260717152314_AddEntryForDataSheetFields'
+)
+BEGIN
+    ALTER TABLE [JobIsnes] ADD [CertificateOfOriginDate] datetime2 NOT NULL DEFAULT '0001-01-01T00:00:00.0000000';
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260717152314_AddEntryForDataSheetFields'
+)
+BEGIN
+    ALTER TABLE [JobIsnes] ADD [ImporterCode] nvarchar(10) NOT NULL DEFAULT N'';
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260717152314_AddEntryForDataSheetFields'
+)
+BEGIN
+    ALTER TABLE [JobIsnes] ADD [InsuranceCompanyNameAddress] nvarchar(200) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260717152314_AddEntryForDataSheetFields'
+)
+BEGIN
+    ALTER TABLE [JobIsnes] ADD [InvoiceDate] datetime2 NOT NULL DEFAULT '0001-01-01T00:00:00.0000000';
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260717152314_AddEntryForDataSheetFields'
+)
+BEGIN
+    ALTER TABLE [JobIsnes] ADD [InvoiceNumber] nvarchar(20) NOT NULL DEFAULT N'';
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260717152314_AddEntryForDataSheetFields'
+)
+BEGIN
+    ALTER TABLE [JobIsnes] ADD [SensitiveCargo] bit NOT NULL DEFAULT CAST(0 AS bit);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260717152314_AddEntryForDataSheetFields'
+)
+BEGIN
+    ALTER TABLE [JobIsnes] ADD [SensitiveCifValue] decimal(18,2) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260717152314_AddEntryForDataSheetFields'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260717152314_AddEntryForDataSheetFields', N'8.0.11');
+END;
+GO
+
+COMMIT;
+GO
+

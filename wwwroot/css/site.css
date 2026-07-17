@@ -583,6 +583,9 @@ body{
 .field-suffix-wrap{position:relative;}
 .field-suffix-wrap input{padding-right:54px;}
 .field-suffix{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:11.5px;color:var(--ink-400);font-weight:700;}
+.field-prefix-wrap{position:relative;}
+.field-prefix-wrap input{padding-left:66px;}
+.field-prefix{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:11.5px;color:var(--ink-400);font-weight:700;}
 .field-static{padding:10px 12px;background:var(--surface-2);border-radius:var(--r-md);font-size:13.3px;font-weight:700;color:var(--ink-900);border:1px dashed var(--surface-border-strong);}
 .checkbox-row{display:flex;align-items:center;gap:9px;padding:10px 0;}
 .checkbox-row input[type=checkbox]{width:17px;height:17px;accent-color:var(--amber-500);cursor:pointer;}
@@ -1010,6 +1013,16 @@ fieldset.form-section legend{padding:0 10px;font-size:13px;font-weight:700;color
   font-weight: 700;
   color: var(--navy-900);
 }
+.erp-section.collapsible .erp-section-head {
+  cursor: pointer;
+  user-select: none;
+}
+.erp-section.collapsed .erp-section-body {
+  display: none;
+}
+.erp-section.collapsed .erp-section-head .erp-section-chevron {
+  transform: rotate(-90deg);
+}
 .erp-section-head .section-letter {
   width: 26px;
   height: 26px;
@@ -1027,6 +1040,14 @@ fieldset.form-section legend{padding:0 10px;font-size:13px;font-weight:700;color
   width: 15px;
   height: 15px;
   color: var(--amber-600);
+}
+.erp-section-head .erp-section-chevron {
+  width: 16px;
+  height: 16px;
+  margin-left: auto;
+  color: var(--ink-400);
+  transition: transform .18s;
+  flex-shrink: 0;
 }
 .erp-section-body {
   padding: 18px;

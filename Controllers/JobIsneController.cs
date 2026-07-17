@@ -78,6 +78,35 @@ public class JobIsneController : Controller
         if (!Enum.TryParse<ContainerStatus>(request.ShipmentType, true, out var shipmentType))
             shipmentType = ContainerStatus.FCL;
 
+        if (!System.Text.RegularExpressions.Regex.IsMatch(request.ImporterCode, @"^NP0000\d{4}$"))
+            return Json(new { success = false, message = "Importer Code must be NP0000 followed by exactly 4 numeric digits." });
+
+        if (string.IsNullOrWhiteSpace(request.InvoiceNumber))
+            return Json(new { success = false, message = "Invoice Number is required." });
+        if (request.InvoiceNumber.Length > 20)
+            return Json(new { success = false, message = "Invoice Number cannot exceed 20 characters." });
+
+        if (!request.InvoiceDate.HasValue)
+            return Json(new { success = false, message = "Invoice Date is required." });
+
+        if (string.IsNullOrWhiteSpace(request.CertificateOfOrigin))
+            return Json(new { success = false, message = "Certificate of Origin is required." });
+        if (request.CertificateOfOrigin.Length > 30)
+            return Json(new { success = false, message = "Certificate of Origin cannot exceed 30 characters." });
+
+        if (!request.CertificateOfOriginDate.HasValue)
+            return Json(new { success = false, message = "Certificate of Origin Date is required." });
+
+        if (request.SensitiveCargo)
+        {
+            if (string.IsNullOrWhiteSpace(request.InsuranceCompanyNameAddress))
+                return Json(new { success = false, message = "Insurance Company Name & Address is required when Sensitive Cargo is Yes." });
+            if (request.InsuranceCompanyNameAddress.Length > 200)
+                return Json(new { success = false, message = "Insurance Company Name & Address cannot exceed 200 characters." });
+            if (!request.SensitiveCifValue.HasValue || request.SensitiveCifValue.Value <= 0)
+                return Json(new { success = false, message = "CIF Value is required and must be a positive number when Sensitive Cargo is Yes." });
+        }
+
         var entity = new JobIsne
         {
             Id = request.Id,
@@ -128,6 +157,14 @@ public class JobIsneController : Controller
             ShipmentType = shipmentType,
             MiscDescription = request.MiscDescription,
             CargoDescription = request.CargoDescription,
+            ImporterCode = request.ImporterCode,
+            InvoiceNumber = request.InvoiceNumber,
+            InvoiceDate = request.InvoiceDate!.Value,
+            CertificateOfOrigin = request.CertificateOfOrigin,
+            CertificateOfOriginDate = request.CertificateOfOriginDate!.Value,
+            SensitiveCargo = request.SensitiveCargo,
+            InsuranceCompanyNameAddress = request.SensitiveCargo ? request.InsuranceCompanyNameAddress : null,
+            SensitiveCifValue = request.SensitiveCargo ? request.SensitiveCifValue : null,
             Currency = request.Currency,
             ExchangeRate = request.ExchangeRate,
             FobValue = request.FobValue,
