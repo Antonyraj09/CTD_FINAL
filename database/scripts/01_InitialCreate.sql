@@ -2162,3 +2162,94 @@ GO
 COMMIT;
 GO
 
+BEGIN TRANSACTION;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260717160937_MakeDataSheetFieldsOptional'
+)
+BEGIN
+    DECLARE @var19 sysname;
+    SELECT @var19 = [d].[name]
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[JobIsnes]') AND [c].[name] = N'InvoiceNumber');
+    IF @var19 IS NOT NULL EXEC(N'ALTER TABLE [JobIsnes] DROP CONSTRAINT [' + @var19 + '];');
+    ALTER TABLE [JobIsnes] ALTER COLUMN [InvoiceNumber] nvarchar(20) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260717160937_MakeDataSheetFieldsOptional'
+)
+BEGIN
+    DECLARE @var20 sysname;
+    SELECT @var20 = [d].[name]
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[JobIsnes]') AND [c].[name] = N'InvoiceDate');
+    IF @var20 IS NOT NULL EXEC(N'ALTER TABLE [JobIsnes] DROP CONSTRAINT [' + @var20 + '];');
+    ALTER TABLE [JobIsnes] ALTER COLUMN [InvoiceDate] datetime2 NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260717160937_MakeDataSheetFieldsOptional'
+)
+BEGIN
+    DECLARE @var21 sysname;
+    SELECT @var21 = [d].[name]
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[JobIsnes]') AND [c].[name] = N'ImporterCode');
+    IF @var21 IS NOT NULL EXEC(N'ALTER TABLE [JobIsnes] DROP CONSTRAINT [' + @var21 + '];');
+    ALTER TABLE [JobIsnes] ALTER COLUMN [ImporterCode] nvarchar(10) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260717160937_MakeDataSheetFieldsOptional'
+)
+BEGIN
+    DECLARE @var22 sysname;
+    SELECT @var22 = [d].[name]
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[JobIsnes]') AND [c].[name] = N'CertificateOfOriginDate');
+    IF @var22 IS NOT NULL EXEC(N'ALTER TABLE [JobIsnes] DROP CONSTRAINT [' + @var22 + '];');
+    ALTER TABLE [JobIsnes] ALTER COLUMN [CertificateOfOriginDate] datetime2 NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260717160937_MakeDataSheetFieldsOptional'
+)
+BEGIN
+    DECLARE @var23 sysname;
+    SELECT @var23 = [d].[name]
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[JobIsnes]') AND [c].[name] = N'CertificateOfOrigin');
+    IF @var23 IS NOT NULL EXEC(N'ALTER TABLE [JobIsnes] DROP CONSTRAINT [' + @var23 + '];');
+    ALTER TABLE [JobIsnes] ALTER COLUMN [CertificateOfOrigin] nvarchar(30) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260717160937_MakeDataSheetFieldsOptional'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260717160937_MakeDataSheetFieldsOptional', N'8.0.11');
+END;
+GO
+
+COMMIT;
+GO
+
