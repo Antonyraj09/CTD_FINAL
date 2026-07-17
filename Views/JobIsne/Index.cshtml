@@ -27,6 +27,36 @@
         }).ToList()
     }).ToList();
     var subAgentLookup = subAgents.Select(s => new { code = s.SubAgentCode, name = s.Name }).ToList();
+
+    var containerInit = Model != null && Model.Containers.Any()
+        ? Model.Containers.Select(c => new
+        {
+            containerNo = c.ContainerNo,
+            containerSize = c.ContainerSize,
+            shipmentType = c.ShipmentType.ToString(),
+            noPackages = c.NoPackages,
+            packageType = c.PackageType,
+            grossWeight = c.GrossWeight,
+            grossWeightUnit = c.GrossWeightUnit,
+            netWeight = c.NetWeight,
+            netWeightUnit = c.NetWeightUnit,
+            marksSerial = c.MarksSerial,
+            customsCode = c.CustomsCode
+        })
+        : new[] { new
+        {
+            containerNo = (string?)"",
+            containerSize = "20ft",
+            shipmentType = "FCL",
+            noPackages = 0,
+            packageType = (string?)"",
+            grossWeight = (decimal?)null,
+            grossWeightUnit = "KG",
+            netWeight = (decimal?)null,
+            netWeightUnit = "KG",
+            marksSerial = (string?)"",
+            customsCode = (string?)""
+        } };
 }
 
 <div class="erp-form-header">
@@ -253,57 +283,104 @@
                 <div class="split-panel">
                     <div class="split-panel-title">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg>
-                        Container Details
+                        Shipment Information
                     </div>
-                    <div class="form-grid" style="grid-template-columns:1fr 1fr;gap:14px;">
-                        <div class="field span-2"><label>Marks &amp; Serial Number</label><textarea id="isne_marksSerial" placeholder="e.g. N/M" style="min-height:64px;">@Model?.MarksSerial</textarea></div>
-                        <div class="field span-2"><label>Container Number</label><input type="text" id="isne_containerNo" placeholder="e.g. OCGU2034526 (15 alphanumeric)" value="@Model?.ContainerNo"></div>
-                        <div class="field span-2">
-                            <label>Container Status</label>
-                            <div class="radio-group">
-                                <label class="radio-pill @(Model is null || Model.ContainerStatus == CTD_FINAL.Enums.ContainerStatus.FCL ? "checked" : "")" id="rp_fcl">
-                                    <input type="radio" name="isneContainerStatus" value="FCL" checked="@(Model is null || Model.ContainerStatus == CTD_FINAL.Enums.ContainerStatus.FCL)">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/></svg>
-                                    FCL
-                                </label>
-                                <label class="radio-pill @(Model?.ContainerStatus == CTD_FINAL.Enums.ContainerStatus.LCL ? "checked" : "")" id="rp_lcl">
-                                    <input type="radio" name="isneContainerStatus" value="LCL" checked="@(Model?.ContainerStatus == CTD_FINAL.Enums.ContainerStatus.LCL)">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-                                    LCL
-                                </label>
-                            </div>
+                    <div class="field">
+                        <label>Shipment Type <span class="req">*</span></label>
+                        <div class="radio-group">
+                            <label class="radio-pill @(Model is null || Model.ShipmentType == CTD_FINAL.Enums.ContainerStatus.FCL ? "checked" : "")" id="rp_shiptype_fcl">
+                                <input type="radio" name="isneShipmentType" value="FCL" checked="@(Model is null || Model.ShipmentType == CTD_FINAL.Enums.ContainerStatus.FCL)">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/></svg>
+                                FCL
+                            </label>
+                            <label class="radio-pill @(Model?.ShipmentType == CTD_FINAL.Enums.ContainerStatus.LCL ? "checked" : "")" id="rp_shiptype_lcl">
+                                <input type="radio" name="isneShipmentType" value="LCL" checked="@(Model?.ShipmentType == CTD_FINAL.Enums.ContainerStatus.LCL)">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                                LCL
+                            </label>
                         </div>
-                        <div class="field span-2">
-                            <label>Container Size</label>
-                            <div class="size-pill-group" id="isne_sizePillGroup">
-                                <label class="size-pill @(Model is null || Model.ContainerSize == "20ft" ? "checked" : "")" data-size="20ft"><input type="radio" name="isneContainerSize" value="20ft" checked="@(Model is null || Model.ContainerSize == "20ft")"> 📦 20 Feet</label>
-                                <label class="size-pill @(Model?.ContainerSize == "40ft" ? "checked" : "")" data-size="40ft"><input type="radio" name="isneContainerSize" value="40ft" checked="@(Model?.ContainerSize == "40ft")"> 📦 40 Feet</label>
-                                <label class="size-pill @(Model?.ContainerSize == "lcl" ? "checked" : "")" data-size="lcl"><input type="radio" name="isneContainerSize" value="lcl" checked="@(Model?.ContainerSize == "lcl")"> 📦 LCL</label>
-                            </div>
-                        </div>
-                        <div class="field"><label>No. of Packages <span class="req">*</span></label><input type="number" id="isne_noPackages" placeholder="0" min="0" value="@Model?.NoPackages"></div>
-                        <div class="field"><label>Customs Code</label><input type="text" id="isne_customsCode" placeholder="e.g. HSITC/72199090" value="@Model?.CustomsCode"></div>
                     </div>
+                    <div class="form-grid cols-2" style="gap:14px;margin-top:14px;align-items:end;">
+                        <div class="field">
+                            <label>No. of Containers <span class="req">*</span></label>
+                            <input type="number" id="isne_containerCount" placeholder="e.g. 10" min="0" max="200" step="1" value="@(Model?.Containers.Count ?? 1)">
+                        </div>
+                        <div class="field">
+                            <button type="button" class="btn btn-amber" id="isneGenerateContainersBtn" style="width:100%;justify-content:center;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 3v18M3 12h18"/></svg>
+                                Generate Containers
+                            </button>
+                        </div>
+                    </div>
+                    <p style="font-size:11.5px;color:var(--ink-500);margin-top:6px;">Enter number of containers and click Generate.</p>
                 </div>
                 <div class="split-panel">
                     <div class="split-panel-title">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-                        Cargo Details
+                        Common Cargo Details <span style="font-weight:500;color:var(--ink-500);font-size:11.5px;">(Applies to all containers)</span>
                     </div>
-                    <div class="form-grid" style="grid-template-columns:1fr;gap:14px;">
-                        <div class="field"><label>Miscellaneous Description</label><input type="text" id="isne_miscDesc" placeholder="e.g. SHIPPER'S LOAD &amp; COUNT" value="@Model?.MiscDescription"></div>
-                        <div class="field"><label>Unit</label><input type="text" id="isne_unit" placeholder="e.g. 1X20' CONT. STC 7 PKG" value="@Model?.Unit"></div>
-                        <div class="field"><label>Cargo Description</label><textarea id="isne_cargoDesc" placeholder="e.g. STAINLESS STEEL COLD ROLLED COILS GRADE 201/302 FINISHED MILL EDGE" style="min-height:120px;">@Model?.CargoDescription</textarea></div>
-                        <div style="background:var(--surface-2);border:1px solid var(--surface-border);border-radius:var(--r-md);padding:12px;font-size:12.5px;color:var(--ink-500);">
-                            <strong style="display:block;margin-bottom:4px;color:var(--ink-700);">Example:</strong>
-                            1 x 20 Feet Container STC 7 Packages<br>
-                            Stainless Steel Cold Rolled Coils Grade 201/302 Finished Mill Edge
-                        </div>
+                    <div class="form-grid cols-2" style="gap:14px;">
+                        <div class="field"><label>Miscellaneous Description</label><textarea id="isne_miscDesc" placeholder="e.g. SHIPPER'S LOAD &amp; COUNT" style="min-height:96px;">@Model?.MiscDescription</textarea></div>
+                        <div class="field"><label>Cargo Description</label><textarea id="isne_cargoDesc" placeholder="e.g. STAINLESS STEEL COLD ROLLED COILS GRADE 201/302 FINISHED MILL EDGE" style="min-height:96px;">@Model?.CargoDescription</textarea></div>
                     </div>
+                </div>
+            </div>
+
+            <div class="split-panel" style="margin-top:18px;">
+                <div class="flex-between" style="margin-bottom:12px;flex-wrap:wrap;gap:10px;">
+                    <div class="split-panel-title" style="margin:0;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg>
+                        Container Details
+                    </div>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                        <button type="button" class="btn btn-outline btn-xs" id="isneImportExcelBtn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="m9 15 3-3 3 3M12 12v6"/></svg>
+                            Import from Excel
+                        </button>
+                        <input type="file" id="isneExcelFileInput" accept=".csv,.txt" hidden>
+                        <button type="button" class="btn btn-outline btn-xs" id="isneClearAllBtn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                            Clear All
+                        </button>
+                    </div>
+                </div>
+                <div class="table-scroll">
+                    <table class="mini-table" id="isneContainerTable">
+                        <thead>
+                            <tr>
+                                <th style="width:28px;"><input type="checkbox" id="isneSelectAllRows" style="width:16px;height:16px;padding:0;accent-color:var(--amber-500);"></th>
+                                <th style="width:34px;">S.No</th>
+                                <th style="min-width:140px;">Container No. <span style="color:var(--seal-red);">*</span></th>
+                                <th style="min-width:90px;">Size <span style="color:var(--seal-red);">*</span></th>
+                                <th style="min-width:100px;">Shipment Type <span style="color:var(--seal-red);">*</span></th>
+                                <th style="min-width:80px;">Packages <span style="color:var(--seal-red);">*</span></th>
+                                <th style="min-width:110px;">Package Type <span style="color:var(--seal-red);">*</span></th>
+                                <th style="min-width:100px;">Gross Weight <span style="color:var(--seal-red);">*</span></th>
+                                <th style="min-width:70px;">Unit</th>
+                                <th style="min-width:100px;">Net Weight <span style="color:var(--seal-red);">*</span></th>
+                                <th style="min-width:70px;">Unit</th>
+                                <th style="min-width:140px;">Marks &amp; Serial No.</th>
+                                <th style="min-width:130px;">Customs Code</th>
+                                <th style="width:36px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="isneContainerRowsBody"></tbody>
+                    </table>
+                </div>
+                <div class="flex-between" style="margin-top:12px;">
+                    <button type="button" class="btn btn-outline btn-xs" id="isneAddContainerBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                        Add Container
+                    </button>
+                    <button type="button" class="btn btn-danger btn-xs" id="isneRemoveSelectedBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m5 0V4a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v2"/></svg>
+                        Remove Selected
+                    </button>
                 </div>
             </div>
         </div>
     </div>
+    <script id="isneContainerDataInit" type="application/json">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(containerInit))</script>
 
     <!-- ============ SECTION E: COMMERCIAL INFORMATION ============ -->
     <div class="erp-section">

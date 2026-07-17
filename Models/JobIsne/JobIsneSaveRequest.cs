@@ -55,15 +55,10 @@ public class JobIsneSaveRequest
     public DateTime? DueProformaInvoice { get; set; }
 
     // Section D
-    public string? MarksSerial { get; set; }
-    public string? ContainerNo { get; set; }
-    public string ContainerStatus { get; set; } = "FCL";
-    public string ContainerSize { get; set; } = "20ft";
-    public int NoPackages { get; set; }
-    public string? CustomsCode { get; set; }
+    public string ShipmentType { get; set; } = "FCL";
     public string? MiscDescription { get; set; }
-    public string? Unit { get; set; }
     public string? CargoDescription { get; set; }
+    public List<JobIsneContainerRequest> Containers { get; set; } = new();
 
     // Section E
     public string Currency { get; set; } = "USD";
@@ -86,4 +81,19 @@ public class JobIsneSaveRequest
     public DateTime? ShipmentExpiry { get; set; }
     public string PartialShipment { get; set; } = "ALLOWED";
     public decimal? DutyAmount { get; set; }
+}
+
+public class JobIsneContainerRequest
+{
+    public string? ContainerNo { get; set; }
+    public string ContainerSize { get; set; } = "20ft";
+    public string ShipmentType { get; set; } = "FCL";
+    public int NoPackages { get; set; }
+    public string? PackageType { get; set; }
+    public decimal? GrossWeight { get; set; }
+    public string GrossWeightUnit { get; set; } = "KG";
+    public decimal? NetWeight { get; set; }
+    public string NetWeightUnit { get; set; } = "KG";
+    public string? MarksSerial { get; set; }
+    public string? CustomsCode { get; set; }
 }

@@ -38,7 +38,7 @@
                     <td>@j.JobDate.ToString("d MMM yyyy")</td>
                     <td>@j.PartyName</td>
                     <td class="ctd-code">@(j.CtdNumber ?? "—")</td>
-                    <td>@(j.ContainerNo ?? "—")</td>
+                    <td>@(j.Containers.Count switch { 0 => "—", 1 => j.Containers.First().ContainerNo ?? "—", var n => $"{n} containers" })</td>
                     <td>@(j.RouteOfTransit ?? "—")</td>
                     <td><span class="badge @JobIsneStatus.BadgeClass(status)">@status</span></td>
                     <td class="no-print">

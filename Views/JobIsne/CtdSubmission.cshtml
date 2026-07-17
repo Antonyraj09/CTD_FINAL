@@ -70,24 +70,33 @@
                 <span class="lbl">HBL NO:</span> <span class="val">@V(Model.HblNo)</span> &nbsp;&nbsp; <span class="lbl">DATE:</span> <span class="val">@D(Model.HblDate)</span>
             </li>
             <li>
-                <span class="lbl">TOTAL PACKAGE:</span> <span class="val">@(Model.NoPackages > 0 ? Model.NoPackages.ToString() : "")</span> &nbsp;&nbsp;
-                <span class="lbl">PACKAGE CODE:</span> <span class="val">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> &nbsp;&nbsp;
+                <span class="lbl">TOTAL PACKAGE:</span> <span class="val">@(Model.Containers.Sum(c => c.NoPackages) is var totalPkg && totalPkg > 0 ? totalPkg.ToString() : "")</span> &nbsp;&nbsp;
+                <span class="lbl">PACKAGE CODE:</span> <span class="val">@V(string.Join(", ", Model.Containers.Select(c => c.PackageType).Where(p => !string.IsNullOrWhiteSpace(p)).Distinct()))</span> &nbsp;&nbsp;
                 <span class="lbl">TARE WT:</span> <span class="val">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
             </li>
             <li>
-                <span class="lbl">GROSS WT:</span> <span class="val">@V(Model.GrossWeight)</span> &nbsp;&nbsp;
-                <span class="lbl">NET WT:</span> <span class="val">@V(Model.NetWeight)</span> &nbsp;&nbsp;
+                <span class="lbl">GROSS WT:</span> <span class="val">@(Model.Containers.Any(c => c.GrossWeight.HasValue) ? Model.Containers.Sum(c => c.GrossWeight ?? 0).ToString("N3") : "")</span> &nbsp;&nbsp;
+                <span class="lbl">NET WT:</span> <span class="val">@(Model.Containers.Any(c => c.NetWeight.HasValue) ? Model.Containers.Sum(c => c.NetWeight ?? 0).ToString("N3") : "")</span> &nbsp;&nbsp;
                 <span class="lbl">EXCHANGE RATE:</span> <span class="val">@V(Model.ExchangeRate)</span>
             </li>
-            <li>
-                <span class="lbl">CONTAINER NO / SHIPPER SEAL NO:</span> <span class="val">@V(Model.ContainerStatus)@(string.IsNullOrWhiteSpace(Model.ContainerNo) ? "" : " / " + Model.ContainerNo)</span> &nbsp;&nbsp;
-                <span class="lbl">SEAL:</span> <span class="val">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-            </li>
-            <li>
-                <span class="lbl">ITEM NO:</span> <span class="val">1</span> &nbsp;&nbsp;
-                <span class="lbl">CTH:</span> <span class="val">@V(Model.CustomsCode)</span> &nbsp;&nbsp;
-                <span class="lbl">SENSITIVE:</span> <span class="val">&nbsp;&nbsp;&nbsp;</span>
-            </li>
+            @foreach (var c in Model.Containers)
+            {
+                <li>
+                    <span class="lbl">CONTAINER NO / SHIPPER SEAL NO:</span> <span class="val">@c.ShipmentType@(string.IsNullOrWhiteSpace(c.ContainerNo) ? "" : " / " + c.ContainerNo)</span> &nbsp;&nbsp;
+                    <span class="lbl">SEAL:</span> <span class="val">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> &nbsp;&nbsp;
+                    <span class="lbl">CTH:</span> <span class="val">@V(c.CustomsCode)</span> &nbsp;&nbsp;
+                    <span class="lbl">SENSITIVE:</span> <span class="val">&nbsp;&nbsp;&nbsp;</span>
+                </li>
+            }
+            @if (!Model.Containers.Any())
+            {
+                <li>
+                    <span class="lbl">CONTAINER NO / SHIPPER SEAL NO:</span> <span class="val">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> &nbsp;&nbsp;
+                    <span class="lbl">SEAL:</span> <span class="val">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> &nbsp;&nbsp;
+                    <span class="lbl">CTH:</span> <span class="val">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> &nbsp;&nbsp;
+                    <span class="lbl">SENSITIVE:</span> <span class="val">&nbsp;&nbsp;&nbsp;</span>
+                </li>
+            }
         </ol>
     </div>
     <p class="footer">Printed from CTD Management System &middot; @DateTime.Now.ToString("g")</p>
