@@ -5,10 +5,6 @@
     string jobNumber = (string)ViewBag.NextJobNumber;
     string D(DateTime? d) => d?.ToString("yyyy-MM-dd") ?? "";
     string today = DateTime.Today.ToString("yyyy-MM-dd");
-    const string ImporterCodePrefix = "NP0000";
-    string ImporterCodeSuffix(string? code) =>
-        !string.IsNullOrEmpty(code) && code.StartsWith(ImporterCodePrefix) && code.Length == ImporterCodePrefix.Length + 4
-            ? code.Substring(ImporterCodePrefix.Length) : "";
 
     var parties = (List<Party>)ViewBag.Parties;
     var subAgents = (List<SubAgent>)ViewBag.SubAgents;
@@ -79,7 +75,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg> New
         </button>
         <button class="btn btn-amber btn-sm" id="isneSaveBtn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save (F9)
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> @(Model is null ? "Save (F9)" : "Update (F9)")
         </button>
         <button class="btn btn-outline btn-sm" id="isneEditBtn" style="background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.14);color:#e6e9f2;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Edit
@@ -398,10 +394,7 @@
             <div class="form-grid cols-4">
                 <div class="field">
                     <label>Importer Code</label>
-                    <div class="field-prefix-wrap">
-                        <span class="field-prefix">@ImporterCodePrefix</span>
-                        <input type="text" id="isne_importerCodeSuffix" inputmode="numeric" maxlength="4" placeholder="0000" value="@ImporterCodeSuffix(Model?.ImporterCode)">
-                    </div>
+                    <input type="text" id="isne_importerCode" maxlength="6" placeholder="e.g. NP0001" value="@(Model?.ImporterCode ?? (Model is null ? "NP" : ""))">
                 </div>
                 <div class="field">
                     <label>Invoice Number</label>
@@ -503,7 +496,7 @@
         </button>
         <button type="button" class="btn btn-amber" onclick="document.getElementById('isneSaveBtn').click()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
-            Save Job (F9)
+            @(Model is null ? "Save Job (F9)" : "Update Job (F9)")
         </button>
     </div>
 

@@ -68,12 +68,12 @@
     });
   });
 
-  /* ---------------- Importer Code: fixed NP0000 prefix + exactly 4 numeric digits ---------------- */
-  const importerCodeSuffix = $("#isne_importerCodeSuffix");
-  if (importerCodeSuffix) {
-    importerCodeSuffix.addEventListener("input", function () {
-      const cleaned = importerCodeSuffix.value.replace(/[^0-9]/g, "").slice(0, 4);
-      if (cleaned !== importerCodeSuffix.value) importerCodeSuffix.value = cleaned;
+  /* ---------------- Importer Code: 6 alphanumeric chars (2 letters + 4 digits), fully editable ---------------- */
+  const importerCode = $("#isne_importerCode");
+  if (importerCode) {
+    importerCode.addEventListener("input", function () {
+      const cleaned = importerCode.value.replace(/[^a-zA-Z0-9]/g, "").slice(0, 6);
+      if (cleaned !== importerCode.value) importerCode.value = cleaned;
     });
   }
 
@@ -104,6 +104,15 @@
       $("#isne_miscDesc").value = radio.value === "FCL" ? "SHIPPER'S LOAD & COUNT" : "";
     });
   });
+
+  // FCL is the pre-selected default on a brand-new job, but the change listener
+  // above only fires on a user-initiated toggle — so on first load the default
+  // text never appeared even though FCL was already selected. Apply it once on
+  // load, but only for a new job with nothing typed yet, so an existing job's
+  // saved (possibly intentionally blank) Misc Description is never touched.
+  if (recordId === 0 && currentShipmentType() === "FCL" && !$("#isne_miscDesc").value.trim()) {
+    $("#isne_miscDesc").value = "SHIPPER'S LOAD & COUNT";
+  }
 
   /* ---------------- Container Details grid ---------------- */
   const WEIGHT_UNITS = ["KG", "MT", "LBS"];
@@ -172,6 +181,10 @@
     // The grid's <select> elements are freshly created on every render, so they
     // need the typeable-combo enhancement (re)applied — see wwwroot/js/combobox.js.
     if (typeof enhanceSelects === "function") enhanceSelects(containerTbody);
+    // Keep "No. of Containers" in sync with the actual row count after any
+    // grid action (Add/Delete/Remove Selected/Import/Clear), not just Generate.
+    const countInput = $("#isne_containerCount");
+    if (countInput) countInput.value = containerRows.length;
   }
 
   if (containerTbody) {
@@ -421,7 +434,7 @@
           customsCode: r.customsCode
         };
       }),
-      importerCode: $("#isne_importerCodeSuffix").value ? "NP0000" + $("#isne_importerCodeSuffix").value : null,
+      importerCode: $("#isne_importerCode").value || null,
       invoiceNumber: $("#isne_invoiceNumber").value,
       invoiceDate: $("#isne_invoiceDate").value || null,
       certificateOfOrigin: $("#isne_certOrigin").value,
@@ -469,13 +482,13 @@
     // Entry for Data Sheet fields are all optional — only flag Importer Code /
     // CIF Value as invalid when something was actually typed but doesn't fit
     // the expected format; an empty field is never blocking.
-    const importerSuffixField = importerCodeSuffix?.closest(".field");
-    const importerSuffixVal = importerCodeSuffix?.value || "";
-    if (importerSuffixVal && !/^\d{4}$/.test(importerSuffixVal)) {
+    const importerCodeField = importerCode?.closest(".field");
+    const importerCodeVal = importerCode?.value || "";
+    if (importerCodeVal && !/^[A-Za-z]{2}\d{4}$/.test(importerCodeVal)) {
       valid = false;
-      if (importerSuffixField) importerSuffixField.classList.add("invalid");
-    } else if (importerSuffixField) {
-      importerSuffixField.classList.remove("invalid");
+      if (importerCodeField) importerCodeField.classList.add("invalid");
+    } else if (importerCodeField) {
+      importerCodeField.classList.remove("invalid");
     }
 
     const cifField = $("#isne_sensitiveCifValue").closest(".field");
