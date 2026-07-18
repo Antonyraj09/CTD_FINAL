@@ -2253,3 +2253,34 @@ GO
 COMMIT;
 GO
 
+BEGIN TRANSACTION;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260718054304_ShrinkImporterCodeToSixChars'
+)
+BEGIN
+    DECLARE @var24 sysname;
+    SELECT @var24 = [d].[name]
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[JobIsnes]') AND [c].[name] = N'ImporterCode');
+    IF @var24 IS NOT NULL EXEC(N'ALTER TABLE [JobIsnes] DROP CONSTRAINT [' + @var24 + '];');
+    ALTER TABLE [JobIsnes] ALTER COLUMN [ImporterCode] nvarchar(6) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260718054304_ShrinkImporterCodeToSixChars'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260718054304_ShrinkImporterCodeToSixChars', N'8.0.11');
+END;
+GO
+
+COMMIT;
+GO
+

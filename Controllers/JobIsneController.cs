@@ -80,8 +80,8 @@ public class JobIsneController : Controller
 
         // Entry for Data Sheet fields are all optional — only format/length is
         // re-checked server-side, and only when a value was actually provided.
-        if (!string.IsNullOrEmpty(request.ImporterCode) && !System.Text.RegularExpressions.Regex.IsMatch(request.ImporterCode, @"^NP0000\d{4}$"))
-            return Json(new { success = false, message = "Importer Code must be NP0000 followed by exactly 4 numeric digits." });
+        if (!string.IsNullOrEmpty(request.ImporterCode) && !System.Text.RegularExpressions.Regex.IsMatch(request.ImporterCode, "^[A-Za-z]{2}[0-9]{4}$"))
+            return Json(new { success = false, message = "Importer Code must be 2 letters followed by exactly 4 numeric digits." });
 
         if (!string.IsNullOrEmpty(request.InvoiceNumber) && request.InvoiceNumber.Length > 20)
             return Json(new { success = false, message = "Invoice Number cannot exceed 20 characters." });
