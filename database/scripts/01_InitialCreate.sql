@@ -2261,6 +2261,15 @@ IF NOT EXISTS (
     WHERE [MigrationId] = N'20260718054304_ShrinkImporterCodeToSixChars'
 )
 BEGIN
+    UPDATE [JobIsnes] SET [ImporterCode] = NULL WHERE [ImporterCode] IS NOT NULL AND LEN([ImporterCode]) > 6;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260718054304_ShrinkImporterCodeToSixChars'
+)
+BEGIN
     DECLARE @var24 sysname;
     SELECT @var24 = [d].[name]
     FROM [sys].[default_constraints] [d]
