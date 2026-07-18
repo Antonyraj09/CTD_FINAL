@@ -27,6 +27,16 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(connectionString, sql => sql.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName)));
 
+// ADMIN_CTD: the one fixed, always-reachable database (Companies/Licenses/ClientDatabases/
+// InstallationHistory) every tenant lookup starts from. Unlike AppDbContext above — which a
+// later phase repoints at a per-request dynamically-resolved tenant connection string — this
+// connection stays static for the life of the process.
+var adminConnectionString = builder.Configuration.GetConnectionString("AdminConnection")
+    ?? throw new InvalidOperationException("Connection string 'AdminConnection' not found.");
+
+builder.Services.AddDbContext<AdminDbContext>(options =>
+    options.UseSqlServer(adminConnectionString, sql => sql.MigrationsAssembly(typeof(AdminDbContext).Assembly.FullName)));
+
 builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
     {
         options.Password.RequiredLength = 8;
@@ -119,6 +129,7 @@ app.MapControllerRoute(
 
 using (var scope = app.Services.CreateScope())
 {
+    await AdminDbInitializer.SeedAsync(scope.ServiceProvider);
     await DbInitializer.SeedAsync(scope.ServiceProvider);
 }
 
