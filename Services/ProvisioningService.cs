@@ -2,14 +2,11 @@ using System.Text.RegularExpressions;
 using CTD_FINAL.Constants;
 using CTD_FINAL.Data;
 using CTD_FINAL.Data.Seed;
-using CTD_FINAL.Entities;
 using CTD_FINAL.Entities.Admin;
 using CTD_FINAL.Enums;
 using CTD_FINAL.Infrastructure.Provisioning;
 using CTD_FINAL.Interfaces;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.Data.SqlClient;
-using Microsoft.EntityFrameworkCore;
 
 namespace CTD_FINAL.Services;
 
@@ -219,25 +216,6 @@ EXEC sp_executesql @roleSql;";
     // Runs against an isolated mini DI container, scoped to just this one seed call — the
     // main app's AppDbContext registration resolves its connection from ITenantContextAccessor
     // (a per-HTTP-request value), which doesn't exist here since provisioning isn't a login.
-    private async Task SeedTenantAsync(string tenantConnectionString, ProvisioningRequest request)
-    {
-        var services = new ServiceCollection();
-        services.AddSingleton(_loggerFactory);
-        services.AddLogging();
-        services.AddDbContext<AppDbContext>(options =>
-            options.UseSqlServer(tenantConnectionString, sql => sql.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName)));
-        services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
-            {
-                options.Password.RequiredLength = 8;
-                options.Password.RequireDigit = true;
-                options.Password.RequireUppercase = true;
-                options.Password.RequireNonAlphanumeric = true;
-            })
-            .AddEntityFrameworkStores<AppDbContext>()
-            .AddDefaultTokenProviders();
-
-        await using var provider = services.BuildServiceProvider();
-        using var scope = provider.CreateScope();
-        await TenantSeeder.SeedNewTenantAsync(scope.ServiceProvider, request.AdminEmail, request.AdminFullName, request.AdminPassword);
-    }
+    private Task SeedTenantAsync(string tenantConnectionString, ProvisioningRequest request) =>
+        TenantSeeder.SeedNewTenantAsync(tenantConnectionString, _loggerFactory, request.AdminEmail, request.AdminFullName, request.AdminPassword);
 }

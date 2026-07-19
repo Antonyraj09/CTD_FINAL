@@ -1,6 +1,8 @@
+using CTD_FINAL.Constants;
 using CTD_FINAL.Data;
 using CTD_FINAL.Data.Seed;
 using CTD_FINAL.Entities;
+using CTD_FINAL.Entities.Admin;
 using CTD_FINAL.Enums;
 using CTD_FINAL.Infrastructure;
 using CTD_FINAL.Infrastructure.Identity;
@@ -170,37 +172,59 @@ using (var scope = app.Services.CreateScope())
     // Install Wizard / ProvisioningService.
     await AdminDbInitializer.SeedAsync(scope.ServiceProvider);
 
-    // Development convenience only: if nothing has ever been installed, run the exact same
-    // provisioning pipeline the Install Wizard uses against DefaultConnection's database, so
-    // `dotnet run` still gets a working login out of the box without a manual wizard pass.
-    // Production/Testing never take this path — they always go through the real wizard.
+    // Development convenience only: if nothing has ever been installed, attach
+    // DefaultConnection's database (already migrated via `dotnet ef database update
+    // --context AppDbContext`) as the first tenant directly — no CREATE DATABASE/LOGIN/USER
+    // needed since it already exists and the app connects to it the same way DefaultConnection
+    // always has (Trusted_Connection), not a freshly-created SQL login. Seeds it (idempotent)
+    // and registers it in ADMIN_CTD under the first generated license number (ERC00001, since
+    // AdminNumberSequence starts empty). Production/Testing never take this path — they always
+    // go through the real Install Wizard, which does create a brand new database/login.
     if (app.Environment.IsDevelopment())
     {
         var adminContext = scope.ServiceProvider.GetRequiredService<AdminDbContext>();
         if (!await adminContext.Companies.AnyAsync())
         {
-            var provisioningService = scope.ServiceProvider.GetRequiredService<IProvisioningService>();
-            var devDatabaseName = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(connectionString).InitialCatalog;
+            const string devAdminEmail = "admin@ctdsuite.local";
+            const string devAdminPassword = "ChangeMe#2026";
 
-            var result = await provisioningService.ProvisionAsync(new ProvisioningRequest(
-                CompanyName: "Himalayan Cargo Movers Pvt. Ltd.",
-                CompanyCode: "DEFAULT",
-                Address: null, Country: "India", State: null, City: null, GstNumber: null, ContactPerson: null,
-                Email: "admin@ctdsuite.local", Phone: null, InstallationLocation: "Local Development",
-                LicenseType: LicenseType.Trial,
-                DatabaseName: devDatabaseName,
-                DatabaseUsername: "ctd_dev_user",
-                DatabasePassword: "Dev#Passw0rd2026",
-                AdminEmail: "admin@ctdsuite.local",
-                AdminFullName: "System Administrator",
-                AdminPassword: "ChangeMe#2026",
-                InstalledBy: "Startup Auto-Provision",
-                MachineName: Environment.MachineName));
+            var loggerFactory = scope.ServiceProvider.GetRequiredService<ILoggerFactory>();
+            await TenantSeeder.SeedNewTenantAsync(connectionString, loggerFactory, devAdminEmail, "System Administrator", devAdminPassword);
 
-            if (result.Success)
-                Log.Information("Development auto-provision created license {LicenseNumber} for the default tenant — use it, admin@ctdsuite.local / ChangeMe#2026 to sign in.", result.LicenseNumber);
-            else
-                Log.Warning("Development auto-provision failed: {Reason}. Use the Install Wizard at /Install instead.", result.FailureReason);
+            var company = new Company
+            {
+                CompanyName = "Himalayan Cargo Movers Pvt. Ltd.",
+                CompanyCode = "DEFAULT",
+                Country = "India",
+                Email = devAdminEmail,
+                InstallationLocation = "Local Development",
+                Status = CompanyStatus.Active
+            };
+            adminContext.Companies.Add(company);
+            await adminContext.SaveChangesAsync();
+
+            var licenseService = scope.ServiceProvider.GetRequiredService<ILicenseService>();
+            var license = await licenseService.GenerateLicenseAsync(company.Id, company.CompanyCode, LicenseType.Trial, LicenseConstants.CurrentApplicationVersion);
+            adminContext.Licenses.Add(license);
+
+            var encryptionService = scope.ServiceProvider.GetRequiredService<IEncryptionService>();
+            var devConnectionBuilder = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(connectionString);
+            adminContext.ClientDatabases.Add(new ClientDatabase
+            {
+                CompanyId = company.Id,
+                DatabaseName = devConnectionBuilder.InitialCatalog,
+                ServerName = devConnectionBuilder.DataSource,
+                DatabaseUsername = "(Trusted_Connection)",
+                EncryptedPassword = encryptionService.Encrypt(string.Empty),
+                EncryptedConnectionString = encryptionService.Encrypt(connectionString),
+                DatabaseVersion = LicenseConstants.CurrentApplicationVersion,
+                ApplicationVersion = LicenseConstants.CurrentApplicationVersion,
+                Status = ClientDatabaseStatus.Active
+            });
+            await adminContext.SaveChangesAsync();
+
+            Log.Information("Development bootstrap registered {DatabaseName} as the first tenant under license {LicenseNumber} — sign in with {Email} / {Password}.",
+                devConnectionBuilder.InitialCatalog, license.LicenseNumber, devAdminEmail, devAdminPassword);
         }
     }
 }

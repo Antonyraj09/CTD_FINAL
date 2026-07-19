@@ -23,6 +23,32 @@ namespace CTD_FINAL.Data.Seed;
 /// </summary>
 public static class TenantSeeder
 {
+    /// <summary>Builds an isolated mini DI container against the given connection string and
+    /// seeds it — for callers that don't already have a scope pointed at the target tenant
+    /// database (ProvisioningService mid-install, or Program.cs's Development bootstrap
+    /// attaching an already-migrated database directly).</summary>
+    public static async Task SeedNewTenantAsync(string connectionString, ILoggerFactory loggerFactory, string adminEmail, string adminFullName, string adminPassword)
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton(loggerFactory);
+        services.AddLogging();
+        services.AddDbContext<AppDbContext>(options =>
+            options.UseSqlServer(connectionString, sql => sql.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName)));
+        services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
+            {
+                options.Password.RequiredLength = 8;
+                options.Password.RequireDigit = true;
+                options.Password.RequireUppercase = true;
+                options.Password.RequireNonAlphanumeric = true;
+            })
+            .AddEntityFrameworkStores<AppDbContext>()
+            .AddDefaultTokenProviders();
+
+        await using var provider = services.BuildServiceProvider();
+        using var scope = provider.CreateScope();
+        await SeedNewTenantAsync(scope.ServiceProvider, adminEmail, adminFullName, adminPassword);
+    }
+
     public static async Task SeedNewTenantAsync(IServiceProvider services, string adminEmail, string adminFullName, string adminPassword)
     {
         var context = services.GetRequiredService<AppDbContext>();
