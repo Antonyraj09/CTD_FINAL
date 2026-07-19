@@ -1,0 +1,128 @@
+@using CTD_FINAL.Enums
+@model CTD_FINAL.Models.Install.InstallIndexViewModel
+@{
+    Layout = "_SetupLayout";
+    ViewData["Title"] = "Installation Wizard";
+}
+<div class="section-head">
+    <div>
+        <h2>Installation Wizard</h2>
+        <p>Provision a new client database and issue its license — this only needs to run once per client.</p>
+    </div>
+</div>
+
+<div class="wizard-shell" id="installShell" data-setup-key="@Model.SetupKey">
+    <div class="wizard-steps" id="installStepsBar">
+        <div class="wstep current" data-step="1"><div class="wstep-num">1</div><div class="wstep-meta"><span class="lbl">Step 1</span><span class="nm">Client Information</span></div></div>
+        <div class="wstep" data-step="2"><div class="wstep-num">2</div><div class="wstep-meta"><span class="lbl">Step 2</span><span class="nm">Database Configuration</span></div></div>
+        <div class="wstep" data-step="3"><div class="wstep-num">3</div><div class="wstep-meta"><span class="lbl">Step 3</span><span class="nm">Review &amp; Install</span></div></div>
+        <div class="wstep" data-step="4"><div class="wstep-num">4</div><div class="wstep-meta"><span class="lbl">Step 4</span><span class="nm">License Issued</span></div></div>
+    </div>
+
+    <div class="wizard-body">
+        <!-- STEP 1: CLIENT INFORMATION -->
+        <div class="wizard-pane active" id="ipane-1">
+            <div class="subhead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Client Information</div>
+            <div class="form-grid">
+                <div class="field"><label>License Number</label><div class="field-static">Assigned automatically once installation completes</div></div>
+                <div class="field"><label>License Type <span class="req">*</span></label>
+                    <select id="i1_licenseType">
+                        @foreach (var lt in Enum.GetValues<LicenseType>())
+                        {
+                            <option value="@lt" selected="@(lt == LicenseType.Trial)">@lt</option>
+                        }
+                    </select>
+                </div>
+                <div class="field"><label>Company Name <span class="req">*</span></label><input type="text" id="i1_companyName" placeholder="ABC Logistics Pvt. Ltd.">
+                    <span class="field-error">Company name is required</span>
+                </div>
+                <div class="field"><label>Company Code <span class="req">*</span></label><input type="text" id="i1_companyCode" placeholder="ABCLOG" maxlength="20">
+                    <span class="field-error">Company code is required</span>
+                </div>
+                <div class="field"><label>Email <span class="req">*</span></label><input type="email" id="i1_email" placeholder="ops@abclogistics.com">
+                    <span class="field-error">A valid email is required</span>
+                </div>
+                <div class="field"><label>Phone</label><input type="text" id="i1_phone" placeholder="+91 98765 43210"></div>
+                <div class="field"><label>Contact Person</label><input type="text" id="i1_contactPerson" placeholder="Full name"></div>
+                <div class="field"><label>GST Number</label><input type="text" id="i1_gstNumber" placeholder="22AAAAA0000A1Z5"></div>
+                <div class="field"><label>Country</label><input type="text" id="i1_country" value="India"></div>
+                <div class="field"><label>State</label><input type="text" id="i1_state" placeholder="e.g. West Bengal"></div>
+                <div class="field"><label>City</label><input type="text" id="i1_city" placeholder="e.g. Kolkata"></div>
+                <div class="field"><label>Installation Location</label><input type="text" id="i1_installationLocation" placeholder="On-prem / Azure / AWS region, etc."></div>
+                <div class="field span-2"><label>Address</label><input type="text" id="i1_address" placeholder="Registered office address"></div>
+            </div>
+        </div>
+
+        <!-- STEP 2: DATABASE CONFIGURATION -->
+        <div class="wizard-pane" id="ipane-2">
+            <div class="subhead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>Database Configuration</div>
+            <div class="form-grid">
+                <div class="field"><label>Database Name <span class="req">*</span></label><input type="text" id="i2_databaseName" placeholder="CTD_ABC_LOGISTICS">
+                    <span class="field-error">Letters, digits and underscores only, starting with a letter</span>
+                </div>
+                <div class="field"><label>Database Username <span class="req">*</span></label><input type="text" id="i2_databaseUsername" placeholder="ctd_user">
+                    <span class="field-error">Letters, digits and underscores only, starting with a letter</span>
+                </div>
+                <div class="field"><label>Database Password <span class="req">*</span></label><input type="password" id="i2_databasePassword" placeholder="At least 8 characters">
+                    <span class="field-error">At least 8 characters</span>
+                </div>
+            </div>
+            <div class="divider"></div>
+            <h4 style="margin:0 0 12px;font-size:13.5px;">Default Administrator Account</h4>
+            <p style="margin:0 0 14px;font-size:12px;color:var(--ink-500);">This is the only login seeded into the new database — no demo data or extra users are created.</p>
+            <div class="form-grid">
+                <div class="field"><label>Full Name <span class="req">*</span></label><input type="text" id="i2_adminFullName" placeholder="Administrator">
+                    <span class="field-error">Full name is required</span>
+                </div>
+                <div class="field"><label>Email <span class="req">*</span></label><input type="email" id="i2_adminEmail" placeholder="admin@abclogistics.com">
+                    <span class="field-error">A valid email is required</span>
+                </div>
+                <div class="field"><label>Password <span class="req">*</span></label><input type="password" id="i2_adminPassword" placeholder="At least 8 characters">
+                    <span class="field-error">At least 8 characters</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 3: REVIEW & INSTALL -->
+        <div class="wizard-pane" id="ipane-3">
+            <div class="subhead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>Review &amp; Install</div>
+            <div class="mini-table-wrap">
+                <table class="mini-table" id="reviewTable">
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div class="divider"></div>
+            <div id="installProgress" style="display:none;">
+                <div class="install-spinner"></div>
+                <p style="text-align:center;font-size:13px;color:var(--ink-500);">Creating the database, deploying the schema and seeding the administrator account — this can take a minute.</p>
+            </div>
+        </div>
+
+        <!-- STEP 4: LICENSE ISSUED -->
+        <div class="wizard-pane" id="ipane-4">
+            <div class="install-result">
+                <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>
+                <h3>Installation Complete</h3>
+                <p>The client database has been created and the license has been issued.</p>
+                <div class="install-license-box">
+                    <span class="lbl">License Number</span>
+                    <span class="val" id="resultLicenseNumber">—</span>
+                </div>
+                <p style="font-size:12px;color:var(--ink-500);">Record this license number now — it will be needed on every login for this client, alongside a username and password.</p>
+                <a class="btn btn-primary" asp-controller="Account" asp-action="Login">Go to Login</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="wizard-foot">
+        <button type="button" class="btn btn-ghost" id="installPrevBtn" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>Back</button>
+        <div class="right-actions">
+            <button type="button" class="btn btn-primary" id="installNextBtn">Continue<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button>
+            <button type="button" class="btn btn-success" id="installStartBtn" style="display:none;">Start Installation</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/install-wizard.js" asp-append-version="true"></script>
+}

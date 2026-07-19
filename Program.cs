@@ -1,6 +1,7 @@
 using CTD_FINAL.Data;
 using CTD_FINAL.Data.Seed;
 using CTD_FINAL.Entities;
+using CTD_FINAL.Enums;
 using CTD_FINAL.Infrastructure;
 using CTD_FINAL.Infrastructure.Identity;
 using CTD_FINAL.Infrastructure.Middleware;
@@ -166,9 +167,42 @@ using (var scope = app.Services.CreateScope())
     // Only ADMIN_CTD gets migrated unconditionally at boot — it's the one database with a
     // fixed connection string. There is no longer a single "the" tenant database to seed
     // here: each tenant is provisioned (schema deployed + seeded) once, on demand, via the
-    // Install Wizard / ProvisioningService. See the Development-only auto-provision block
-    // further down for how local `dotnet run` still gets a working login out of the box.
+    // Install Wizard / ProvisioningService.
     await AdminDbInitializer.SeedAsync(scope.ServiceProvider);
+
+    // Development convenience only: if nothing has ever been installed, run the exact same
+    // provisioning pipeline the Install Wizard uses against DefaultConnection's database, so
+    // `dotnet run` still gets a working login out of the box without a manual wizard pass.
+    // Production/Testing never take this path — they always go through the real wizard.
+    if (app.Environment.IsDevelopment())
+    {
+        var adminContext = scope.ServiceProvider.GetRequiredService<AdminDbContext>();
+        if (!await adminContext.Companies.AnyAsync())
+        {
+            var provisioningService = scope.ServiceProvider.GetRequiredService<IProvisioningService>();
+            var devDatabaseName = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(connectionString).InitialCatalog;
+
+            var result = await provisioningService.ProvisionAsync(new ProvisioningRequest(
+                CompanyName: "Himalayan Cargo Movers Pvt. Ltd.",
+                CompanyCode: "DEFAULT",
+                Address: null, Country: "India", State: null, City: null, GstNumber: null, ContactPerson: null,
+                Email: "admin@ctdsuite.local", Phone: null, InstallationLocation: "Local Development",
+                LicenseType: LicenseType.Trial,
+                DatabaseName: devDatabaseName,
+                DatabaseUsername: "ctd_dev_user",
+                DatabasePassword: "Dev#Passw0rd2026",
+                AdminEmail: "admin@ctdsuite.local",
+                AdminFullName: "System Administrator",
+                AdminPassword: "ChangeMe#2026",
+                InstalledBy: "Startup Auto-Provision",
+                MachineName: Environment.MachineName));
+
+            if (result.Success)
+                Log.Information("Development auto-provision created license {LicenseNumber} for the default tenant — use it, admin@ctdsuite.local / ChangeMe#2026 to sign in.", result.LicenseNumber);
+            else
+                Log.Warning("Development auto-provision failed: {Reason}. Use the Install Wizard at /Install instead.", result.FailureReason);
+        }
+    }
 }
 
 app.Run();

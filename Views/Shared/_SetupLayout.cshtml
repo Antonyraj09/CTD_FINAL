@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@(ViewData["Title"] as string ?? "Installation") | CTD Management System</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/auth.css" asp-append-version="true" />
+</head>
+<body class="setup-body">
+    <form id="antiForgeryForm" style="display:none;">@Html.AntiForgeryToken()</form>
+
+    <div class="setup-topbar">
+        <div class="brand-mark">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#1a1305" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-6 9 6-9 6-9-6z"/><path d="M3 9v7l9 6 9-6V9"/><path d="M12 15v6"/></svg>
+        </div>
+        <div>
+            <strong>CTD Suite</strong>
+            <span>Installation &amp; Licensing</span>
+        </div>
+    </div>
+
+    <div class="setup-canvas">
+        @RenderBody()
+    </div>
+
+    <div class="toast-stack" id="toastStack"></div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
