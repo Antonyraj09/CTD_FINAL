@@ -97,6 +97,7 @@ builder.Services.AddScoped<IPartyService, PartyService>();
 
 builder.Services.AddScoped<IEncryptionService, EncryptionService>();
 builder.Services.AddScoped<ITenantResolutionService, TenantResolutionService>();
+builder.Services.AddScoped<ILicenseService, LicenseService>();
 
 builder.Services.AddScoped<IUserClaimsPrincipalFactory<ApplicationUser>, AppUserClaimsPrincipalFactory>();
 
