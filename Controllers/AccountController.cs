@@ -7,27 +7,35 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CTD_FINAL.Controllers;
 
+// Deliberately does NOT constructor-inject SignInManager<ApplicationUser>/UserManager<ApplicationUser>
+// (or anything else backed by AppDbContext) — ASP.NET Core resolves a controller's entire
+// constructor dependency graph the moment it's instantiated, before any action code runs.
+// SignInManager/UserManager transitively need AppDbContext (via UserStore), and AppDbContext's
+// tenant-resolving registration throws until ITenantContextAccessor has been populated — which,
+// for an anonymous request, only happens INSIDE the Login POST action after the license number
+// has been validated. Constructor-injecting them would make even loading the login page throw.
+// They're resolved lazily from HttpContext.RequestServices instead, at the point each action
+// actually needs them (after the tenant is established), via GetIdentityServices() below.
 [AllowAnonymous]
 public class AccountController : Controller
 {
-    private readonly SignInManager<ApplicationUser> _signInManager;
-    private readonly UserManager<ApplicationUser> _userManager;
     private readonly ILicenseService _licenseService;
     private readonly ITenantResolutionService _tenantResolutionService;
     private readonly ITenantContextAccessor _tenantContextAccessor;
     private readonly ILogger<AccountController> _logger;
 
-    public AccountController(SignInManager<ApplicationUser> signInManager, UserManager<ApplicationUser> userManager,
-        ILicenseService licenseService, ITenantResolutionService tenantResolutionService, ITenantContextAccessor tenantContextAccessor,
-        ILogger<AccountController> logger)
+    public AccountController(ILicenseService licenseService, ITenantResolutionService tenantResolutionService,
+        ITenantContextAccessor tenantContextAccessor, ILogger<AccountController> logger)
     {
-        _signInManager = signInManager;
-        _userManager = userManager;
         _licenseService = licenseService;
         _tenantResolutionService = tenantResolutionService;
         _tenantContextAccessor = tenantContextAccessor;
         _logger = logger;
     }
+
+    private (UserManager<ApplicationUser> UserManager, SignInManager<ApplicationUser> SignInManager) GetIdentityServices() =>
+        (HttpContext.RequestServices.GetRequiredService<UserManager<ApplicationUser>>(),
+         HttpContext.RequestServices.GetRequiredService<SignInManager<ApplicationUser>>());
 
     [HttpGet]
     public IActionResult Login(string? returnUrl = null)
@@ -65,16 +73,17 @@ public class AccountController : Controller
             return View(model);
         }
 
-        // Step 5: connect to the client database — set BEFORE UserManager/SignInManager
-        // touch AppDbContext for the first time this request, since its DI registration
-        // reads this same accessor to build its connection.
+        // Step 5: connect to the client database — set BEFORE UserManager/SignInManager are
+        // resolved below, since AppDbContext's DI registration reads this same accessor to
+        // build its connection, and constructing either service touches AppDbContext.
         _tenantContextAccessor.Set(tenant.ConnectionString, model.LicenseNumber, tenant.CompanyId, tenant.CompanyName);
 
         // Step 6: authenticate the user from the client database, using ASP.NET Core
         // Identity's UserManager/SignInManager exactly as before — PBKDF2 password hashing,
         // never a reversible encryption, unchanged from the single-tenant implementation.
-        var user = await _userManager.FindByEmailAsync(model.UserNameOrEmail)
-                   ?? await _userManager.FindByNameAsync(model.UserNameOrEmail);
+        var (userManager, signInManager) = GetIdentityServices();
+        var user = await userManager.FindByEmailAsync(model.UserNameOrEmail)
+                   ?? await userManager.FindByNameAsync(model.UserNameOrEmail);
 
         if (user is null || !user.IsActive)
         {
@@ -82,12 +91,12 @@ public class AccountController : Controller
             return View(model);
         }
 
-        var result = await _signInManager.PasswordSignInAsync(user.UserName!, model.Password, model.RememberMe, lockoutOnFailure: true);
+        var result = await signInManager.PasswordSignInAsync(user.UserName!, model.Password, model.RememberMe, lockoutOnFailure: true);
 
         if (result.Succeeded)
         {
             user.LastLoginAt = DateTime.UtcNow;
-            await _userManager.UpdateAsync(user);
+            await userManager.UpdateAsync(user);
             await _licenseService.RecordSuccessfulActivationAsync(licenseResult.License, machineIdentifier);
             _logger.LogInformation("User {Email} logged in under license {LicenseNumber}.", user.Email, model.LicenseNumber);
             return RedirectToLocal(model.ReturnUrl);
@@ -107,7 +116,14 @@ public class AccountController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Logout()
     {
-        await _signInManager.SignOutAsync();
+        // Guard first: an anonymous POST here (no cookie, so TenantResolutionMiddleware never
+        // set a tenant) would otherwise hit the same AppDbContext chicken-and-egg problem
+        // GetIdentityServices() exists to avoid — there's nothing to sign out of anyway.
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            var (_, signInManager) = GetIdentityServices();
+            await signInManager.SignOutAsync();
+        }
         return RedirectToAction(nameof(Login));
     }
 

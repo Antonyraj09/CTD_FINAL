@@ -81,6 +81,19 @@ builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
 
+// AddIdentity wires a periodic SecurityStampValidator re-check (default: every 30 minutes)
+// into the cookie's OnValidatePrincipal event, which fires inside UseAuthentication() —
+// BEFORE UseTenantResolution() gets a chance to populate ITenantContextAccessor for the
+// request. That validator needs UserManager (-> AppDbContext), so on an already-authenticated
+// request it would hit the exact same "No tenant database connection has been established"
+// failure Login itself works around, just ~30 minutes into a session instead of immediately.
+// Disabled here; TenantResolutionMiddleware already re-validates the license/tenant on every
+// single request (not just every 30 minutes), which is the freshness check that actually
+// matters for this app. The trade-off: a security-stamp change from elsewhere (e.g. an admin
+// resetting this user's password) no longer force-signs-out this session early — it still
+// takes effect on the next fresh login.
+builder.Services.Configure<SecurityStampValidatorOptions>(options => options.ValidationInterval = TimeSpan.MaxValue);
+
 builder.Services.AddMemoryCache();
 
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
