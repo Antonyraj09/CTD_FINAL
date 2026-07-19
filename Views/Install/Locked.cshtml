@@ -1,0 +1,23 @@
+@model bool
+@{
+    Layout = "_SetupLayout";
+    ViewData["Title"] = "Setup Key Required";
+}
+<div class="install-locked">
+    <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    <h3>Setup Key Required</h3>
+    <p>An installation already exists on this system. Enter the shared setup key to run the Installation Wizard again and provision another client database.</p>
+
+    @if (Model)
+    {
+        <div class="auth-validation-summary">The setup key you entered is not valid.</div>
+    }
+
+    <form method="get" asp-controller="Install" asp-action="Index" class="install-locked-form">
+        <div class="auth-field">
+            <label for="key">Setup Key</label>
+            <input type="password" id="key" name="key" autocomplete="off" autofocus placeholder="Enter setup key" />
+        </div>
+        <button type="submit" class="btn btn-amber auth-submit">Continue</button>
+    </form>
+</div>

@@ -30,8 +30,14 @@
             <div asp-validation-summary="ModelOnly" class="auth-validation-summary" style="@(ViewData.ModelState.IsValid ? "display:none;" : "")"></div>
 
             <div class="auth-field">
+                <label asp-for="LicenseNumber">License Number</label>
+                <input asp-for="LicenseNumber" type="text" autocomplete="off" autofocus placeholder="ERC00001" />
+                <span asp-validation-for="LicenseNumber" class="text-danger"></span>
+            </div>
+
+            <div class="auth-field">
                 <label asp-for="UserNameOrEmail">Username or Email</label>
-                <input asp-for="UserNameOrEmail" type="text" autocomplete="username" autofocus placeholder="you@company.com" />
+                <input asp-for="UserNameOrEmail" type="text" autocomplete="username" placeholder="you@company.com" />
                 <span asp-validation-for="UserNameOrEmail" class="text-danger"></span>
             </div>
 
@@ -58,7 +64,8 @@
         </form>
 
         <div class="auth-demo-note">
-            <strong>Demo accounts</strong> (password <code>ChangeMe#2026</code>): admin@ctdsuite.com · manager@ctdsuite.com · operator@ctdsuite.com · viewer@ctdsuite.com
+            <strong>Demo accounts</strong> (password <code>ChangeMe#2026</code>): admin@ctdsuite.com · manager@ctdsuite.com · operator@ctdsuite.com · viewer@ctdsuite.com<br />
+            Sign-in also requires the license number issued to your company's installation.
         </div>
     </div>
 </div>

@@ -4,6 +4,10 @@ namespace CTD_FINAL.Models.Account;
 
 public class LoginViewModel
 {
+    [Required(ErrorMessage = "License number is required")]
+    [Display(Name = "License Number")]
+    public string LicenseNumber { get; set; } = string.Empty;
+
     [Required(ErrorMessage = "Username or email is required")]
     [Display(Name = "Username or Email")]
     public string UserNameOrEmail { get; set; } = string.Empty;

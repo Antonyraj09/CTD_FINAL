@@ -92,6 +92,60 @@ A new collapsible section (`Views/JobIsne/Index.cshtml`, Section E — the old S
 - **Dropdown menus clipped at the bottom of a section**: `.erp-section` had `overflow: hidden` (originally just to crop the header's square corners to match the section's rounded border), which also clipped any typeable combo-select's popup menu when it opened below a field near a section's bottom edge. Fixed by moving the corner-rounding onto `.erp-section-head` directly (`border-top-left/right-radius`) and dropping `overflow: hidden` from `.erp-section` itself — the section's visual appearance is unchanged, but dropdowns near the end of a section are no longer cropped.
 - **Save vs. Update button label**: both Save buttons (header and footer) now read "Save (F9)" only for a brand-new, unsaved job and "Update (F9)" once the job has a saved record (`Model is not null`) — determined server-side from the same `Model is null` check the rest of the page already uses, so it flips automatically the moment a new job's first save redirects to its edit URL.
 
+## Multi-tenant installation & licensing
+
+The app is multi-client: every licensed company gets its own SQL Server database (all the entities described above — Party, CtdJob, JobIsne, Identity users, ...), but every installation is tracked through one central, always-reachable **ADMIN_CTD** database. There is no single fixed tenant connection string — the app resolves which database to talk to on every login, from the license number the user types in.
+
+### ADMIN_CTD
+
+A separate `AdminDbContext` (`Data/AdminDbContext.cs`), migrated independently from the tenant schema (`Data/Migrations/Admin/`, script at `database/scripts/02_AdminInitialCreate.sql`), with five tables:
+
+| Table | Purpose |
+|---|---|
+| `Company` | One row per licensed client — name, code, address, GST, contact, status. |
+| `License` | One row per issued license — `LicenseNumber` (`ERC00001` style), type (Trial/Standard/Professional/Enterprise), issue/expiry dates, machine identifier, an RSA signature (`LicenseKey`) and an AES-encrypted copy of the signed payload (`EncryptedLicense`). |
+| `ClientDatabase` | The connection details for a company's own database — server, database name, username, and the password + full connection string, both AES-encrypted. Never stored in plain text. |
+| `InstallationHistory` | One row per provisioning *attempt* (not per company) — a failed install followed by a retry leaves both in the audit trail. |
+| `AdminNumberSequence` | Backs sequential License Number generation (`ERC00001`, `ERC00002`, ...). |
+
+`AppDbContext.OnModelCreating` and `AdminDbContext.OnModelCreating` deliberately don't share configuration discovery: `AdminDbContext` applies its 5 `IEntityTypeConfiguration<T>` classes explicitly, and `AppDbContext`'s `ApplyConfigurationsFromAssembly` call filters out anything configuring a `CTD_FINAL.Entities.Admin` type — otherwise both `ApplyConfigurationsFromAssembly` calls would happily discover each other's configurations (they live in the same assembly) and leak Company/License/... into every tenant database, or Party/CtdJob/... into ADMIN_CTD.
+
+### Installing a new client
+
+Visit **`/Install`** — a 4-step wizard (Client Information → Database Configuration + a default Administrator account → Review → License Issued) that posts once to `InstallController.Provision`. That drives `ProvisioningService` (`Services/ProvisioningService.cs`) through the whole pipeline server-side:
+
+1. `CREATE DATABASE`, `CREATE LOGIN`, `CREATE USER`, `ALTER ROLE db_owner ADD MEMBER` — every identifier is validated against an allow-list regex up front and only ever reaches SQL via `QUOTENAME()` inside parameterized dynamic SQL (`sp_executesql`), never raw string interpolation.
+2. Deploys the full tenant schema by running `database/scripts/01_InitialCreate.sql` against the new database (`Infrastructure/Provisioning/SqlScriptRunner.cs` splits it into `GO`-separated batches).
+3. Seeds the new database via `Data/Seed/TenantSeeder.cs` — Roles, the default Permission Matrix, and **exactly one** Administrator account (whatever email/name/password was entered in the wizard). No demo master data, no extra users — a fresh tenant starts genuinely empty except for what the app itself needs to function.
+4. Generates a license (`ILicenseService.GenerateLicenseAsync`) and registers the `Company`/`License`/`ClientDatabase` rows in ADMIN_CTD, encrypting the database password and the runtime connection string.
+
+Re-running the wizard once any company already exists requires the shared `Setup:InstallKey` (as a `?key=` query param), checked with a fixed-time comparison — there's no separate admin-auth system gating repeat installs.
+
+**Local development**: if `ASPNETCORE_ENVIRONMENT=Development` and ADMIN_CTD has zero companies at startup, `Program.cs` runs the same `ProvisioningService` pipeline automatically against `ConnectionStrings:DefaultConnection`'s database, so `dotnet run` still gets a working login without a manual trip through the wizard. The issued license number is written to the startup log — look for `Development auto-provision created license ...`. The seeded login is `admin@ctdsuite.local` / `ChangeMe#2026`.
+
+### Login flow
+
+`Views/Account/Login.cshtml` collects a License Number alongside username/password. `AccountController.Login` then:
+
+1. Validates the license (`ILicenseService.ValidateAsync`) — status, expiry, and an RSA signature check against the stored `LicenseKey` (skipped only if a license predates signing). A machine-identifier mismatch is logged, not blocked — a web-hosted app's "machine" is the deployment server, and legitimate hardware migrations shouldn't lock a paying customer out.
+2. Resolves and decrypts the tenant's connection string (`ITenantResolutionService.ResolveAsync`, backed by `AdminDbContext`, cached 5 minutes) and stores it on `ITenantContextAccessor` — a scoped service the request's `AppDbContext` registration reads to build its connection (`Program.cs`'s `AddDbContext<AppDbContext>((sp, options) => ...)` resolves `ITenantContextAccessor` from the same DI scope the `DbContext` belongs to, so no existing service/repository/controller that depends on `AppDbContext` needed to change).
+3. Authenticates the user from *that* database via the existing `UserManager`/`SignInManager` — unchanged PBKDF2 password hashing, never reversible encryption.
+4. On success, adds a `LicenseNumber` claim to the auth cookie (`Infrastructure/Identity/AppUserClaimsPrincipalFactory.cs`) so `Infrastructure/Middleware/TenantResolutionMiddleware.cs` can re-resolve the same tenant on every later request in the session — re-checking status/expiry each time (cheap — no RSA verification), so a license suspended mid-session signs the user out on their next request instead of waiting for cookie expiry.
+
+### Encryption
+
+`Services/EncryptionService.cs` — AES-256-GCM (authenticated: confidentiality + tamper detection, no separate HMAC) for the database password, connection string, and license payload stored in ADMIN_CTD. `Services/LicenseService.cs` additionally signs the license payload with RSA-SHA256 (`Encryption:RsaPrivateKeyPem`/`RsaPublicKeyPem`) so direct database tampering with a `License` row is detectable at validation time, independent of the AES encryption.
+
+`appsettings.json` ships a real (dev-only) AES key and RSA keypair so `dotnet run` works out of the box locally. **Generate your own before deploying anywhere real users can reach**:
+
+```bash
+openssl rand -base64 32                                    # Encryption:AesKeyBase64
+openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out private.pem
+openssl rsa -in private.pem -pubout -out public.pem         # Encryption:RsaPrivateKeyPem / RsaPublicKeyPem
+```
+
+`appsettings.Production.json`/`appsettings.Testing.json` ship placeholders for all of these (`Encryption:*`, `ConnectionStrings:AdminConnection`/`ProvisioningConnection`, `Setup:InstallKey`) — override via environment variables or a secrets manager, same as `DefaultConnection`.
+
 ## Project layout
 
 ```
@@ -131,6 +185,8 @@ This app targets old SQL Server installations, down to **SQL Server 2008 SP1**. 
 
 Everything else in the schema/queries (filtered unique indexes, `datetime2`, `GROUP BY`, `CROSS/OUTER APPLY` from `Include()`) has been in SQL Server since 2008 or earlier, so no other changes were needed for this — but this hasn't been exercised against a real SQL Server 2008 instance, only audited by inspecting the generated SQL and cross-checking against known SQL Server version history. If you hit another `Incorrect syntax near ...` error, it's almost certainly another EF Core LINQ translation using a newer T-SQL feature — check the exact SQL Server version the syntax was introduced in and report it back with the error text and the query that triggered it.
 
+**One deliberate, narrower exception**: `ProvisioningService`'s tenant database setup uses `ALTER ROLE db_owner ADD MEMBER ...` to grant the newly-created login access to its new database — that syntax needs **SQL Server 2012+** (2008-compatible installs would need `sp_addrolemember` instead). This applies only to provisioning a *new* tenant database server, not to the app's day-to-day queries against an *existing* one — an existing tenant database still only needs 2008 SP1+ once it's been created.
+
 ## First-time setup
 
 1. **Restore client-side libraries**:
@@ -151,42 +207,43 @@ Everything else in the schema/queries (filtered unique indexes, `datetime2`, `GR
 
    **Note on environments**: the app only reads `appsettings.Development.json` when `ASPNETCORE_ENVIRONMENT=Development`. `Properties/launchSettings.json` sets this automatically for `dotnet run` / Visual Studio F5 (`http`/`https` profiles) — without it, or if you run the published output directly, the app falls back to `Production` and uses the base `appsettings.json` (LocalDB) instead.
 
-3. **Apply migrations and seed data.** Happens automatically on startup. To provision manually:
+3. **ADMIN_CTD gets migrated automatically on startup** (`AdminDbInitializer.SeedAsync` — migrate-only, it starts genuinely empty). There's no longer a single tenant database seeded alongside it — each client's own database is created and seeded separately, either through the Install Wizard or (in Development only) the auto-provision fallback described below. To migrate ADMIN_CTD manually instead:
    ```bash
-   sqlcmd -S <server> -d CtdFinalDb -i database/scripts/01_InitialCreate.sql
+   sqlcmd -S <server> -d ADMIN_CTD -i database/scripts/02_AdminInitialCreate.sql
    # or
    dotnet tool install -g dotnet-ef
-   dotnet ef database update
+   dotnet ef database update --context AdminDbContext
    ```
+   A tenant database is never migrated this way — `01_InitialCreate.sql` / `dotnet ef database update --context AppDbContext` only apply against a database that's already been provisioned (created, login/user/role set up) by `ProvisioningService`, either via the wizard or manually.
 
 4. **Run**:
    ```bash
    dotnet run --project CTD_FINAL.csproj
    ```
-
-## Seeded demo accounts
-
-All seeded with the temporary password `ChangeMe#2026`:
-
-| Email | Role |
-|---|---|
-| `admin@ctdsuite.com` | Administrator |
-| `manager@ctdsuite.com` | Manager |
-| `operator@ctdsuite.com` | Operator |
-| `viewer@ctdsuite.com` | Viewer |
+   In Development, if ADMIN_CTD has no companies yet, the app provisions a default tenant automatically on this first run — see "Multi-tenant installation & licensing" above for the seeded login and where to find its license number. Outside Development, visit `/Install` to provision the first client.
 
 ## Adding a schema migration
 
+There are two independent `DbContext`s now — `AppDbContext` (tenant schema) and `AdminDbContext` (ADMIN_CTD) — every `dotnet ef` command needs `--context` to say which one:
+
 ```bash
-dotnet ef migrations add <Name>
-dotnet ef migrations script -o database/scripts/01_InitialCreate.sql --idempotent
+dotnet ef migrations add <Name> --context AppDbContext
+dotnet ef migrations script --context AppDbContext -o database/scripts/01_InitialCreate.sql --idempotent
+
+dotnet ef migrations add <Name> --context AdminDbContext
+dotnet ef migrations script --context AdminDbContext -o database/scripts/02_AdminInitialCreate.sql --idempotent
 ```
+
+Both generated scripts need `SET QUOTED_IDENTIFIER ON; GO` re-added as the first lines by hand — `dotnet ef migrations script` doesn't emit it, but the filtered unique indexes in this schema require it when run via `sqlcmd` (`Microsoft.Data.SqlClient` already defaults it on, so `dotnet ef database update` is unaffected). It gets wiped every time the script is regenerated, so re-add it as part of the same change.
+
+`AppDbContext.OnModelCreating`'s `ApplyConfigurationsFromAssembly` filter (see "Multi-tenant installation & licensing" above) means a new `IEntityTypeConfiguration<T>` for a `CTD_FINAL.Entities.Admin` type is automatically excluded from tenant migrations — but a new tenant-side entity's configuration must still live outside that namespace, or it'll be silently excluded too.
 
 ## Security notes
 
-- Every mutating (`POST`) action validates the anti-forgery token; AJAX JSON calls supply it via the `RequestVerificationToken` header.
+- Every mutating (`POST`) action validates the anti-forgery token; AJAX JSON calls supply it via the `RequestVerificationToken` header — including the anonymous `/Install/Provision` endpoint, which still requires a valid token even though it doesn't require a signed-in user.
 - All authorization is enforced server-side via `[RequirePermission]`, independent of the (also permission-gated) navigation UI.
-- All data access goes through EF Core's parameterized LINQ — no raw/interpolated SQL.
+- Tenant data access goes through EF Core's parameterized LINQ — no raw/interpolated SQL. The one deliberate exception is `ProvisioningService`'s `CREATE DATABASE`/`CREATE LOGIN`/`CREATE USER`/`ALTER ROLE` statements (EF Core has no API for these), which are raw ADO.NET but never string-interpolated: every identifier is validated against an allow-list regex first and only reaches SQL via `QUOTENAME()` inside parameterized dynamic SQL.
+- Database passwords, connection strings and license payloads are AES-256-GCM encrypted at rest in ADMIN_CTD (`Services/EncryptionService.cs`); license payloads are additionally RSA-SHA256 signed (`Services/LicenseService.cs`) so direct database tampering is detectable. User login passwords are untouched by any of this — they stay on ASP.NET Core Identity's one-way PBKDF2 hashing.
 - Uploaded documents are stored under `App_Data/uploads/documents`, outside `wwwroot`, so the static file middleware can never serve them directly; every download is re-authorized through `Documents/Download`. Uploads are restricted to a fixed extension allow-list and a 20 MB size cap.
 - Identity passwords require 8+ characters with a digit, uppercase letter and non-alphanumeric character; accounts lock out for 10 minutes after 5 failed attempts.
 - Cookies are `HttpOnly`, `SameSite=Lax`; `UseHttpsRedirection`/`UseHsts` are enabled; baseline security response headers (`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`) are set on every response.

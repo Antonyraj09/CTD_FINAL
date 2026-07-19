@@ -1,9 +1,11 @@
 using CTD_FINAL.Data;
 using CTD_FINAL.Data.Seed;
 using CTD_FINAL.Entities;
+using CTD_FINAL.Enums;
 using CTD_FINAL.Infrastructure;
 using CTD_FINAL.Infrastructure.Identity;
 using CTD_FINAL.Infrastructure.Middleware;
+using CTD_FINAL.Infrastructure.Tenancy;
 using CTD_FINAL.Interfaces;
 using CTD_FINAL.Repositories;
 using CTD_FINAL.Services;
@@ -21,11 +23,48 @@ builder.Host.UseSerilog((context, services, configuration) => configuration
 
 builder.Services.Configure<AppOptions>(builder.Configuration.GetSection("AppOptions"));
 
+// Kept around only as the Development-only auto-provision target (see the seeding block
+// near the bottom of this file) — AppDbContext itself no longer uses this directly. The
+// app never has one fixed tenant connection string: every request resolves its own via
+// ITenantContextAccessor (see below), keyed off the LicenseNumber the user signed in with.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(connectionString, sql => sql.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName)));
+builder.Services.AddScoped<ITenantContextAccessor, TenantContextAccessor>();
+
+// AppDbContext's connection is resolved per-request from whatever ITenantContextAccessor
+// holds for the current scope, instead of one static connection string. AddDbContext's
+// (IServiceProvider, DbContextOptionsBuilder) overload resolves services from the SAME
+// scope the DbContext instance itself belongs to, so this correctly picks up a fresh
+// tenant on every request — see TenantResolutionMiddleware / AccountController.Login for
+// where ITenantContextAccessor actually gets populated.
+builder.Services.AddDbContext<AppDbContext>((sp, options) =>
+{
+    // `dotnet ef` briefly builds this same host while probing for DbContext types, before
+    // falling back to AppDbContextFactory (IDesignTimeDbContextFactory<AppDbContext>) — if
+    // this lambda throws during that probe, the tool surfaces the exception instead of
+    // trying the factory. EF.IsDesignTime is exactly the documented escape hatch: true only
+    // under design-time tooling, never at real runtime.
+    if (Microsoft.EntityFrameworkCore.EF.IsDesignTime)
+    {
+        options.UseSqlServer("Server=(local);Database=__DesignTimePlaceholder__;Trusted_Connection=True;");
+        return;
+    }
+
+    var tenant = sp.GetRequiredService<ITenantContextAccessor>();
+    if (string.IsNullOrEmpty(tenant.ConnectionString))
+        throw new InvalidOperationException("No tenant database connection has been established for this request.");
+    options.UseSqlServer(tenant.ConnectionString, sql => sql.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName));
+});
+
+// ADMIN_CTD: the one fixed, always-reachable database (Companies/Licenses/ClientDatabases/
+// InstallationHistory) every tenant lookup starts from. Unlike AppDbContext above, this
+// connection stays static for the life of the process.
+var adminConnectionString = builder.Configuration.GetConnectionString("AdminConnection")
+    ?? throw new InvalidOperationException("Connection string 'AdminConnection' not found.");
+
+builder.Services.AddDbContext<AdminDbContext>(options =>
+    options.UseSqlServer(adminConnectionString, sql => sql.MigrationsAssembly(typeof(AdminDbContext).Assembly.FullName)));
 
 builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
     {
@@ -56,6 +95,11 @@ builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddScoped<IJobIsneService, JobIsneService>();
 builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<IPartyService, PartyService>();
+
+builder.Services.AddScoped<IEncryptionService, EncryptionService>();
+builder.Services.AddScoped<ITenantResolutionService, TenantResolutionService>();
+builder.Services.AddScoped<ILicenseService, LicenseService>();
+builder.Services.AddScoped<IProvisioningService, ProvisioningService>();
 
 builder.Services.AddScoped<IUserClaimsPrincipalFactory<ApplicationUser>, AppUserClaimsPrincipalFactory>();
 
@@ -111,6 +155,7 @@ app.UseStaticFiles();
 app.UseRouting();
 
 app.UseAuthentication();
+app.UseTenantResolution();
 app.UseAuthorization();
 
 app.MapControllerRoute(
@@ -119,7 +164,45 @@ app.MapControllerRoute(
 
 using (var scope = app.Services.CreateScope())
 {
-    await DbInitializer.SeedAsync(scope.ServiceProvider);
+    // Only ADMIN_CTD gets migrated unconditionally at boot — it's the one database with a
+    // fixed connection string. There is no longer a single "the" tenant database to seed
+    // here: each tenant is provisioned (schema deployed + seeded) once, on demand, via the
+    // Install Wizard / ProvisioningService.
+    await AdminDbInitializer.SeedAsync(scope.ServiceProvider);
+
+    // Development convenience only: if nothing has ever been installed, run the exact same
+    // provisioning pipeline the Install Wizard uses against DefaultConnection's database, so
+    // `dotnet run` still gets a working login out of the box without a manual wizard pass.
+    // Production/Testing never take this path — they always go through the real wizard.
+    if (app.Environment.IsDevelopment())
+    {
+        var adminContext = scope.ServiceProvider.GetRequiredService<AdminDbContext>();
+        if (!await adminContext.Companies.AnyAsync())
+        {
+            var provisioningService = scope.ServiceProvider.GetRequiredService<IProvisioningService>();
+            var devDatabaseName = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(connectionString).InitialCatalog;
+
+            var result = await provisioningService.ProvisionAsync(new ProvisioningRequest(
+                CompanyName: "Himalayan Cargo Movers Pvt. Ltd.",
+                CompanyCode: "DEFAULT",
+                Address: null, Country: "India", State: null, City: null, GstNumber: null, ContactPerson: null,
+                Email: "admin@ctdsuite.local", Phone: null, InstallationLocation: "Local Development",
+                LicenseType: LicenseType.Trial,
+                DatabaseName: devDatabaseName,
+                DatabaseUsername: "ctd_dev_user",
+                DatabasePassword: "Dev#Passw0rd2026",
+                AdminEmail: "admin@ctdsuite.local",
+                AdminFullName: "System Administrator",
+                AdminPassword: "ChangeMe#2026",
+                InstalledBy: "Startup Auto-Provision",
+                MachineName: Environment.MachineName));
+
+            if (result.Success)
+                Log.Information("Development auto-provision created license {LicenseNumber} for the default tenant — use it, admin@ctdsuite.local / ChangeMe#2026 to sign in.", result.LicenseNumber);
+            else
+                Log.Warning("Development auto-provision failed: {Reason}. Use the Install Wizard at /Install instead.", result.FailureReason);
+        }
+    }
 }
 
 app.Run();
