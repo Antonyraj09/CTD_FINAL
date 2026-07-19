@@ -35,10 +35,23 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, 
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
-        builder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
+
+        // Excludes Data/Configurations/AdminConfigurations.cs — those configure ADMIN_CTD-only
+        // entities (Company, License, ClientDatabase, InstallationHistory, AdminNumberSequence)
+        // that must never appear in a tenant's own database. ApplyConfigurationsFromAssembly has
+        // no built-in namespace filter, so this predicate checks each configuration's target
+        // entity type directly (the same leak AdminDbContext avoids by listing its 5 configs
+        // explicitly instead — not practical here given AppDbContext's much larger config count).
+        builder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly, IsTenantEntityConfiguration);
 
         // Identity tables: keep default AspNetXxx names but trim to our simplified schema footprint.
         builder.Entity<ApplicationUser>(b => b.ToTable("AspNetUsers"));
         builder.Entity<ApplicationRole>(b => b.ToTable("AspNetRoles"));
     }
+
+    private static bool IsTenantEntityConfiguration(Type configurationType) =>
+        !configurationType.GetInterfaces().Any(i =>
+            i.IsGenericType &&
+            i.GetGenericTypeDefinition() == typeof(IEntityTypeConfiguration<>) &&
+            i.GenericTypeArguments[0].Namespace == "CTD_FINAL.Entities.Admin");
 }
