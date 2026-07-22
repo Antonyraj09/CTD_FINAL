@@ -11,10 +11,11 @@
     string Rs(decimal? v) => v.HasValue ? v.Value.ToString("N2", inr) : "";
 
     // "B/L No. & Date" has one box in the reference form; JobIsne tracks both a Master
-    // and a House B/L — the House B/L is what a CHA actually files against for transit,
-    // so it's preferred here, falling back to the Master B/L only if no House B/L exists.
-    var blNo = !string.IsNullOrWhiteSpace(Model.HblNo) ? Model.HblNo : Model.MblNo;
-    var blDate = !string.IsNullOrWhiteSpace(Model.HblNo) ? Model.HblDate : Model.MblDate;
+    // and a House B/L. The reference CTD Submission checklist format (a separate,
+    // field-verified reference document) shows the Master B/L number in this exact slot,
+    // so it's preferred here, falling back to the House B/L only if no Master B/L exists.
+    var blNo = !string.IsNullOrWhiteSpace(Model.MblNo) ? Model.MblNo : Model.HblNo;
+    var blDate = !string.IsNullOrWhiteSpace(Model.MblNo) ? Model.MblDate : Model.HblDate;
 
     var agentName = agent?.Name ?? Model.SubAgentName;
     var agentAddressLines = agent is null
