@@ -224,10 +224,15 @@ public class JobIsneController : Controller
     }
 
     /// <summary>
-    /// "ANNEXURE - A" data sheet for CTD submission to Nepal customs. Fields JobIsne
-    /// doesn't capture (Invoice No/Date, Insurance Policy details, Package Code, Tare
-    /// Weight, Seal No, Sensitive flag) are left as blank fill-in lines rather than
-    /// guessed — same convention the paper form itself uses for optional fields.
+    /// CTD Submission checklist — same "ANNEXURE - A" data sheet fields as before, now
+    /// presented as a checklist (checkbox-style items instead of a numbered list) and
+    /// downloaded as a Word document rather than opened for browser printing. Served as
+    /// plain HTML with Word-compatible markup (the well-established technique Word itself
+    /// supports for opening ".doc" files) rather than real OOXML — no new dependency, same
+    /// convention as every other print view in this app. Fields JobIsne doesn't capture
+    /// (Invoice No/Date, Insurance Policy details, Package Code, Tare Weight, Seal No,
+    /// Sensitive flag) are left as blank fill-in lines rather than guessed — same
+    /// convention the paper form itself uses for optional fields.
     /// </summary>
     [HttpGet]
     [RequirePermission(PermissionKeys.JobIsneManage)]
@@ -235,6 +240,30 @@ public class JobIsneController : Controller
     {
         var record = await _jobIsneService.GetByIdAsync(id);
         if (record is null) return NotFound();
+
+        var result = View(record);
+        result.ContentType = "application/msword";
+        Response.Headers["Content-Disposition"] = $"attachment; filename=\"CTD_Checklist_{record.JobNumber}.doc\"";
+        return result;
+    }
+
+    /// <summary>
+    /// "Customs Transit Declaration (Import) ICCD" — the official CHA-issued form layout,
+    /// replicated field-for-field from the reference paper format. Opened for browser
+    /// printing (window.print(), print-to-PDF via the browser's own dialog) same as every
+    /// other print view in this app — no server-side PDF generation.
+    /// </summary>
+    [HttpGet]
+    [RequirePermission(PermissionKeys.JobIsneManage)]
+    public async Task<IActionResult> CtdDeclaration(int id)
+    {
+        var record = await _jobIsneService.GetByIdAsync(id);
+        if (record is null) return NotFound();
+
+        ViewBag.Agent = string.IsNullOrEmpty(record.SubAgentCode)
+            ? null
+            : (await _subAgents.FindAsync(s => s.SubAgentCode == record.SubAgentCode)).FirstOrDefault();
+
         return View(record);
     }
 

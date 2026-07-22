@@ -6,10 +6,19 @@
     string V(object? v) => v?.ToString() ?? "";
 }
 <!DOCTYPE html>
-<html>
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
 <head>
     <meta charset="utf-8" />
-    <title>CTD Submission (Nepal) - @Model.JobNumber</title>
+    <title>CTD Submission Checklist - @Model.JobNumber</title>
+    <!--[if gte mso 9]>
+    <xml>
+        <w:WordDocument>
+            <w:View>Print</w:View>
+            <w:Zoom>100</w:Zoom>
+            <w:DoNotOptimizeForBrowser/>
+        </w:WordDocument>
+    </xml>
+    <![endif]-->
     <style>
         @@page { size: A4; margin: 14mm; }
         body { font-family: Arial, Helvetica, sans-serif; color: #10172a; font-size: 12.5px; }
@@ -20,19 +29,19 @@
         .hdr .note { font-size: 10.5px; font-style: italic; margin-top: 2px; }
         .refline { display: flex; justify-content: flex-end; gap: 22px; font-size: 11.5px; font-weight: 600; margin: 6px 0 12px; border-bottom: 1px solid #10172a; padding-bottom: 8px; }
         .refline span { border-bottom: 1px solid #10172a; padding-bottom: 1px; min-width: 60px; display: inline-block; }
-        ol.items { list-style: none; counter-reset: item; margin: 0; padding: 0; }
-        ol.items > li { counter-increment: item; margin-bottom: 9px; line-height: 1.55; }
-        ol.items > li::before { content: counter(item) ". "; font-weight: 700; }
+        ol.items { list-style: none; margin: 0; padding: 0; }
+        ol.items > li { margin-bottom: 9px; line-height: 1.55; padding-left: 22px; position: relative; }
+        ol.items > li::before { content: ""; position: absolute; left: 0; top: 2px; width: 12px; height: 12px; border: 1.4px solid #10172a; }
         .lbl { font-weight: 700; }
         .val { border-bottom: 1px dotted #10172a; padding: 0 3px; }
         .footer { margin-top: 16px; font-size: 10px; color: #888; text-align: right; }
         @@media print { .no-print { display: none; } }
     </style>
 </head>
-<body onload="window.print()">
+<body>
     <div class="box">
         <div class="hdr">
-            <div class="title">ANNEXURE - A</div>
+            <div class="title">CTD SUBMISSION CHECKLIST</div>
             <div class="subtitle">DATA SHEET FOR SUBMISSION OF CTD FOR NEPAL TRANSIT CARGO</div>
             <div class="note">(FILL UP USING BLOCK LETTERS)</div>
         </div>

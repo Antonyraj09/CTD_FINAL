@@ -1,0 +1,291 @@
+@using System.Globalization
+@using CTD_FINAL.Entities
+@model JobIsne
+@{
+    Layout = null;
+    var agent = ViewBag.Agent as SubAgent;
+    var inr = CultureInfo.GetCultureInfo("en-IN");
+
+    string D(DateTime? d) => d?.ToString("dd/MM/yyyy") ?? "";
+    string V(object? v) => v?.ToString() ?? "";
+    string Rs(decimal? v) => v.HasValue ? v.Value.ToString("N2", inr) : "";
+
+    // "B/L No. & Date" has one box in the reference form; JobIsne tracks both a Master
+    // and a House B/L — the House B/L is what a CHA actually files against for transit,
+    // so it's preferred here, falling back to the Master B/L only if no House B/L exists.
+    var blNo = !string.IsNullOrWhiteSpace(Model.HblNo) ? Model.HblNo : Model.MblNo;
+    var blDate = !string.IsNullOrWhiteSpace(Model.HblNo) ? Model.HblDate : Model.MblDate;
+
+    var agentName = agent?.Name ?? Model.SubAgentName;
+    var agentAddressLines = agent is null
+        ? new List<string>()
+        : new[] { agent.AddressLine1, agent.AddressLine2, string.Join(", ", new[] { agent.City, agent.PinCode }.Where(s => !string.IsNullOrWhiteSpace(s))) }
+            .Where(s => !string.IsNullOrWhiteSpace(s)).Select(s => s!).ToList();
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Customs Transit Declaration - @Model.JobNumber</title>
+    <style>
+        @@page { size: A4; margin: 10mm; }
+        body { font-family: Arial, Helvetica, sans-serif; color: #10172a; font-size: 10.5px; }
+        table { border-collapse: collapse; width: 100%; }
+        .outer { border: 1.6px solid #10172a; }
+        td, th { border: 1px solid #10172a; padding: 4px 7px; vertical-align: top; }
+        .no-border td, .no-border th { border: none; padding: 0; }
+
+        .agent-cell { width: 30%; }
+        .agent-name { font-weight: 700; font-style: italic; font-size: 12px; }
+        .agent-cha { font-size: 9.5px; text-align: right; margin-top: -14px; }
+        .agent-addr { font-size: 9px; margin-top: 4px; }
+        .agent-phone, .agent-gst { font-size: 9px; }
+
+        .title-cell { text-align: center; }
+        .copytype { font-size: 9px; border-bottom: 1px solid #10172a; padding-bottom: 3px; margin-bottom: 4px; }
+        .formtitle { font-size: 15px; font-weight: 700; letter-spacing: .02em; }
+        .formtitle .sub { font-size: 12px; }
+        .jobno { font-size: 11.5px; margin-top: 4px; }
+
+        .cell-lbl { font-size: 9.5px; color: #333; }
+        .cell-val { font-weight: 600; margin-top: 2px; }
+        .verify-text { font-size: 8.7px; line-height: 1.4; margin: 3px 0 6px; }
+        .intransit { font-weight: 700; text-align: center; margin-top: 4px; }
+
+        .cargo-grid th { background: #f3f4f8; font-size: 9.5px; font-weight: 700; text-align: left; }
+        .marks-cell { width: 24%; }
+        .desc-cell { width: 46%; }
+        .wv-cell { width: 30%; padding: 0; }
+        .wv-inner td { border: none; border-bottom: 1px solid #10172a; padding: 4px 8px; }
+        .wv-inner tr:last-child td { border-bottom: none; }
+        .wv-lbl { font-size: 9px; color: #333; }
+        .wv-val { font-weight: 700; text-align: right; }
+        .container-block { margin-bottom: 10px; }
+        .container-block b { display: block; }
+
+        .decl-cell { font-size: 9px; line-height: 1.5; }
+        .decl-cell .heading { font-weight: 700; margin-bottom: 2px; }
+        .sign-block { margin-top: 14px; }
+
+        .footer { margin-top: 8px; font-size: 9px; color: #888; text-align: right; }
+        @@media print { .no-print { display: none; } }
+    </style>
+</head>
+<body onload="window.print()">
+    <table class="outer no-border">
+        <tr>
+            <td class="agent-cell">
+                <div class="agent-cha">Org/Dup/Trip/Quard/Quin/6th/Office</div>
+                <div class="agent-name">@V(agentName)</div>
+                @if (!string.IsNullOrWhiteSpace(agent?.LicenseNo))
+                {
+                    <div class="agent-cha" style="margin-top:2px;">C.H.Aagent No. @agent!.LicenseNo</div>
+                }
+                @foreach (var line in agentAddressLines)
+                {
+                    <div class="agent-addr">@line</div>
+                }
+                @if (!string.IsNullOrWhiteSpace(agent?.Phone))
+                {
+                    <div class="agent-phone">Phone : @agent!.Phone</div>
+                }
+                @if (!string.IsNullOrWhiteSpace(agent?.GstinNo))
+                {
+                    <div class="agent-gst">GSTIN @agent!.GstinNo</div>
+                }
+            </td>
+            <td class="title-cell">
+                <div class="formtitle">CUSTOMS TRANSIT DECLARATION<br /><span class="sub">(IMPORT) &nbsp; ICCD</span></div>
+                <div class="jobno">Job No. <b>@Model.JobNumber</b></div>
+            </td>
+        </tr>
+    </table>
+
+    <table class="outer">
+        <tr>
+            <td style="width:38%;">
+                <div class="cell-lbl">Importer's Name &amp; Address</div>
+                <div class="cell-val">@V(Model.PartyName)</div>
+                @if (!string.IsNullOrWhiteSpace(Model.Address))
+                {
+                    <div class="cell-val">@Model.Address</div>
+                }
+            </td>
+            <td>
+                <div class="cell-lbl">Verification</div>
+                <div class="verify-text">I have verified that the goods specified in this Declaration and of the quantity and value specified herein have been permitted to be imported by Government of Nepal under licence No. and date indicated below :</div>
+                <div class="cell-lbl">Country of Consignment <span class="cell-val">@V(Model.CountryCgn)</span></div>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <div class="cell-lbl">Notify or delivery address</div>
+                <div class="cell-val" style="text-align:center;">Same as above</div>
+            </td>
+            <td>
+                <div class="cell-lbl">Country of Origin <span class="cell-val">@V(Model.CountryOrigin)</span></div>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <div class="cell-lbl">Statement as to transportation</div>
+                <div class="cell-val">By Road/Rail</div>
+            </td>
+            <td>
+                <div class="cell-lbl">HMO' &amp; Import Licence No. and Date</div>
+                @if (!string.IsNullOrWhiteSpace(Model.BankName))
+                {
+                    <div class="cell-val">@Model.BankName</div>
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.LcNo))
+                {
+                    <div class="cell-val">LC:@Model.LcNo @(Model.LcDate.HasValue ? "DT." + D(Model.LcDate) : "")</div>
+                }
+            </td>
+        </tr>
+        <tr>
+            <td style="width:26%;">
+                <div class="cell-lbl">Ship's Name :</div>
+                <div class="cell-val">@V(Model.VesselName)</div>
+                @if (!string.IsNullOrWhiteSpace(Model.VoyageNo))
+                {
+                    <div class="cell-val">@Model.VoyageNo</div>
+                }
+            </td>
+            <td style="width:18%;">
+                <div class="cell-lbl">Rotation No.</div>
+                <div class="cell-val">@V(Model.RotNo)</div>
+            </td>
+            <td style="width:14%;">
+                <div class="cell-lbl">Line No.</div>
+                <div class="cell-val">@V(Model.LineNo)</div>
+            </td>
+            <td>
+                <div class="cell-lbl">B/L No. &amp; Date.</div>
+                <div class="cell-val">@V(blNo) @(blDate.HasValue ? "dt." + D(blDate) : "")</div>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="4">
+                <div class="cell-lbl">Route of Transit:</div>
+                <div class="cell-val">@V(Model.RouteOfTransit)</div>
+                <div class="intransit">In Transit To Nepal</div>
+            </td>
+        </tr>
+    </table>
+
+    <table class="outer cargo-grid">
+        <tr>
+            <th class="marks-cell">Marks and Serial No. of Pkgs</th>
+            <th class="desc-cell">No. and description of Pkgs/description of goods</th>
+            <th class="wv-cell">Gr. Wt. kgs. / Cif Value Rs. / Nett. Wt. kgs. / Market Value Rs.</th>
+        </tr>
+        <tr>
+            <td class="marks-cell">
+                @if (Model.Containers.Any())
+                {
+                    @foreach (var c in Model.Containers)
+                    {
+                        <div class="container-block">
+                            @if (!string.IsNullOrWhiteSpace(c.MarksSerial))
+                            {
+                                <b>@c.MarksSerial</b>
+                            }
+                            <div>Container</div>
+                            <b>@V(c.ContainerNo)</b>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <span>&nbsp;</span>
+                }
+            </td>
+            <td class="desc-cell">
+                @foreach (var c in Model.Containers)
+                {
+                    if (!string.IsNullOrWhiteSpace(c.CustomsCode))
+                    {
+                        <div>@c.CustomsCode</div>
+                    }
+                }
+                <div style="margin-top:4px;">
+                    @foreach (var c in Model.Containers)
+                    {
+                        <div>1X@(c.ContainerSize.TrimEnd('t', 'f'))' CONT. STC @c.NoPackages PKG</div>
+                    }
+                </div>
+                @if (!string.IsNullOrWhiteSpace(Model.CargoDescription))
+                {
+                    <div style="margin-top:4px;font-weight:600;">@Model.CargoDescription</div>
+                }
+                else if (!string.IsNullOrWhiteSpace(Model.MiscDescription))
+                {
+                    <div style="margin-top:4px;font-weight:600;">@Model.MiscDescription</div>
+                }
+                <div style="margin-top:4px;">(AS PER INVOICE)</div>
+                <div style="margin-top:8px;">
+                    @if (Model.FobValue.HasValue)
+                    {
+                        <div>FOB @Model.Currency @Model.FobValue.Value.ToString("N2", inr)@(Model.ExchangeRate.HasValue ? "=Rs." + (Model.FobValue.Value * Model.ExchangeRate.Value).ToString("N2", inr) + "/-" : "")</div>
+                    }
+                    @if (Model.ExchangeRate.HasValue)
+                    {
+                        <div>1 @Model.Currency = Rs. @Model.ExchangeRate.Value.ToString("N4", inr)</div>
+                    }
+                    @if (Model.Freight.HasValue)
+                    {
+                        <div>Freight @Model.Currency :@Model.Freight.Value.ToString("N2", inr)@(Model.ExchangeRate.HasValue ? "=Rs." + (Model.Freight.Value * Model.ExchangeRate.Value).ToString("N2", inr) + "/-" : "")</div>
+                    }
+                    @if (Model.InsuranceValueInr.HasValue)
+                    {
+                        <div>Insurance Rs.@Model.InsuranceValueInr.Value.ToString("N2", inr)</div>
+                    }
+                    @if (Model.CifInr.HasValue)
+                    {
+                        <div>CIF Value = Rs.@Model.CifInr.Value.ToString("N2", inr)/-</div>
+                    }
+                </div>
+            </td>
+            <td class="wv-cell">
+                <table class="wv-inner">
+                    <tr><td class="wv-lbl">Gr. Wt. kgs.</td></tr>
+                    <tr><td class="wv-val">@(Model.GrossWeight.HasValue ? Model.GrossWeight.Value.ToString("N3", inr) : "")</td></tr>
+                    <tr><td class="wv-lbl">Cif Value Rs.</td></tr>
+                    <tr><td class="wv-val">@Rs(Model.CifInr)</td></tr>
+                    <tr><td class="wv-lbl">Nett. Wt. kgs.</td></tr>
+                    <tr><td class="wv-val">@(Model.NetWeight.HasValue ? Model.NetWeight.Value.ToString("N3", inr) : "")</td></tr>
+                    <tr><td class="wv-lbl">Market Value Rs.</td></tr>
+                    <tr><td class="wv-val">@Rs(Model.MarketValueInr)</td></tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <table class="outer">
+        <tr>
+            <td style="width:38%;height:70px;">
+                <div class="cell-lbl">Endorsement by Customs House on entry</div>
+            </td>
+            <td class="decl-cell">
+                <div class="heading">Declaration,</div>
+                <div>'I/We declare that the goods entered herein are for Nepal in transit through India and shall not be diverted enroute or retained in India'.</div>
+                <div>'I/We declare that the entries made herein above are true and correct to the best of my/our knowledge and belief.</div>
+                <div class="sign-block">
+                    For @V(agentName)<br />
+                    <br />
+                    Date @D(Model.CtdDate ?? DateTime.Today) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Director / Authorised Signatory
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td style="height:50px;">
+                <div class="cell-lbl">Endorsement by Indian Border Customs Office on Exit</div>
+            </td>
+            <td>&nbsp;</td>
+        </tr>
+    </table>
+
+    <p class="footer">Printed from CTD Management System &middot; @DateTime.Now.ToString("g")</p>
+</body>
+</html>
