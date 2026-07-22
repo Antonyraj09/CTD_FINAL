@@ -1,4 +1,3 @@
-using CTD_FINAL.Entities;
 using CTD_FINAL.Interfaces;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -9,12 +8,12 @@ namespace CTD_FINAL.Infrastructure.Identity;
 /// <summary>
 /// Wired as the application cookie's OnValidatePrincipal event (see Program.cs's
 /// ConfigureApplicationCookie), replacing the default AddIdentity assignment
-/// (SecurityStampValidator.ValidateAsync&lt;SecurityStampValidator&lt;ApplicationUser&gt;&gt;).
+/// (SecurityStampValidator.ValidatePrincipalAsync, i.e. ValidateAsync&lt;ISecurityStampValidator&gt;).
 ///
 /// OnValidatePrincipal fires inside UseAuthentication(), for every single request that
 /// carries a valid auth cookie — not periodically. The default handler resolves
-/// ISecurityStampValidator via DI to call it, and merely CONSTRUCTING SecurityStampValidator
-/// &lt;ApplicationUser&gt; pulls in SignInManager/UserManager/AppDbContext — before
+/// ISecurityStampValidator via DI to call it, and merely CONSTRUCTING that validator
+/// (SecurityStampValidator&lt;ApplicationUser&gt;) pulls in SignInManager/UserManager/AppDbContext — before
 /// TenantResolutionMiddleware (which runs later, after UseAuthentication()) ever gets a
 /// chance to establish a tenant. Every authenticated request was hitting "No tenant database
 /// connection has been established for this request." as a result, regardless of
@@ -60,8 +59,11 @@ public static class TenantCookieValidator
         var tenantContextAccessor = context.HttpContext.RequestServices.GetRequiredService<ITenantContextAccessor>();
         tenantContextAccessor.Set(resolution.ConnectionString, licenseNumber, resolution.CompanyId, resolution.CompanyName);
 
-        // Now safe: constructing SecurityStampValidator<ApplicationUser> needs SignInManager/
+        // Now safe: constructing the registered ISecurityStampValidator needs SignInManager/
         // UserManager, which need AppDbContext, which needs the tenant set immediately above.
-        await SecurityStampValidator.ValidateAsync<SecurityStampValidator<ApplicationUser>>(context);
+        // Must be the interface, not the concrete SecurityStampValidator<ApplicationUser> type
+        // — AddIdentity registers it as services.TryAddScoped<ISecurityStampValidator,
+        // SecurityStampValidator<TUser>>(), so only the interface is resolvable via DI.
+        await SecurityStampValidator.ValidateAsync<ISecurityStampValidator>(context);
     }
 }
