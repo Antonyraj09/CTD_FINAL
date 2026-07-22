@@ -224,15 +224,15 @@ public class JobIsneController : Controller
     }
 
     /// <summary>
-    /// CTD Submission checklist — same "ANNEXURE - A" data sheet fields as before, now
-    /// presented as a checklist (checkbox-style items instead of a numbered list) and
-    /// downloaded as a Word document rather than opened for browser printing. Served as
-    /// plain HTML with Word-compatible markup (the well-established technique Word itself
-    /// supports for opening ".doc" files) rather than real OOXML — no new dependency, same
-    /// convention as every other print view in this app. Fields JobIsne doesn't capture
-    /// (Invoice No/Date, Insurance Policy details, Package Code, Tare Weight, Seal No,
-    /// Sensitive flag) are left as blank fill-in lines rather than guessed — same
-    /// convention the paper form itself uses for optional fields.
+    /// CTD Submission checklist — the "ANNEXURE - A" data sheet, field-for-field matching
+    /// the reference format supplied for this feature: fetched values in red, static labels
+    /// in black, downloaded as a Word document rather than opened for browser printing.
+    /// Served as plain HTML with Word-compatible markup (the well-established technique
+    /// Word itself supports for opening ".doc" files) rather than real OOXML — no new
+    /// dependency, same convention as every other print view in this app. Fields JobIsne
+    /// doesn't capture (Importer's PAN, Insurance Policy details, Anti-Dumping Duty,
+    /// Vehicle/Chassis/Engine No.) are left as blank fill-in lines rather than guessed —
+    /// same convention the paper form itself uses for optional fields.
     /// </summary>
     [HttpGet]
     [RequirePermission(PermissionKeys.JobIsneManage)]
@@ -240,6 +240,8 @@ public class JobIsneController : Controller
     {
         var record = await _jobIsneService.GetByIdAsync(id);
         if (record is null) return NotFound();
+
+        ViewBag.Agent = await LoadAgentAsync(record);
 
         var result = View(record);
         result.ContentType = "application/msword";
@@ -260,12 +262,15 @@ public class JobIsneController : Controller
         var record = await _jobIsneService.GetByIdAsync(id);
         if (record is null) return NotFound();
 
-        ViewBag.Agent = string.IsNullOrEmpty(record.SubAgentCode)
-            ? null
-            : (await _subAgents.FindAsync(s => s.SubAgentCode == record.SubAgentCode)).FirstOrDefault();
+        ViewBag.Agent = await LoadAgentAsync(record);
 
         return View(record);
     }
+
+    private async Task<SubAgent?> LoadAgentAsync(JobIsne record) =>
+        string.IsNullOrEmpty(record.SubAgentCode)
+            ? null
+            : (await _subAgents.FindAsync(s => s.SubAgentCode == record.SubAgentCode)).FirstOrDefault();
 
     [RequirePermission(PermissionKeys.TrackingView)]
     public IActionResult Tracking()
