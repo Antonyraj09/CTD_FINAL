@@ -594,7 +594,14 @@
   const ctdSubmissionBtn = $("#isneCtdSubmissionBtn");
   if (ctdSubmissionBtn && !ctdSubmissionBtn.disabled) {
     ctdSubmissionBtn.addEventListener("click", function () {
-      window.open("/JobIsne/CtdSubmission/" + recordId, "_blank");
+      window.location.href = "/JobIsne/CtdSubmission/" + recordId;
+    });
+  }
+
+  const ctdDeclarationBtn = $("#isneCtdDeclarationBtn");
+  if (ctdDeclarationBtn && !ctdDeclarationBtn.disabled) {
+    ctdDeclarationBtn.addEventListener("click", function () {
+      window.open("/JobIsne/CtdDeclaration/" + recordId, "_blank");
     });
   }
 
