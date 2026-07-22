@@ -126,8 +126,15 @@ public class LicenseService : ILicenseService
         return $"{LicenseConstants.LicenseNumberPrefix}{row.CurrentValue:D5}";
     }
 
+    // DateTime.ToString("O") encodes Kind into the string (a trailing "Z" for Utc, nothing for
+    // Unspecified) — these values are always genuinely UTC instants (assigned from
+    // DateTime.UtcNow at issuance), but SQL Server's datetime2 columns don't store Kind, so EF
+    // Core reloads them as Unspecified. Without normalizing back to Utc here, ValidateAsync
+    // would rebuild a payload that differs from what was signed at issuance purely because of
+    // that lost label — not because anything about the license actually changed — and every
+    // signature check would fail after a single round-trip through the database.
     private static string BuildPayload(string licenseNumber, string companyCode, LicenseType licenseType, DateTime issueDate, DateTime expiryDate, string applicationVersion) =>
-        $"{licenseNumber}|{companyCode}|{licenseType}|{issueDate:O}|{expiryDate:O}|{applicationVersion}";
+        $"{licenseNumber}|{companyCode}|{licenseType}|{DateTime.SpecifyKind(issueDate, DateTimeKind.Utc):O}|{DateTime.SpecifyKind(expiryDate, DateTimeKind.Utc):O}|{applicationVersion}";
 
     private string SignPayload(string payload)
     {
