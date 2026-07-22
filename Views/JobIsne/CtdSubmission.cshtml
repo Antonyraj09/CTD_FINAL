@@ -22,15 +22,17 @@
     <![endif]-->
     <style>
         @@page { size: A4; margin: 18mm 16mm; }
-        body { font-family: Arial, Helvetica, sans-serif; color: #000; font-size: 11.5px; }
-        p { margin: 0 0 6px; font-weight: 700; line-height: 1.5; }
+        body { font-family: 'Times New Roman', Times, serif; color: #000; font-size: 10pt; }
+        p { margin: 0 0 10px; font-weight: 700; line-height: 1.5; }
+        p.cont { margin: 0 0 10px; padding-left: 22px; }
         .hdr { text-align: center; margin-bottom: 4px; }
-        .hdr .title { font-size: 14px; font-weight: 700; }
-        .hdr .subtitle { font-size: 12px; font-weight: 700; }
-        .hdr .note { font-size: 10.5px; font-weight: 700; }
-        .divider { border-top: 1px solid #000; margin: 8px 0 10px; }
+        .hdr .title { font-size: 13pt; font-weight: 700; }
+        .hdr .subtitle { font-size: 11pt; font-weight: 700; }
+        .hdr .note { font-size: 10pt; font-weight: 700; }
+        .divider { border-top: 1px solid #000; margin: 8px 0 12px; }
+        .num { display: inline-block; min-width: 20px; }
         .val { color: #FF0000; }
-        .footer { margin-top: 16px; font-size: 10px; color: #888; text-align: right; font-weight: 400; }
+        .footer { margin-top: 16px; font-size: 9pt; color: #888; text-align: right; font-weight: 400; }
     </style>
 </head>
 <body>
@@ -43,57 +45,78 @@
     </div>
     <div class="divider"></div>
 
-    <p>CHA CODE: <span class="val">@V(agent?.LicenseNo)</span>, CHA NAME: <span class="val">@V(agent?.Name ?? Model.SubAgentName)</span>,</p>
-    <p>EXIT CUSTOMS SITE: (PL TICK), ROUTE OF TRANSIT: <span class="val">@V(Model.RouteOfTransit)</span></p>
-    <p>IMPORTER'S CODE: <span class="val">@V(Model.ImporterCode)</span></p>
-    <p>IMPORTER'S NAME &amp; ADDRESS: <span class="val">@V(Model.PartyName)</span></p>
-    <p><span class="val">@V(Model.Address)</span>, PAN: <span class="val">&nbsp;</span>.</p>
-    <p>NOTIFY NAME AND ADDRESS: <span class="val">SAME AS ABOVE</span></p>
-    <p>INVOICE NO: <span class="val">@V(Model.InvoiceNumber)</span>, DATE: <span class="val">@D(Model.InvoiceDate)</span></p>
-    <p>CERTIFICATE OF ORIGIN: <span class="val">@V(Model.CertificateOfOrigin)</span>, DATE: <span class="val">@D(Model.CertificateOfOriginDate)</span></p>
-    <p>LC / EL NO: <span class="val">@V(Model.LcNo)</span>,&nbsp; DATE: <span class="val">@D(Model.LcDate)</span>,&nbsp; COUNTRY OF ORIGIN: <span class="val">@V(Model.CountryOrigin)</span></p>
-    <p>COUNTRY OF CONSIGNMENT: <span class="val">@V(Model.CountryCgn)</span>.&nbsp; CURRENCY CODE: <span class="val">@V(Model.Currency)</span></p>
-    <p>INS. POLICY NO:&nbsp;<span class="val">&nbsp;</span>, DATE:&nbsp;<span class="val">&nbsp;</span>, EXP DATE:&nbsp;<span class="val">&nbsp;</span></p>
-    <p>INSURANCE COMPANY NAME &amp; ADD : <span class="val">@V(Model.SensitiveCargo ? Model.InsuranceCompanyNameAddress : null)</span></p>
-    <p>IGM NO: <span class="val">@V(Model.RotNo)</span>, IGM DATE: <span class="val">@D(Model.RotDate)</span>, LINE NO: <span class="val">@V(Model.LineNo)</span>, INWARD DATE: <span class="val">@D(Model.InwardDate)</span></p>
-    <p>MBL NO: <span class="val">@V(Model.MblNo)</span>, DATE: <span class="val">@D(Model.MblDate)</span>, HBL NO: <span class="val">@V(Model.HblNo)</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DATE: <span class="val">@D(Model.HblDate)</span></p>
+    <p><span class="num">1.</span> CHA CODE: <span class="val">@V(agent?.LicenseNo)</span>, CHA NAME: <span class="val">@V(agent?.Name ?? Model.SubAgentName)</span>,</p>
+    <p><span class="num">2.</span> EXIT CUSTOMS SITE: (PL TICK), ROUTE OF TRANSIT: <span class="val">@V(Model.RouteOfTransit)</span></p>
+    <p><span class="num">3.</span> IMPORTER'S CODE: <span class="val">@V(Model.ImporterCode)</span></p>
+    <p><span class="num">4.</span> IMPORTER'S NAME &amp; ADDRESS: <span class="val">@V(Model.PartyName)</span></p>
+    <p class="cont"><span class="val">@V(Model.Address)</span>, PAN: <span class="val">&nbsp;</span>.</p>
+    <p class="cont">NOTIFY NAME AND ADDRESS: <span class="val">SAME AS ABOVE</span></p>
+    <p><span class="num">5.</span> INVOICE NO: <span class="val">@V(Model.InvoiceNumber)</span>, DATE: <span class="val">@D(Model.InvoiceDate)</span></p>
+    <p><span class="num">6.</span> CERTIFICATE OF ORIGIN: <span class="val">@V(Model.CertificateOfOrigin)</span>, DATE: <span class="val">@D(Model.CertificateOfOriginDate)</span></p>
+    <p><span class="num">7.</span> LC / EL NO: <span class="val">@V(Model.LcNo)</span>,&nbsp; DATE: <span class="val">@D(Model.LcDate)</span>,&nbsp; COUNTRY OF ORIGIN: <span class="val">@V(Model.CountryOrigin)</span></p>
+    <p class="cont">COUNTRY OF CONSIGNMENT: <span class="val">@V(Model.CountryCgn)</span>.&nbsp; CURRENCY CODE: <span class="val">@V(Model.Currency)</span></p>
+    <p><span class="num">8.</span> INS. POLICY NO:&nbsp;<span class="val">&nbsp;</span>, DATE:&nbsp;<span class="val">&nbsp;</span>, EXP DATE:&nbsp;<span class="val">&nbsp;</span></p>
+    <p><span class="num">9.</span> INSURANCE COMPANY NAME &amp; ADD : <span class="val">@V(Model.SensitiveCargo ? Model.InsuranceCompanyNameAddress : null)</span></p>
+    <p><span class="num">10.</span> IGM NO: <span class="val">@V(Model.RotNo)</span>, IGM DATE: <span class="val">@D(Model.RotDate)</span>, LINE NO: <span class="val">@V(Model.LineNo)</span>, INWARD DATE: <span class="val">@D(Model.InwardDate)</span></p>
+    <p><span class="num">11.</span> MBL NO: <span class="val">@V(Model.MblNo)</span>, DATE: <span class="val">@D(Model.MblDate)</span>, HBL NO: <span class="val">@V(Model.HblNo)</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DATE: <span class="val">@D(Model.HblDate)</span></p>
     <p>
-        TOTAL PACKAGE: <span class="val">@(Model.Containers.Sum(c => c.NoPackages) is var totalPkg && totalPkg > 0 ? totalPkg.ToString() : "")</span>,
+        <span class="num">12.</span> TOTAL PACKAGE: <span class="val">@(Model.Containers.Sum(c => c.NoPackages) is var totalPkg && totalPkg > 0 ? totalPkg.ToString() : "")</span>,
         PACKAGE CODE: <span class="val">@V(string.Join(", ", Model.Containers.Select(c => c.PackageType).Where(p => !string.IsNullOrWhiteSpace(p)).Distinct()))</span>,
         MARK AND NO: <span class="val">@(Model.Containers.Any(c => !string.IsNullOrWhiteSpace(c.MarksSerial)) ? string.Join(", ", Model.Containers.Select(c => c.MarksSerial).Where(m => !string.IsNullOrWhiteSpace(m))) : "N/M")</span>
     </p>
     <p>
-        GROSS WT: <span class="val">@(Model.GrossWeight.HasValue ? Model.GrossWeight.Value.ToString("N3") : "")</span>,
+        <span class="num">13.</span> GROSS WT: <span class="val">@(Model.GrossWeight.HasValue ? Model.GrossWeight.Value.ToString("N3") : "")</span>,
         NET WT: <span class="val">@(Model.NetWeight.HasValue ? Model.NetWeight.Value.ToString("N3") : "")</span>,
         UNIT: <span class="val">KGS</span>
     </p>
     @if (Model.Containers.Any())
     {
+        var first = true;
         foreach (var c in Model.Containers)
         {
-            <p>CONTAINER NO/SHIPPER SEAL NO: <span class="val">@V(c.ContainerNo) &ndash; @V(c.ContainerSize.TrimEnd('t', 'f'))'</span></p>
+            if (first)
+            {
+                <p><span class="num">14.</span> CONTAINER NO/SHIPPER SEAL NO: <span class="val">@V(c.ContainerNo) &ndash; @V(c.ContainerSize.TrimEnd('t', 'f'))'</span></p>
+            }
+            else
+            {
+                <p class="cont">CONTAINER NO/SHIPPER SEAL NO: <span class="val">@V(c.ContainerNo) &ndash; @V(c.ContainerSize.TrimEnd('t', 'f'))'</span></p>
+            }
+            first = false;
         }
     }
     else
     {
-        <p>CONTAINER NO/SHIPPER SEAL NO: <span class="val">&nbsp;</span></p>
+        <p><span class="num">14.</span> CONTAINER NO/SHIPPER SEAL NO: <span class="val">&nbsp;</span></p>
     }
     @{ var itemNo = 0; }
-    @foreach (var c in Model.Containers)
+    @if (Model.Containers.Any())
     {
-        itemNo++;
-        <p>ITEM NO: <span class="val">@itemNo</span>, CTH: <span class="val">@V(c.CustomsCode)</span>,&nbsp; SENSITIVE: <span class="val">@(Model.SensitiveCargo ? "YES" : "NO")</span></p>
+        var first = true;
+        foreach (var c in Model.Containers)
+        {
+            itemNo++;
+            if (first)
+            {
+                <p><span class="num">15.</span> ITEM NO: <span class="val">@itemNo</span>, CTH: <span class="val">@V(c.CustomsCode)</span>,&nbsp; SENSITIVE: <span class="val">@(Model.SensitiveCargo ? "YES" : "NO")</span></p>
+            }
+            else
+            {
+                <p class="cont">ITEM NO: <span class="val">@itemNo</span>, CTH: <span class="val">@V(c.CustomsCode)</span>,&nbsp; SENSITIVE: <span class="val">@(Model.SensitiveCargo ? "YES" : "NO")</span></p>
+            }
+            first = false;
+        }
     }
     @if (!Model.Containers.Any())
     {
-        <p>ITEM NO: <span class="val">&nbsp;</span>, CTH: <span class="val">&nbsp;</span>,&nbsp; SENSITIVE: <span class="val">@(Model.SensitiveCargo ? "YES" : "NO")</span></p>
+        <p><span class="num">15.</span> ITEM NO: <span class="val">&nbsp;</span>, CTH: <span class="val">&nbsp;</span>,&nbsp; SENSITIVE: <span class="val">@(Model.SensitiveCargo ? "YES" : "NO")</span></p>
     }
-    <p>DESCRIPTION OF GOODS: <span class="val">@V(Model.CargoDescription ?? Model.MiscDescription)</span></p>
-    <p>CIF VALUE IN FC: @V(Model.Currency). <span class="val">@(Model.CifFc.HasValue ? Model.CifFc.Value.ToString("N2") : "")</span>,&nbsp; ANTI DUMPING DUTY(INR): <span class="val">&nbsp;</span></p>
-    <p>DUTY EXCLUDING ANTI DUMPING AND SAFEGUARD(INR): <span class="val">@(Model.DutyAmount.HasValue ? Model.DutyAmount.Value.ToString("N2") : "")</span></p>
-    <p>VHICLE NO: <span class="val">&nbsp;</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CHASSIS NO: <span class="val">&nbsp;</span></p>
-    <p>ENGINE NO: <span class="val">&nbsp;</span>&nbsp;&nbsp;&nbsp;DATE OF REGN: <span class="val">&nbsp;</span></p>
-    <p>MODE OF TRANSPORT &ndash; ROAD</p>
+    <p><span class="num">16.</span> DESCRIPTION OF GOODS: <span class="val">@V(Model.CargoDescription ?? Model.MiscDescription)</span></p>
+    <p><span class="num">17.</span> CIF VALUE IN FC: @V(Model.Currency). <span class="val">@(Model.CifFc.HasValue ? Model.CifFc.Value.ToString("N2") : "")</span>,&nbsp; ANTI DUMPING DUTY(INR): <span class="val">&nbsp;</span></p>
+    <p><span class="num">18.</span> DUTY EXCLUDING ANTI DUMPING AND SAFEGUARD(INR): <span class="val">@(Model.DutyAmount.HasValue ? Model.DutyAmount.Value.ToString("N2") : "")</span></p>
+    <p><span class="num">19.</span> VHICLE NO: <span class="val">&nbsp;</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CHASSIS NO: <span class="val">&nbsp;</span></p>
+    <p><span class="num">20.</span> ENGINE NO: <span class="val">&nbsp;</span>&nbsp;&nbsp;&nbsp;DATE OF REGN: <span class="val">&nbsp;</span></p>
+    <p><span class="num">21.</span> MODE OF TRANSPORT &ndash; ROAD</p>
 
     <p style="margin-top:18px;">FOR <span class="val">@V(agent?.Name ?? Model.SubAgentName)</span></p>
     <p>&nbsp;</p>
