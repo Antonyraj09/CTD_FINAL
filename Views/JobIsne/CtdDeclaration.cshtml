@@ -18,10 +18,14 @@
     var blDate = !string.IsNullOrWhiteSpace(Model.MblNo) ? Model.MblDate : Model.HblDate;
 
     var agentName = agent?.Name ?? Model.SubAgentName;
-    var agentAddressLines = agent is null
-        ? new List<string>()
-        : new[] { agent.AddressLine1, agent.AddressLine2, string.Join(", ", new[] { agent.City, agent.PinCode }.Where(s => !string.IsNullOrWhiteSpace(s))) }
-            .Where(s => !string.IsNullOrWhiteSpace(s)).Select(s => s!).ToList();
+    // Reference form's header cell is exactly 3 lines: Name<tab>CHA No. / full address on
+    // one line ending with the copy-type marker / Phone immediately followed by GSTIN with
+    // no separator (verified against the reference .docx paragraph-by-paragraph, including
+    // its own lack of a space between the phone number and "GSTIN").
+    var agentAddress = agent is null
+        ? null
+        : string.Join(", ", new[] { agent.AddressLine1, agent.AddressLine2, string.Join("-", new[] { agent.City, agent.PinCode }.Where(s => !string.IsNullOrWhiteSpace(s))) }
+            .Where(s => !string.IsNullOrWhiteSpace(s)));
 }
 <!DOCTYPE html>
 <html>
@@ -34,16 +38,16 @@
            word/document.xml) so the printed sheet matches the reference 1:1 — this is a
            customs-submission form, not a free-flowing report. */
         @@page { size: A4; margin: 3.88mm 9.98mm 4.94mm 2.49mm; }
-        body { font-family: Arial, Helvetica, sans-serif; color: #10172a; font-size: 10.5px; margin: 0; }
+        body { font-family: Arial, Helvetica, sans-serif; color: #10172a; font-size: 10pt; margin: 0; }
         table { border-collapse: collapse; table-layout: fixed; width: 193.26mm; margin-left: 2.5mm; }
         td, th { border: 1px solid #10172a; padding: 2px 4px; vertical-align: top; word-wrap: break-word; box-sizing: border-box; }
         .outer { border: 1.6px solid #10172a; }
 
-        .agent-name { font-weight: 700; font-style: italic; font-size: 12px; }
-        .agent-cha { font-size: 9.5px; }
-        .agent-addr { font-size: 9px; margin-top: 2px; }
-        .agent-phone, .agent-gst { font-size: 9px; }
-        .copy-marker { text-align: right; font-weight: 700; font-size: 12px; margin: 1px 0; }
+        .agent-cha { float: right; white-space: nowrap; margin-left: 4px; }
+        .agent-name { font-weight: 700; font-style: italic; }
+        .agent-addr { margin-top: 1px; clear: both; }
+        .agent-addr .copy-marker { font-weight: 700; }
+        .agent-phone-gst { margin-top: 1px; }
 
         .title-cell { text-align: center; padding: 0; }
         .copytype { font-size: 9px; text-align: right; border-bottom: 1px solid #10172a; padding: 2px 6px; }
@@ -83,24 +87,24 @@
         </colgroup>
         <tr style="height:22.35mm">
             <td colspan="3">
-                <div class="agent-name">@V(agentName)</div>
                 @if (!string.IsNullOrWhiteSpace(agent?.LicenseNo))
                 {
-                    <div class="agent-cha" style="margin-top:2px;">C.H.Aagent No. @agent!.LicenseNo</div>
+                    <span class="agent-cha">C.H.Aagent No. @agent!.LicenseNo</span>
                 }
-                @foreach (var line in agentAddressLines)
+                <div class="agent-name">@V(agentName)</div>
+                @if (!string.IsNullOrWhiteSpace(agentAddress))
                 {
-                    <div class="agent-addr">@line</div>
+                    <div class="agent-addr">@agentAddress <span class="copy-marker">D</span></div>
                 }
-                <div class="copy-marker">D</div>
-                @if (!string.IsNullOrWhiteSpace(agent?.Phone))
-                {
-                    <div class="agent-phone">Phone : @agent!.Phone</div>
-                }
-                @if (!string.IsNullOrWhiteSpace(agent?.GstinNo))
-                {
-                    <div class="agent-gst">GSTIN @agent!.GstinNo</div>
-                }
+                <div class="agent-phone-gst">
+                    @if (!string.IsNullOrWhiteSpace(agent?.Phone))
+                    {
+                        <text>Phone : @agent!.Phone</text>
+                    }@if (!string.IsNullOrWhiteSpace(agent?.GstinNo))
+                    {
+                        <text>GSTIN @agent!.GstinNo</text>
+                    }
+                </div>
             </td>
             <td colspan="6" class="title-cell">
                 <div class="copytype">Org/Dup/Trip/Quard/Quin/6th/Office</div>
