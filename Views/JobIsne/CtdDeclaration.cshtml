@@ -38,10 +38,14 @@
            word/document.xml) so the printed sheet matches the reference 1:1 — this is a
            customs-submission form, not a free-flowing report. */
         @@page { size: A4; margin: 3.88mm 9.98mm 4.94mm 2.49mm; }
-        body { font-family: Arial, Helvetica, sans-serif; color: #10172a; font-size: 10pt; line-height: 1.15; margin: 0; }
+        body { font-family: Arial, Helvetica, sans-serif; color: #10172a; font-size: 10pt; line-height: 1.1; margin: 0; }
         table { border-collapse: collapse; table-layout: fixed; width: 193.26mm; margin-left: 2.5mm; }
-        td, th { border: 1px solid #10172a; padding: 2px 4px; vertical-align: top; word-wrap: break-word; box-sizing: border-box; }
+        td, th { border: 1px solid #10172a; padding: 1px 4px; vertical-align: top; word-wrap: break-word; box-sizing: border-box; }
         .outer { border: 1.6px solid #10172a; }
+        /* A long agent name/address (real CHA company names run long) can push a row past
+           its reference-derived floor height; without this, Chrome's print pagination will
+           split the row's content mid-cell across two pages instead of moving it as a whole. */
+        tr { break-inside: avoid; page-break-inside: avoid; }
 
         /* Uniform 10pt everywhere (inherited from body, no per-class overrides) — bold is
            reserved strictly for database-fetched values, never for static labels/titles. */
@@ -53,8 +57,8 @@
         .agent-phone-gst b { font-weight: 700; }
 
         .title-cell { text-align: center; padding: 0; }
-        .copytype { text-align: right; border-bottom: 1px solid #10172a; padding: 2px 6px; }
-        .title-body { padding: 4px 7px 2px; }
+        .copytype { text-align: right; border-bottom: 1px solid #10172a; padding: 1px 6px; }
+        .title-body { padding: 2px 7px 1px; }
         .formtitle { letter-spacing: .02em; }
         .jobno { margin-top: 3px; }
 
@@ -69,11 +73,11 @@
         .wv-second { margin-top: 25mm; }
         .wv-lbl { color: #333; }
         .wv-val { font-weight: 700; }
-        .container-block { margin-bottom: 8px; }
+        .container-block { margin-bottom: 5px; }
         .container-block b { display: block; }
 
         .decl-cell b { font-weight: 700; }
-        .sign-block { margin-top: 10px; }
+        .sign-block { margin-top: 6px; }
 
         .footer { margin: 0 0 0 2.5mm; font-size: 7pt; line-height: 1; color: #888; text-align: right; width: 193.26mm; box-sizing: border-box; }
         @@media print { .no-print { display: none; } }
