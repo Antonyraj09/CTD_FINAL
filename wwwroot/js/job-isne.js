@@ -87,6 +87,10 @@
         $("#isne_insuranceCompanyAddress").closest(".field")?.classList.remove("invalid");
         $("#isne_sensitiveCifValue").closest(".field")?.classList.remove("invalid");
       }
+      // Undertaking Bond only applies when cargo is NOT sensitive (its bond amount is
+      // Market Value minus CIF Value, which sensitive cargo prices differently).
+      const bondField = $("#isne_undertakingBondField");
+      if (bondField) bondField.style.display = sensitiveToggle.checked ? "none" : "block";
     });
   }
 
@@ -602,6 +606,13 @@
   if (ctdDeclarationBtn && !ctdDeclarationBtn.disabled) {
     ctdDeclarationBtn.addEventListener("click", function () {
       window.open("/JobIsne/CtdDeclaration/" + recordId, "_blank");
+    });
+  }
+
+  const undertakingBondBtn = $("#isneUndertakingBondBtn");
+  if (undertakingBondBtn && !undertakingBondBtn.disabled) {
+    undertakingBondBtn.addEventListener("click", function () {
+      window.open("/JobIsne/UndertakingBond/" + recordId, "_blank");
     });
   }
 

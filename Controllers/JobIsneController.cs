@@ -272,6 +272,27 @@ public class JobIsneController : Controller
             ? null
             : (await _subAgents.FindAsync(s => s.SubAgentCode == record.SubAgentCode)).FirstOrDefault();
 
+    /// <summary>
+    /// "Undertaking Bond" — the legal bond an importer executes when cargo is NOT sensitive,
+    /// pledging to pay the President of India the difference between the goods' market
+    /// value and CIF value if they fail to reach Nepal. Only offered for non-sensitive cargo
+    /// (SensitiveCargo == false) because the reference form's bond amount is specifically
+    /// Market Value minus CIF Value — sensitive cargo prices off SensitiveCifValue instead,
+    /// which this bond format doesn't account for, so direct access is blocked rather than
+    /// producing a bond with a meaningless amount.
+    /// </summary>
+    [HttpGet]
+    [RequirePermission(PermissionKeys.JobIsneManage)]
+    public async Task<IActionResult> UndertakingBond(int id)
+    {
+        var record = await _jobIsneService.GetByIdAsync(id);
+        if (record is null) return NotFound();
+        if (record.SensitiveCargo) return BadRequest("Undertaking Bond is only applicable when Sensitive Cargo is set to No.");
+
+        ViewBag.Agent = await LoadAgentAsync(record);
+        return View(record);
+    }
+
     [RequirePermission(PermissionKeys.TrackingView)]
     public IActionResult Tracking()
     {
