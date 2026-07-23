@@ -38,43 +38,44 @@
            word/document.xml) so the printed sheet matches the reference 1:1 — this is a
            customs-submission form, not a free-flowing report. */
         @@page { size: A4; margin: 3.88mm 9.98mm 4.94mm 2.49mm; }
-        body { font-family: Arial, Helvetica, sans-serif; color: #10172a; font-size: 10pt; margin: 0; }
+        body { font-family: Arial, Helvetica, sans-serif; color: #10172a; font-size: 10pt; line-height: 1.15; margin: 0; }
         table { border-collapse: collapse; table-layout: fixed; width: 193.26mm; margin-left: 2.5mm; }
         td, th { border: 1px solid #10172a; padding: 2px 4px; vertical-align: top; word-wrap: break-word; box-sizing: border-box; }
         .outer { border: 1.6px solid #10172a; }
 
+        /* Uniform 10pt everywhere (inherited from body, no per-class overrides) — bold is
+           reserved strictly for database-fetched values, never for static labels/titles. */
         .agent-cha { float: right; white-space: nowrap; margin-left: 4px; }
+        .agent-cha b { font-weight: 700; }
         .agent-name { font-weight: 700; font-style: italic; }
         .agent-addr { margin-top: 1px; clear: both; }
-        .agent-addr .copy-marker { font-weight: 700; }
         .agent-phone-gst { margin-top: 1px; }
+        .agent-phone-gst b { font-weight: 700; }
 
         .title-cell { text-align: center; padding: 0; }
-        .copytype { font-size: 9px; text-align: right; border-bottom: 1px solid #10172a; padding: 2px 6px; }
+        .copytype { text-align: right; border-bottom: 1px solid #10172a; padding: 2px 6px; }
         .title-body { padding: 4px 7px 2px; }
-        .formtitle { font-size: 15px; font-weight: 700; letter-spacing: .02em; }
-        .formtitle .sub { font-size: 12px; }
-        .jobno { font-size: 11.5px; margin-top: 3px; }
+        .formtitle { letter-spacing: .02em; }
+        .jobno { margin-top: 3px; }
 
-        .cell-lbl { font-size: 9.5px; color: #333; }
-        .cell-val { font-weight: 600; margin-top: 1px; }
-        .verify-text { font-size: 8.7px; line-height: 1.3; margin: 2px 0 4px; }
-        .intransit { font-weight: 700; margin-top: 4px; }
+        .cell-lbl { color: #333; }
+        .cell-val { font-weight: 700; margin-top: 1px; }
+        .verify-text { margin: 2px 0 4px; }
+        .intransit { margin-top: 4px; }
         .center { text-align: center; }
 
-        .cargo-grid th { background: #f3f4f8; font-size: 9.5px; font-weight: 700; text-align: left; }
+        .cargo-grid th { background: #f3f4f8; text-align: left; }
         .wv-col { height: 104.97mm; }
         .wv-second { margin-top: 25mm; }
-        .wv-lbl { font-size: 9px; color: #333; }
+        .wv-lbl { color: #333; }
         .wv-val { font-weight: 700; }
         .container-block { margin-bottom: 8px; }
         .container-block b { display: block; }
 
-        .decl-cell { font-size: 9px; line-height: 1.4; }
-        .decl-cell .heading { font-weight: 700; margin-bottom: 2px; }
+        .decl-cell b { font-weight: 700; }
         .sign-block { margin-top: 10px; }
 
-        .footer { margin: 4px 0 0 2.5mm; font-size: 9px; color: #888; text-align: right; width: 193.26mm; box-sizing: border-box; }
+        .footer { margin: 0 0 0 2.5mm; font-size: 7pt; line-height: 1; color: #888; text-align: right; width: 193.26mm; box-sizing: border-box; }
         @@media print { .no-print { display: none; } }
     </style>
 </head>
@@ -89,20 +90,20 @@
             <td colspan="3">
                 @if (!string.IsNullOrWhiteSpace(agent?.LicenseNo))
                 {
-                    <span class="agent-cha">C.H.Aagent No. @agent!.LicenseNo</span>
+                    <span class="agent-cha">C.H.Aagent No. <b>@agent!.LicenseNo</b></span>
                 }
                 <div class="agent-name">@V(agentName)</div>
                 @if (!string.IsNullOrWhiteSpace(agentAddress))
                 {
-                    <div class="agent-addr">@agentAddress <span class="copy-marker">D</span></div>
+                    <div class="agent-addr"><b>@agentAddress</b> D</div>
                 }
                 <div class="agent-phone-gst">
                     @if (!string.IsNullOrWhiteSpace(agent?.Phone))
                     {
-                        <text>Phone : @agent!.Phone</text>
+                        <text>Phone : <b>@agent!.Phone</b></text>
                     }@if (!string.IsNullOrWhiteSpace(agent?.GstinNo))
                     {
-                        <text>GSTIN @agent!.GstinNo</text>
+                        <text>GSTIN <b>@agent!.GstinNo</b></text>
                     }
                 </div>
             </td>
@@ -124,7 +125,7 @@
                 }
                 @if (!string.IsNullOrWhiteSpace(Model.ImporterCode))
                 {
-                    <div class="cell-val">EXIM: @Model.ImporterCode</div>
+                    <div>EXIM: <b>@Model.ImporterCode</b></div>
                 }
             </td>
             <td colspan="6">
@@ -142,7 +143,7 @@
                 <div class="cell-lbl">Notify or delivery address</div>
             </td>
             <td colspan="2" rowspan="2" class="center">
-                <div class="cell-val">Same as above</div>
+                <div>Same as above</div>
             </td>
             <td colspan="6">
                 <div class="cell-lbl">Country of Origin <span class="cell-val">@V(Model.CountryOrigin)</span></div>
@@ -157,7 +158,7 @@
                 }
                 @if (!string.IsNullOrWhiteSpace(Model.LcNo))
                 {
-                    <div class="cell-val">LC:@Model.LcNo @(Model.LcDate.HasValue ? "DT." + D(Model.LcDate) : "")</div>
+                    <div>LC:<b>@Model.LcNo @(Model.LcDate.HasValue ? "DT." + D(Model.LcDate) : "")</b></div>
                 }
             </td>
         </tr>
@@ -166,7 +167,7 @@
                 <div class="cell-lbl">Statement as to transportation</div>
             </td>
             <td colspan="2">
-                <div class="cell-val">By Road/Rail</div>
+                <div>By Road/Rail</div>
             </td>
         </tr>
         <tr style="height:6.17mm">
@@ -221,44 +222,44 @@
                 {
                     if (!string.IsNullOrWhiteSpace(c.CustomsCode))
                     {
-                        <div>@c.CustomsCode</div>
+                        <div><b>@c.CustomsCode</b></div>
                     }
                 }
                 <div style="margin-top:4px;">
                     @foreach (var c in Model.Containers)
                     {
-                        <div>1X@(c.ContainerSize.TrimEnd('t', 'f'))' CONT. STC @c.NoPackages PKG</div>
+                        <div>1X<b>@(c.ContainerSize.TrimEnd('t', 'f'))</b>' CONT. STC <b>@c.NoPackages</b> PKG</div>
                     }
                 </div>
                 @if (!string.IsNullOrWhiteSpace(Model.CargoDescription))
                 {
-                    <div style="margin-top:4px;font-weight:600;">@Model.CargoDescription</div>
+                    <div style="margin-top:4px;font-weight:700;">@Model.CargoDescription</div>
                 }
                 else if (!string.IsNullOrWhiteSpace(Model.MiscDescription))
                 {
-                    <div style="margin-top:4px;font-weight:600;">@Model.MiscDescription</div>
+                    <div style="margin-top:4px;font-weight:700;">@Model.MiscDescription</div>
                 }
                 <div style="margin-top:4px;">(AS PER INVOICE)</div>
                 <div style="margin-top:8px;">
                     @if (Model.FobValue.HasValue)
                     {
-                        <div>FOB @Model.Currency @Model.FobValue.Value.ToString("N2", inr)@(Model.ExchangeRate.HasValue ? "=Rs." + (Model.FobValue.Value * Model.ExchangeRate.Value).ToString("N2", inr) + "/-" : "")</div>
+                        <div>FOB <b>@Model.Currency @Model.FobValue.Value.ToString("N2", inr)</b>@if (Model.ExchangeRate.HasValue) {<text>=Rs.<b>@((Model.FobValue.Value * Model.ExchangeRate.Value).ToString("N2", inr))</b>/-</text>}</div>
                     }
                     @if (Model.ExchangeRate.HasValue)
                     {
-                        <div>1 @Model.Currency = Rs. @Model.ExchangeRate.Value.ToString("N4", inr)</div>
+                        <div>1 @Model.Currency = Rs. <b>@Model.ExchangeRate.Value.ToString("N4", inr)</b></div>
                     }
                     @if (Model.Freight.HasValue)
                     {
-                        <div>Freight @Model.Currency :@Model.Freight.Value.ToString("N2", inr)@(Model.ExchangeRate.HasValue ? "=Rs." + (Model.Freight.Value * Model.ExchangeRate.Value).ToString("N2", inr) + "/-" : "")</div>
+                        <div>Freight <b>@Model.Currency :@Model.Freight.Value.ToString("N2", inr)</b>@if (Model.ExchangeRate.HasValue) {<text>=Rs.<b>@((Model.Freight.Value * Model.ExchangeRate.Value).ToString("N2", inr))</b>/-</text>}</div>
                     }
                     @if (Model.InsuranceValueInr.HasValue)
                     {
-                        <div>Insurance Rs.@Model.InsuranceValueInr.Value.ToString("N2", inr)</div>
+                        <div>Insurance Rs.<b>@Model.InsuranceValueInr.Value.ToString("N2", inr)</b></div>
                     }
                     @if (Model.CifInr.HasValue)
                     {
-                        <div>CIF Value = Rs.@Model.CifInr.Value.ToString("N2", inr)/-</div>
+                        <div>CIF Value = Rs.<b>@Model.CifInr.Value.ToString("N2", inr)</b>/-</div>
                     }
                 </div>
             </td>
@@ -282,13 +283,13 @@
                 <div class="cell-lbl">Endorsement by Customs House on entry</div>
             </td>
             <td colspan="5" rowspan="2" class="decl-cell">
-                <div class="heading">Declaration,</div>
+                <div style="margin-bottom:2px;">Declaration,</div>
                 <div>'I/We declare that the goods entered herein are for Nepal in transit through India and shall not be diverted enroute or retained in India'..</div>
                 <div>'I/We declare that the entires made herein above are true and correct to the best of my/our knowledge and. belief.</div>
                 <div class="sign-block">
-                    For @V(agentName)<br />
+                    For <b>@V(agentName)</b><br />
                     <br />
-                    Date @D(Model.CtdDate ?? DateTime.Today) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Director / Authorised SIgnatory
+                    Date <b>@D(Model.CtdDate ?? DateTime.Today)</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Director / Authorised SIgnatory
                 </div>
             </td>
         </tr>
