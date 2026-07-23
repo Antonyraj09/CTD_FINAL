@@ -36,36 +36,26 @@
         td, th { border: 1px solid #10172a; padding: 4px 7px; vertical-align: top; word-wrap: break-word; }
         .no-border td, .no-border th { border: none; padding: 0; }
 
-        .agent-cell { width: 46.66%; position: relative; }
         .agent-name { font-weight: 700; font-style: italic; font-size: 12px; }
         .agent-cha { font-size: 9.5px; }
         .agent-addr { font-size: 9px; margin-top: 4px; }
         .agent-phone, .agent-gst { font-size: 9px; }
-        .copy-marker { position: absolute; top: 32px; right: 8px; font-weight: 700; font-size: 11px; border: 1px solid #10172a; padding: 0 4px; }
+        .copy-marker { text-align: right; font-weight: 700; font-size: 12px; margin: 2px 0; }
 
-        .title-cell { width: 53.34%; text-align: center; padding: 0; }
+        .title-cell { text-align: center; padding: 0; }
         .copytype { font-size: 9px; text-align: right; border-bottom: 1px solid #10172a; padding: 3px 6px; }
         .title-body { padding: 6px 7px 4px; }
         .formtitle { font-size: 15px; font-weight: 700; letter-spacing: .02em; }
         .formtitle .sub { font-size: 12px; }
         .jobno { font-size: 11.5px; margin-top: 4px; }
 
-        .col-l { width: 46.66%; }
         .cell-lbl { font-size: 9.5px; color: #333; }
         .cell-val { font-weight: 600; margin-top: 2px; }
         .verify-text { font-size: 8.7px; line-height: 1.4; margin: 3px 0 6px; }
         .intransit { font-weight: 700; margin-top: 6px; }
-
-        .ship-cell { width: 39.26%; }
-        .rot-cell { width: 18.36%; }
-        .line-cell { width: 13.30%; }
-        .bl-cell { width: 29.08%; }
+        .center { text-align: center; }
 
         .cargo-grid th { background: #f3f4f8; font-size: 9.5px; font-weight: 700; text-align: left; }
-        .marks-cell { width: 27.88%; }
-        .desc-cell { width: 40.72%; }
-        .grwt-cell { width: 15.07%; }
-        .cif-cell { width: 16.35%; }
         .wv-inner td { border: none; padding: 2px 4px; }
         .wv-lbl { font-size: 9px; color: #333; }
         .wv-val { font-weight: 700; }
@@ -73,8 +63,6 @@
         .container-block { margin-bottom: 10px; }
         .container-block b { display: block; }
 
-        .foot-l { width: 53.08%; }
-        .foot-r { width: 46.92%; }
         .decl-cell { font-size: 9px; line-height: 1.5; }
         .decl-cell .heading { font-weight: 700; margin-bottom: 2px; }
         .sign-block { margin-top: 14px; }
@@ -85,8 +73,11 @@
 </head>
 <body onload="window.print()">
     <table class="outer no-border">
+        <colgroup>
+            <col style="width:46.70%" /><col style="width:53.30%" />
+        </colgroup>
         <tr>
-            <td class="agent-cell">
+            <td>
                 <div class="agent-name">@V(agentName)</div>
                 @if (!string.IsNullOrWhiteSpace(agent?.LicenseNo))
                 {
@@ -96,6 +87,7 @@
                 {
                     <div class="agent-addr">@line</div>
                 }
+                <div class="copy-marker">D</div>
                 @if (!string.IsNullOrWhiteSpace(agent?.Phone))
                 {
                     <div class="agent-phone">Phone : @agent!.Phone</div>
@@ -104,7 +96,6 @@
                 {
                     <div class="agent-gst">GSTIN @agent!.GstinNo</div>
                 }
-                <div class="copy-marker">D</div>
             </td>
             <td class="title-cell">
                 <div class="copytype">Org/Dup/Trip/Quard/Quin/6th/Office</div>
@@ -117,8 +108,13 @@
     </table>
 
     <table class="outer">
+        <colgroup>
+            <col style="width:27.86%" /><col style="width:11.37%" /><col style="width:7.47%" />
+            <col style="width:6.37%" /><col style="width:4.52%" /><col style="width:10.96%" />
+            <col style="width:2.35%" /><col style="width:12.74%" /><col style="width:16.35%" />
+        </colgroup>
         <tr>
-            <td class="col-l" rowspan="2">
+            <td colspan="3" rowspan="2">
                 <div class="cell-lbl">Importer's Name &amp; Address</div>
                 <div class="cell-val">@V(Model.PartyName)</div>
                 @if (!string.IsNullOrWhiteSpace(Model.Address))
@@ -130,27 +126,29 @@
                     <div class="cell-val">EXIM: @Model.ImporterCode</div>
                 }
             </td>
-            <td>
+            <td colspan="6">
                 <div class="cell-lbl">Verification</div>
                 <div class="verify-text">I have verified that the goods specified In thie Declaration and of the quantity and value spcified herein have been permitted to be Imported by Government of Nepal under Hcence No. and date indicated below :</div>
             </td>
         </tr>
         <tr>
-            <td>
+            <td colspan="6">
                 <div class="cell-lbl">Country of Consignment <span class="cell-val">@V(Model.CountryCgn)</span></div>
             </td>
         </tr>
         <tr>
-            <td class="col-l" rowspan="2">
+            <td rowspan="2">
                 <div class="cell-lbl">Notify or delivery address</div>
-                <div class="cell-val" style="text-align:center;">Same as above</div>
             </td>
-            <td>
+            <td colspan="2" rowspan="2" class="center">
+                <div class="cell-val">Same as above</div>
+            </td>
+            <td colspan="6">
                 <div class="cell-lbl">Country of Origin <span class="cell-val">@V(Model.CountryOrigin)</span></div>
             </td>
         </tr>
         <tr>
-            <td rowspan="2">
+            <td colspan="6" rowspan="2">
                 <div class="cell-lbl">HMO' &amp; Import Licence No. and Date</div>
                 @if (!string.IsNullOrWhiteSpace(Model.BankName))
                 {
@@ -163,51 +161,53 @@
             </td>
         </tr>
         <tr>
-            <td class="col-l">
+            <td>
                 <div class="cell-lbl">Statement as to transportation</div>
+            </td>
+            <td colspan="2">
                 <div class="cell-val">By Road/Rail</div>
             </td>
         </tr>
         <tr>
-            <td class="ship-cell">
-                <div class="cell-lbl">Ship's Name :</div>
+            <td colspan="2"><div class="cell-lbl">Ship's Name :</div></td>
+            <td colspan="3"><div class="cell-lbl">Rotation No.</div></td>
+            <td colspan="2"><div class="cell-lbl">Line No.</div></td>
+            <td colspan="2"><div class="cell-lbl">B/L No. &amp; Date.</div></td>
+        </tr>
+        <tr>
+            <td colspan="2">
                 <div class="cell-val">@V(Model.VesselName)</div>
                 @if (!string.IsNullOrWhiteSpace(Model.VoyageNo))
                 {
                     <div class="cell-val">@Model.VoyageNo</div>
                 }
             </td>
-            <td class="rot-cell">
-                <div class="cell-lbl">Rotation No.</div>
-                <div class="cell-val">@V(Model.RotNo)</div>
-            </td>
-            <td class="line-cell">
-                <div class="cell-lbl">Line No.</div>
-                <div class="cell-val">@V(Model.LineNo)</div>
-            </td>
-            <td class="bl-cell">
-                <div class="cell-lbl">B/L No. &amp; Date.</div>
-                <div class="cell-val">@V(blNo) @(blDate.HasValue ? "dt." + D(blDate) : "")</div>
-            </td>
+            <td colspan="3"><div class="cell-val">@V(Model.RotNo)</div></td>
+            <td colspan="2"><div class="cell-val">@V(Model.LineNo)</div></td>
+            <td colspan="2"><div class="cell-val">@V(blNo) @(blDate.HasValue ? "dt." + D(blDate) : "")</div></td>
         </tr>
         <tr>
-            <td colspan="4">
+            <td colspan="3">
                 <div class="cell-lbl">Route of Transit:</div>
                 <div class="cell-val">@V(Model.RouteOfTransit)</div>
                 <div class="intransit">In Transit To Nepal</div>
             </td>
+            <td colspan="6">&nbsp;</td>
         </tr>
     </table>
 
     <table class="outer cargo-grid">
+        <colgroup>
+            <col style="width:27.86%" /><col style="width:40.68%" /><col style="width:15.09%" /><col style="width:16.35%" />
+        </colgroup>
         <tr>
-            <th class="marks-cell">Marks and Serial No. of Pkgs</th>
-            <th class="desc-cell">No. and description of Pkgs/description of goods</th>
-            <th class="grwt-cell">Gr. Wt. kgs.</th>
-            <th class="cif-cell">Cif Value Rs.</th>
+            <th>Marks and Serial No. of Pkgs</th>
+            <th>No. and description of Pkgs/description of goods</th>
+            <th>Gr. Wt. kgs.</th>
+            <th>Cif Value Rs.</th>
         </tr>
         <tr>
-            <td class="marks-cell">
+            <td>
                 @if (Model.Containers.Any())
                 {
                     @foreach (var c in Model.Containers)
@@ -227,7 +227,7 @@
                     <span>&nbsp;</span>
                 }
             </td>
-            <td class="desc-cell">
+            <td>
                 @foreach (var c in Model.Containers)
                 {
                     if (!string.IsNullOrWhiteSpace(c.CustomsCode))
@@ -273,7 +273,7 @@
                     }
                 </div>
             </td>
-            <td class="grwt-cell">
+            <td>
                 <table class="wv-inner">
                     <tr><td class="wv-val">@(Model.GrossWeight.HasValue ? Model.GrossWeight.Value.ToString("N3", inr) : "")</td></tr>
                     <tr class="wv-gap"><td></td></tr>
@@ -281,7 +281,7 @@
                     <tr><td class="wv-val">@(Model.NetWeight.HasValue ? Model.NetWeight.Value.ToString("N3", inr) : "")</td></tr>
                 </table>
             </td>
-            <td class="cif-cell">
+            <td>
                 <table class="wv-inner">
                     <tr><td class="wv-val">@Rs(Model.CifInr)</td></tr>
                     <tr class="wv-gap"><td></td></tr>
@@ -293,11 +293,14 @@
     </table>
 
     <table class="outer">
+        <colgroup>
+            <col style="width:53.08%" /><col style="width:46.92%" />
+        </colgroup>
         <tr>
-            <td class="foot-l" style="height:70px;">
+            <td style="height:70px;">
                 <div class="cell-lbl">Endorsement by Customs House on entry</div>
             </td>
-            <td class="foot-r decl-cell" rowspan="2">
+            <td class="decl-cell" rowspan="2">
                 <div class="heading">Declaration,</div>
                 <div>'I/We declare that the goods entered herein are for Nepal in transit through India and shall not be diverted enroute or retained in India'..</div>
                 <div>'I/We declare that the entires made herein above are true and correct to the best of my/our knowledge and. belief.</div>
@@ -309,7 +312,7 @@
             </td>
         </tr>
         <tr>
-            <td class="foot-l" style="height:50px;">
+            <td style="height:50px;">
                 <div class="cell-lbl">Endorsement by Indian Border Customs Office on Exit</div>
             </td>
         </tr>
