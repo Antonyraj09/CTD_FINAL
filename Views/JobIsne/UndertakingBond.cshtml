@@ -17,14 +17,15 @@
         : string.Join(", ", new[] { agent.AddressLine1, agent.AddressLine2, string.Join(" - ", new[] { agent.City, agent.PinCode }.Where(s => !string.IsNullOrWhiteSpace(s))) }
             .Where(s => !string.IsNullOrWhiteSpace(s)));
 
-    var importerAddress = string.Join(" ", new[] { Model.PartyName, Model.Address }.Where(s => !string.IsNullOrWhiteSpace(s)));
-
     // Bond amount is the difference between market value and CIF value — the reference
     // form's own condition clause (1) spells this out ("the difference between the market
     // value of the goods in India and their CIF value"), and the reference sample's figures
     // confirm it exactly: 78,32,780.00 - 44,75,874.00 = 33,56,906.00.
     var bondAmount = (Model.MarketValueInr ?? 0) - (Model.CifInr ?? 0);
     var bondAmountWords = IndianNumberWords.ToWords(bondAmount);
+    var cifPlain = (Model.CifInr ?? 0).ToString("N2", plain);
+    var marketInr = (Model.MarketValueInr ?? 0).ToString("N2", inr);
+    var bondInr = bondAmount.ToString("N2", inr);
 }
 <!DOCTYPE html>
 <html>
@@ -32,106 +33,123 @@
     <meta charset="utf-8" />
     <title>Undertaking Bond - @Model.JobNumber</title>
     <style>
-        /* Every dimension below — page margins, and every paragraph's margin-top and font
-           size — is read directly from the reference form's own word/document.xml
-           (pgMar; each paragraph's spacing/before + its run's sz, converted from twips/
-           half-points), not estimated: the reference is pure flowing text with no tables,
-           so exact paragraph-to-paragraph spacing is the only thing that reproduces its
-           layout faithfully. Blank paragraphs in the source (no visible text) contribute
-           their own line height to the following paragraph's margin-top rather than being
-           rendered as empty elements. */
-        @@page { size: A4; margin: 33.87mm 19.98mm 4.94mm 4.99mm; }
-        body { font-family: Arial, Helvetica, sans-serif; color: #000; font-size: 11pt; line-height: 1.15; margin: 0; }
-        p { margin: 0; }
-        .f10 { font-size: 10pt; }
-        .center { text-align: center; }
-        .narrow { max-width: 90mm; }
-        /* Page 2 begins with SCHEDULE, per the reference layout, and the whole schedule
-           block (title through QTY/KGS) is kept from splitting across pages 2/3. */
-        .schedule-page { break-before: page; page-break-before: always; }
-        .schedule-block { break-inside: avoid; page-break-inside: avoid; }
-        .conditions { list-style: none; counter-reset: cond; margin: 9.35mm 0 0; padding-left: 6mm; }
-        .conditions li { counter-increment: cond; margin: 0 0 5mm; padding-left: 4mm; text-indent: -4mm; }
-        .conditions li:first-child { margin-top: 0; }
-        .conditions li::before { content: "(" counter(cond) ") "; }
+        /* Every line below is absolutely positioned at the exact x/y coordinates measured
+           from the reference PDF itself (PyMuPDF span bboxes, points converted to mm) —
+           not estimated from the .docx, which (being pure flowing text with no page-break
+           hints) rendered noticeably differently from the actual printed reference. This
+           guarantees each line starts/ends where the reference has it, not just contains
+           the right words in the right order. */
+        @@page { size: A4; margin: 0; }
+        html, body { margin: 0; padding: 0; }
+        body { font-family: Arial, Helvetica, sans-serif; color: #000; font-size: 10pt; }
+        .page { position: relative; width: 210mm; height: 297mm; overflow: hidden; break-after: page; page-break-after: always; }
+        .page:last-child { break-after: auto; page-break-after: auto; }
+        .ln { position: absolute; white-space: nowrap; }
+        .wrap { position: absolute; white-space: normal; }
+        b { font-weight: 700; }
         @@media print { .no-print { display: none; } }
     </style>
 </head>
 <body onload="window.print()">
-    <!-- ============ PAGE 1: everything up to (not including) SCHEDULE ============ -->
-    <p style="margin-top:99.82mm;">To</p>
-    <p style="margin-top:2.31mm;">The President of India Commissioner of Customs (Port) Nepal Unit/Section, Custom House Kolkata</p>
+    <!-- ============ PAGE 1 ============ -->
+    <div class="page">
+        <div class="ln" style="top:118.19mm;left:8.97mm;">To</div>
+        <div class="ln" style="top:122.17mm;left:8.97mm;">The President of India</div>
+        <div class="ln" style="top:126.15mm;left:8.97mm;">Commissioner of Customs (Port)</div>
+        <div class="ln" style="top:130.38mm;left:8.97mm;">Nepal Unit/Section, Custom House</div>
+        <div class="ln" style="top:134.62mm;left:8.97mm;">Kolkata</div>
+        <div class="ln" style="top:137.37mm;left:133.05mm;"><b>@V(Model.JobNumber)</b></div>
 
-    <p style="margin-top:16.21mm;">UNDERTAKING</p>
+        <div class="ln" style="top:144.05mm;left:82.25mm;font-size:11pt;"><b>UNDERTAKING</b></div>
 
-    <p style="margin-top:13.9mm;">@V(Model.JobNumber)</p>
+        <div class="wrap" style="top:160.02mm;left:6.6mm;width:183mm;">KNOW ALL MEN BY THESE PRESENTS THAT WE, @V(agentName)</div>
+        <div class="wrap" style="top:164.76mm;left:6.6mm;width:183mm;">OF @V(agentAddress) Hereinafter called the Customs Clearing</div>
+        <div class="ln" style="top:169.54mm;left:6.6mm;">Agent on behalf of importer</div>
+        <div class="wrap" style="top:169.41mm;left:50.5mm;width:100mm;"><b>@V(Model.PartyName)</b></div>
+        <div class="ln" style="top:169.41mm;left:155.02mm;"><b>Nepal</b></div>
+        <div class="wrap" style="top:174.58mm;left:6.05mm;width:183mm;">(which expression include its successor/ heirs, executors, adminstrators &amp; legal representative) are held and firmly</div>
+        <div class="wrap" style="top:180.55mm;left:6.35mm;width:183mm;">bond upto the President of India hereinafter called the <b>"President"</b> (which expression shall include his successors</div>
+        <div class="ln" style="top:185.41mm;left:6.6mm;">and assigns) in the sum of Rs. <b>@bondInr</b></div>
+        <div class="ln" style="top:190.71mm;left:5.29mm;">(Rupees</div>
+        <div class="wrap" style="top:191.09mm;left:20.62mm;width:130mm;"><b>@bondAmountWords</b></div>
+        <div class="ln" style="top:190.71mm;left:166mm;">)</div>
+        <div class="wrap" style="top:196.0mm;left:6.35mm;width:183mm;">to be paid to the President for which payment well and truly to be made, WE bind ourselves, our successors, heirs,</div>
+        <div class="wrap" style="top:200.74mm;left:5.0mm;width:183mm;">executors, adminstrators and legal representatives firmly by these present. Sealed with our seals this.</div>
 
-    <p class="f10" style="margin-top:8.42mm;">KNOW ALL MEN BY THESE PRESENTS THAT WE, @V(agentName)</p>
-    <p style="margin-top:2.67mm;">OF @V(agentAddress) Hereinafter called the Customs Clearing</p>
-    <p class="f10" style="margin-top:2.39mm;">Agent on behalf of importer <b>@V(Model.PartyName)</b> &nbsp;&nbsp;&nbsp; <b>Nepal</b></p>
-    <p style="margin-top:2.47mm;">(which expression include its successor/ heirs, executors, adminstrators &amp; legal representative) are held and firmly bond upto the President of India hereinafter called the <b>"President"</b>(which expression shall include his successors</p>
-    <p class="f10" style="margin-top:2.11mm;">and assigns) in the sum of Rs. <b>@bondAmount.ToString("N2", inr)</b></p>
-    <p style="margin-top:2.31mm;">(Rupees @bondAmountWords)</p>
-    <p style="margin-top:2.77mm;">to be paid to the President for which payment well and truly to be made, WE bind ourselves, our successors, heirs, executors, adminstrators and legal representatives firmly by these present. Sealed with our seals this.</p>
+        <div class="ln" style="top:211.2mm;left:6.6mm;"><b>WHEREAS</b></div>
+        <div class="wrap" style="top:218.5mm;left:5.55mm;width:183mm;">The Commissioner of Customs, Custom House, Kolkata ( hereinafter called the <b>"Proper Officer"</b>has agreed to</div>
+        <div class="wrap" style="top:222.71mm;left:5.55mm;width:183mm;">allow transit of the goods in terms of para 9A of the Importer procedure of the memorandum to the protocol to the</div>
+        <div class="wrap" style="top:226.94mm;left:5.55mm;width:183mm;">treaty of transit between Nepal and India - 1999 (hereinafter referred to as treaty).</div>
+    </div>
 
-    <p style="margin-top:4.63mm;">WHEREAS</p>
-    <p style="margin-top:3.97mm;">The Commissioner of Customs, Custom House, Kolkata ( hereinafter called the<b>"Proper Officer"</b>has agreed to allow transit of the goods in terms of para 9A of the Importer procedure of the memorandum to the protocol to the treaty of transit between Nepal and India - 1999 (hereinafter referred to as treaty).</p>
+    <!-- ============ PAGE 2 ============ -->
+    <div class="page">
+        <div class="ln" style="top:12.48mm;left:75.14mm;"><b>SCHEDULE</b></div>
 
-    <!-- ============ PAGE 2: SCHEDULE (kept together, starts a fresh page) ============ -->
-    <div class="schedule-page">
-        <div class="schedule-block">
-            <p class="center" style="margin-top:10.37mm;">SCHEDULE</p>
+        <div class="ln" style="top:25.86mm;left:112.69mm;">DATE : <b>@D(Model.CtdDate)</b></div>
+        <div class="ln" style="top:28.78mm;left:7.41mm;">CTD NO.            : <b>@V(Model.CtdNumber)</b></div>
+        <div class="wrap" style="top:33.82mm;left:7.41mm;width:183mm;">CHA'S NAME     :     @V(agentName)</div>
+        <div class="wrap" style="top:38.81mm;left:7.66mm;width:183mm;">&amp; ADDRESS      :     @V(agent?.AddressLine1)@(!string.IsNullOrWhiteSpace(agent?.AddressLine2) ? ", " + agent!.AddressLine2 : "")</div>
+        <div class="ln" style="top:43.05mm;left:26mm;">@V(agent?.City)@(!string.IsNullOrWhiteSpace(agent?.PinCode) ? " - " + agent!.PinCode : "").</div>
 
-            <p class="f10" style="margin-top:16.23mm;">CTD NO. : <b>@V(Model.CtdNumber)</b></p>
-            <p class="f10" style="margin-top:5.7mm;">DATE : <b>@D(Model.CtdDate)</b></p>
+        <div class="ln" style="top:49.14mm;left:7.92mm;">Importer's Name &amp; Address     :</div>
+        <div class="wrap" style="top:49.27mm;left:59.27mm;width:130mm;"><b>@V(Model.PartyName)</b></div>
+        <div class="wrap" style="top:54.82mm;left:59.27mm;width:130mm;"><b>@V(Model.Address)</b></div>
+        <div class="ln" style="top:61.17mm;left:59.27mm;"><b>EXIM: @V(Model.ImporterCode)</b></div>
 
-            <p class="f10" style="margin-top:9.08mm;">CHA'S NAME : @V(agentName) &amp; ADDRESS: @V(agentAddress)</p>
+        <div class="ln" style="top:68.19mm;left:7.92mm;">M.V. : <b>@V(Model.VesselName)</b></div>
+        <div class="ln" style="top:68.19mm;left:82.01mm;">Rot.No.: <b>@V(Model.RotNo)</b></div>
+        <div class="ln" style="top:68.19mm;left:136.52mm;">Line No. <b>@V(Model.LineNo)</b></div>
 
-            <p style="margin-top:10.97mm;">Importer's Name &amp; Address:<br />@importerAddress</p>
-            <p class="f10" style="margin-top:4.83mm;"><b>EXIM: @V(Model.ImporterCode)</b></p>
+        <div class="ln" style="top:74.54mm;left:7.92mm;">CIF Value  : <b>@cifPlain</b></div>
+        <div class="ln" style="top:74.54mm;left:72.22mm;">Market Value : <b>@marketInr</b></div>
 
-            <p class="f10" style="margin-top:11.1mm;">M.V. :<br />@V(Model.VesselName)</p>
-            <p class="f10" style="margin-top:6.35mm;">Rot.No.: <b>@V(Model.RotNo)</b></p>
-            <p class="f10" style="margin-top:6.86mm;">Line No. <b>@V(Model.LineNo)</b></p>
+        <div class="ln" style="top:80.89mm;left:7.92mm;">Quantity &amp; Description of Goods</div>
 
-            <p class="f10" style="margin-top:10.34mm;">CIF Value : <b>@((Model.CifInr ?? 0).ToString("N2", plain))</b></p>
-            <p style="margin-top:6.63mm;">Quantity &amp; Description of Goods</p>
-            <p style="margin-top:6.74mm;">Market Value :<br /><b>@((Model.MarketValueInr ?? 0).ToString("N2", inr))</b></p>
+        @{ var itemNo = 0; var itemTop = 87.92; }
+        @foreach (var c in Model.Containers)
+        {
+            itemNo++;
+            <div class="ln" style="top:@(itemTop)mm;left:33.87mm;"><b>@itemNo</b></div>
+            <div class="wrap" style="top:@(itemTop)mm;left:44.7mm;width:130mm;"><b>1X@(c.ContainerSize.TrimEnd('t', 'f'))' CONT. STC @c.NoPackages PKG</b></div>
+            itemTop += 6.86;
+        }
+        @if (!Model.Containers.Any())
+        {
+            <div class="wrap" style="top:@(itemTop)mm;left:44.7mm;width:130mm;"><b>&nbsp;</b></div>
+            itemTop += 6.86;
+        }
+        <div class="wrap" style="top:@(itemTop)mm;left:8.47mm;width:180mm;"><b>@V(Model.CargoDescription ?? Model.MiscDescription)</b></div>
 
-            @{ var itemNo = 0; }
-            @foreach (var c in Model.Containers)
-            {
-                itemNo++;
-                <p class="f10" style="margin-top:11.89mm;">@itemNo 1X@(c.ContainerSize.TrimEnd('t', 'f'))' CONT. STC @c.NoPackages PKG@(itemNo == Model.Containers.Count ? " " + V(Model.CargoDescription ?? Model.MiscDescription) : "")</p>
-            }
-            @if (!Model.Containers.Any())
-            {
-                <p class="f10" style="margin-top:11.89mm;">1 @V(Model.CargoDescription ?? Model.MiscDescription)</p>
-            }
+        <div class="ln" style="top:102.87mm;left:8.47mm;">QTY. : <b>@(Model.GrossWeight.HasValue ? Model.GrossWeight.Value.ToString("N3", plain) : "")</b> &nbsp;&nbsp;KGS.</div>
 
-            <p class="f10" style="margin-top:9.35mm;">QTY. :<br /><b>@(Model.GrossWeight.HasValue ? Model.GrossWeight.Value.ToString("N3", plain) : "")</b><br />KGS.</p>
-        </div>
+        <div class="wrap" style="top:111.33mm;left:7.92mm;width:183mm;">Amount payable in terms of para 9A of the treaty as above.</div>
+        <div class="wrap" style="top:117.68mm;left:7.92mm;width:183mm;">NOW THE CONDITION of the above written undertaking is such that :-</div>
 
-        <p class="f10" style="margin-top:13.39mm;">Amount payable in terms of para 9A of the treaty as above.</p>
-        <p style="margin-top:6.76mm;">NOW THE CONDITION of the above written undertaking is such that :-</p>
-        <ol class="conditions f10">
-            <li>The Importer shall pay the amount equal to the difference between the market value of the goods in India and their CIF value on demand to the Commissioner of Customs, Kolkata in the event of the goods not reaching Nepal, in terms of para 9A and 9b of Import Procedure of the said treaty.</li>
-            <li>The President through the Commissioner of Customs Kolkata or other officer may recover the said sum</li>
-        </ol>
+        <div class="wrap" style="top:122.72mm;left:7.92mm;width:183mm;">(1) The Importer shall pay the amount equal to the difference between the market value of the goods in India and</div>
+        <div class="wrap" style="top:127.21mm;left:11.64mm;width:180mm;">their CIF value on demand to the Commissioner of Customs, Kolkata in the event of the goods not reaching</div>
+        <div class="wrap" style="top:131.44mm;left:13.76mm;width:180mm;">Nepal, in terms of para 9A and 9b of Import Procedure of the said treaty.</div>
+        <div class="wrap" style="top:136.73mm;left:8.17mm;width:183mm;">(2) The President through the Commissioner of Customs Kolkata or other officer may recover the said sum</div>
 
-        <p style="margin-top:9.61mm;">Rs.<br /><b class="f10">@bondAmount.ToString("N2", inr)</b><br /><span class="f10">( Rupees :<b>@bondAmountWords</b>)</span></p>
-        <p style="margin-top:9.07mm;">in terms Para 9A in the manner prescribed under Para 9A and 9B of the Import procedure of the memorandum to the protocol to the treaty of transit between Nepal and India effective from 6th January, 1999 and/or by</p>
-        <p style="margin-top:4.46mm;">other laws enforceable, if any.</p>
+        <div class="ln" style="top:141.47mm;left:13.76mm;">Rs. <b style="font-size:8pt;">@bondInr</b> &nbsp;( Rupees :<b style="font-size:8pt;">@bondAmountWords</b> )</div>
 
-        <p style="margin-top:8.93mm;">IN WITNESS WHEREOF the Importer has herein set and subscribed its hands and seals the day, month and year first above written.</p>
+        <div class="wrap" style="top:145.71mm;left:13.46mm;width:180mm;">in terms Para 9A in the manner prescribed under Para 9A and 9B of the Import procedure of the memorandum</div>
+        <div class="wrap" style="top:150.74mm;left:13.46mm;width:180mm;">to the protocol to the treaty of transit between Nepal and India effective from 6th January, 1999 and/or by</div>
+        <div class="wrap" style="top:155.53mm;left:12.95mm;width:180mm;">other laws enforceable, if any.</div>
 
-        <p class="narrow" style="margin-top:13.39mm;">SIGNED AND DELIVERED by and on behalf of the Importer at Calcutta</p>
-        <p style="margin-top:4.5mm;">in the presence of : 1.</p>
-        <p style="margin-top:6.54mm;">2.</p>
+        <div class="wrap" style="top:167.42mm;left:9.78mm;width:180mm;">IN WITNESS WHEREOF the Importer has herein set and subscribed its hands and seals the day, month and</div>
+        <div class="wrap" style="top:172.46mm;left:9.52mm;width:180mm;">year first above written.</div>
 
-        <p class="center" style="margin-top:13.39mm;">Accepted</p>
-        <p class="center" style="margin-top:4.96mm;">for &amp; on behalf of the President of India (Designation of the authorised officer)</p>
-        <p class="center" style="margin-top:4.46mm;">in the presence of</p>
+        <div class="ln" style="top:187.53mm;left:10.84mm;">SIGNED AND DELIVERED by and on behalf</div>
+        <div class="ln" style="top:191.76mm;left:10.84mm;">of the Importer at Calcutta</div>
+        <div class="ln" style="top:196.0mm;left:10.84mm;">in the presence of :</div>
+        <div class="ln" style="top:203.41mm;left:10.84mm;">1.</div>
+        <div class="ln" style="top:212.93mm;left:10.84mm;">2.</div>
+
+        <div class="ln" style="top:228.81mm;left:141.82mm;">Accepted</div>
+        <div class="ln" style="top:233.29mm;left:119.3mm;">for &amp; on behalf of the President of India</div>
+        <div class="ln" style="top:237.27mm;left:119.59mm;">(Designation of the authorised officer)</div>
+        <div class="ln" style="top:240.7mm;left:133.6mm;">in the presence of</div>
     </div>
 </body>
 </html>
