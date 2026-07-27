@@ -133,7 +133,10 @@
                 <svg class="erp-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
             <div class="erp-submenu">
-                <div class="sidebar-link-wrap"><a class="@NavClass("delivery-isne") erp-child" asp-controller="Placeholder" asp-action="Index" asp-route-slug="delivery-isne"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="2"/></svg><span>Delivery ISNE</span></a><div class="collapsed-tip">Delivery ISNE</div></div>
+                @if (Can(PermissionKeys.DeliveryIsneManage))
+                {
+                    <div class="sidebar-link-wrap"><a class="@NavClass("delivery-isne") erp-child" asp-controller="DeliveryIsne" asp-action="Index"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="2"/></svg><span>Delivery ISNE</span></a><div class="collapsed-tip">Delivery ISNE</div></div>
+                }
                 <div class="sidebar-link-wrap"><a class="@NavClass("delivery-challan") erp-child" asp-controller="Placeholder" asp-action="Index" asp-route-slug="delivery-challan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="2"/></svg><span>Delivery Challan</span></a><div class="collapsed-tip">Delivery Challan</div></div>
                 <div class="sidebar-link-wrap"><a class="@NavClass("delivery-export") erp-child" asp-controller="Placeholder" asp-action="Index" asp-route-slug="delivery-export"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="2"/></svg><span>Delivery Export</span></a><div class="collapsed-tip">Delivery Export</div></div>
                 <div class="sidebar-link-wrap"><a class="@NavClass("delivery-misct") erp-child" asp-controller="Placeholder" asp-action="Index" asp-route-slug="delivery-misct"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="2"/></svg><span>Delivery MISCT</span></a><div class="collapsed-tip">Delivery MISCT</div></div>

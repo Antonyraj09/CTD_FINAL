@@ -114,6 +114,7 @@ public static class TenantSeeder
             (PermissionKeys.AuditHistoryView, true, true, false, false),
             (PermissionKeys.AlertRulesManage, true, false, false, false),
             (PermissionKeys.JobIsneManage, true, true, false, false),
+            (PermissionKeys.DeliveryIsneManage, true, true, false, false),
         };
 
         foreach (var row in matrix)

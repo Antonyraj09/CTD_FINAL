@@ -7,4 +7,8 @@ public interface INumberSequenceService
     Task<string> NextInvoiceNumberAsync(CancellationToken ct = default);
     Task<string> NextDocNumberAsync(string prefix, CancellationToken ct = default);
     Task<string> NextIsneJobNumberAsync(CancellationToken ct = default);
+
+    /// <summary>Delivery ISNE's Serial No. — a plain incrementing integer (no prefix/year),
+    /// continuing from the last saved record, per spec.</summary>
+    Task<int> NextDeliveryIsneSerialAsync(CancellationToken ct = default);
 }
