@@ -27,7 +27,6 @@ public class PlaceholderController : Controller
         ["job-misct"] = New("Job MISCT", "Miscellaneous Cargo Transit Job Entry"),
         ["job-isne-browse"] = New("Job ISNE Browse", "Browse and search all ISNE jobs"),
         ["edi-job-register"] = New("EDI Job Register", "EDI Job Register — IAE / ISE / EAE view"),
-        ["delivery-isne"] = New("Delivery ISNE", "Process delivery for ISNE jobs"),
         ["delivery-challan"] = New("Delivery Challan", "Generate delivery challan documents"),
         ["delivery-export"] = New("Delivery Export", "Manage export delivery processing"),
         ["delivery-misct"] = New("Delivery MISCT", "Delivery for miscellaneous transit cargo"),

@@ -1,0 +1,225 @@
+@using CTD_FINAL.Entities
+@model DeliveryIsne?
+@{
+    bool viewOnly = (bool)(ViewData["ViewOnly"] ?? false);
+    bool isNew = Model is null;
+    ViewData["Title"] = isNew ? "Delivery — ISNE (New)" : (viewOnly ? $"Delivery — ISNE (View {Model!.SerialNo})" : $"Delivery — ISNE (Edit {Model!.SerialNo})");
+    string D(DateTime? d) => d?.ToString("yyyy-MM-dd") ?? "";
+    string today = DateTime.Today.ToString("yyyy-MM-dd");
+    string ro = viewOnly ? "disabled" : "";
+
+    var jobs = (List<JobIsne>)ViewBag.Jobs;
+    var transporters = (List<Party>)ViewBag.Transporters;
+    var staffUsers = (List<ApplicationUser>)ViewBag.Staff;
+
+    var jobLookup = jobs.Select(j => new
+    {
+        id = j.Id,
+        jobNo = j.JobNumber,
+        customer = j.PartyName,
+        route = j.RouteOfTransit,
+        containers = j.Containers.Select(c => new { containerNo = c.ContainerNo, containerSize = c.ContainerSize, package = c.NoPackages })
+    }).ToList();
+    var transporterLookup = transporters.Select(p => new { id = p.Id, code = p.PartyCode ?? "", name = p.Name }).ToList();
+    var staffLookup = staffUsers.Select(u => new { id = u.Id, code = u.UserName ?? "", name = u.FullName }).ToList();
+}
+
+<div class="erp-form-header">
+    <div class="erp-form-title">
+        <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,var(--amber-500),var(--amber-600));display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#1a1305" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+        </div>
+        <div>
+            <h2>DELIVERY — ISNE</h2>
+            <div style="font-size:11.5px;color:#aab4cc;margin-top:2px;">@(viewOnly ? "View Mode (read-only)" : isNew ? "New Delivery" : "Edit Delivery")</div>
+        </div>
+        <span>ISNE Delivery</span>
+    </div>
+    <div class="erp-form-actions">
+        <a class="btn btn-outline btn-sm" asp-controller="DeliveryIsne" asp-action="Entry" style="background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.14);color:#e6e9f2;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg> New
+        </a>
+        @if (!viewOnly)
+        {
+            <button class="btn btn-amber btn-sm" id="dlvSaveBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> @(isNew ? "Save" : "Update")
+            </button>
+        }
+        @if (!isNew)
+        {
+            <a class="btn btn-outline btn-sm" asp-controller="DeliveryIsne" asp-action="Entry" asp-route-id="@Model!.Id" style="background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.14);color:#e6e9f2;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Edit
+            </a>
+            <button class="btn btn-danger btn-sm" id="dlvDeleteBtn" data-id="@Model!.Id" data-serial="@Model!.SerialNo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg> Delete
+            </button>
+            <a class="btn btn-outline btn-sm" href="/DeliveryIsne/Print/@Model!.Id" target="_blank" style="background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.14);color:#e6e9f2;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg> Print
+            </a>
+        }
+        <a class="btn btn-ghost btn-sm" asp-controller="DeliveryIsne" asp-action="Index" style="color:#aab4cc;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Cancel
+        </a>
+    </div>
+</div>
+
+<form id="dlvForm" data-record-id="@(Model?.Id ?? 0)" data-view-only="@(viewOnly ? "true" : "false")">
+<div class="erp-form-body">
+
+    <!-- ============ HEADER ============ -->
+    <div class="erp-section">
+        <div class="erp-section-head">
+            <div class="section-letter">1</div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="1"/></svg>
+            Header Information
+        </div>
+        <div class="erp-section-body">
+            <div class="form-grid cols-4">
+                <div class="field">
+                    <label>Serial No.</label>
+                    <div class="field-static" id="dlv_serialNo">@(isNew ? "Auto Generated" : Model!.SerialNo.ToString())</div>
+                </div>
+                <div class="field">
+                    <label>Delivery Date <span class="req">*</span></label>
+                    <input type="date" id="dlv_deliveryDate" value="@(isNew ? today : D(Model!.DeliveryDate))" @ro>
+                </div>
+                <div class="field">
+                    <label>Part (Y/N)</label>
+                    <select id="dlv_partYN" @ro>
+                        <option value="N" selected="@(isNew || Model!.PartYN != "Y")">N</option>
+                        <option value="Y" selected="@(!isNew && Model!.PartYN == "Y")">Y</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ JOB INFORMATION ============ -->
+    <div class="erp-section">
+        <div class="erp-section-head">
+            <div class="section-letter">2</div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+            Job Information
+        </div>
+        <div class="erp-section-body">
+            <div class="form-grid cols-4">
+                <div class="field span-2">
+                    <label>Job No. <span class="req">*</span></label>
+                    @if (isNew)
+                    {
+                        <select id="dlv_jobSelect">
+                            <option value="">-- Select Job No. --</option>
+                        </select>
+                    }
+                    else
+                    {
+                        <div class="field-static" id="dlv_jobNoStatic">@Model!.JobNo</div>
+                    }
+                    <input type="hidden" id="dlv_jobIsneId" value="@(isNew ? "" : Model!.JobIsneId.ToString())">
+                </div>
+                <div class="field">
+                    <label>Customer</label>
+                    <div class="field-static" id="dlv_customer">@(isNew ? "—" : Model!.CustomerName)</div>
+                </div>
+                <div class="field">
+                    <label>Consignee</label>
+                    <input type="text" id="dlv_consignee" value="@Model?.ConsigneeName" @ro>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ DELIVERY INFORMATION ============ -->
+    <div class="erp-section">
+        <div class="erp-section-head">
+            <div class="section-letter">3</div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7"/></svg>
+            Delivery Information
+        </div>
+        <div class="erp-section-body">
+            <div class="form-grid cols-4">
+                <div class="field">
+                    <label>Truck / Railway Reck No.</label>
+                    <input type="text" id="dlv_truckRailway" value="@Model?.TruckRailwayReckNo" @ro>
+                </div>
+                <div class="field">
+                    <label>Shed</label>
+                    <input type="text" id="dlv_shed" value="@Model?.Shed" @ro>
+                </div>
+                <div class="field">
+                    <label>Key No.</label>
+                    <input type="text" id="dlv_keyNo" value="@Model?.KeyNo" @ro>
+                </div>
+                <div class="field">
+                    <label>Package <span class="req">*</span></label>
+                    <input type="number" step="0.001" min="0" id="dlv_package" value="@(Model?.Package)" @ro>
+                </div>
+
+                <div class="field span-2">
+                    <label>Route</label>
+                    <input type="text" id="dlv_route" value="@Model?.Route" @ro>
+                </div>
+                <div class="field">
+                    <label>Transporter Code <span class="req">*</span></label>
+                    <select id="dlv_transporterSelect" @ro>
+                        <option value="">-- Select --</option>
+                        @foreach (var t in transporterLookup)
+                        {
+                            <option value="@t.id" selected="@(!isNew && Model!.TransporterId == (int)t.id)">@t.code — @t.name</option>
+                        }
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Transporter Name</label>
+                    <div class="field-static" id="dlv_transporterName">@(Model?.TransporterName ?? "—")</div>
+                </div>
+
+                <div class="field">
+                    <label>BSL No.</label>
+                    <input type="text" id="dlv_bslNo" value="@Model?.BslNo" @ro>
+                </div>
+                <div class="field">
+                    <label>Staff Code <span class="req">*</span></label>
+                    <select id="dlv_staffSelect" @ro>
+                        <option value="">-- Select --</option>
+                        @foreach (var s in staffLookup)
+                        {
+                            <option value="@s.id" selected="@(!isNew && Model!.StaffId == (int)s.id)">@s.code — @s.name</option>
+                        }
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Staff Name</label>
+                    <div class="field-static" id="dlv_staffName">@(Model?.StaffName ?? "—")</div>
+                </div>
+                <div class="field">
+                    <label>Size</label>
+                    <div class="field-static" id="dlv_size">@(Model?.ContainerSize ?? "—")</div>
+                </div>
+
+                <div class="field span-2">
+                    <label>Container No. <span class="req" id="dlv_containerReq" style="display:none;">*</span></label>
+                    <select id="dlv_containerSelect" @ro>
+                        <option value="">-- No Container --</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="field" style="margin-top:14px;">
+                <label>Remarks</label>
+                <textarea id="dlv_remarks" placeholder="Delivery remarks / instructions" style="min-height:110px;" @ro>@Model?.Remarks</textarea>
+            </div>
+        </div>
+    </div>
+
+</div>
+</form>
+
+<script id="dlvJobLookupData" type="application/json">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(jobLookup))</script>
+<script id="dlvTransporterLookupData" type="application/json">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(transporterLookup))</script>
+<script id="dlvStaffLookupData" type="application/json">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(staffLookup))</script>
+<script id="dlvContainerInitData" type="application/json">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(new { containerNo = Model?.ContainerNo ?? "" }))</script>
+
+@section Scripts {
+    <script src="~/js/delivery-isne.js" asp-append-version="true"></script>
+}

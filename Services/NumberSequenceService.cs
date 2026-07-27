@@ -37,6 +37,8 @@ public class NumberSequenceService : INumberSequenceService
         return $"ISNE/{seq:D4}/{DateTime.UtcNow.Year}";
     }
 
+    public Task<int> NextDeliveryIsneSerialAsync(CancellationToken ct = default) => NextAsync("DeliveryIsneSerial", ct);
+
     private async Task<int> NextAsync(string key, CancellationToken ct)
     {
         var row = await _context.NumberSequences.FirstOrDefaultAsync(s => s.Key == key, ct);

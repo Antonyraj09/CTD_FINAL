@@ -1,0 +1,49 @@
+@using CTD_FINAL.Entities
+@model DeliveryIsne
+@{
+    Layout = null;
+    var fields = new (string Label, object? Value)[]
+    {
+        ("Delivery Date", Model.DeliveryDate.ToString("d MMM yyyy")),
+        ("Part (Y/N)", Model.PartYN),
+        ("Job No.", Model.JobNo),
+        ("Customer", Model.CustomerName),
+        ("Consignee", Model.ConsigneeName),
+        ("Truck/Railway Reck No.", Model.TruckRailwayReckNo),
+        ("Shed", Model.Shed),
+        ("Key No.", Model.KeyNo),
+        ("Package", Model.Package),
+        ("Route", Model.Route),
+        ("Transporter Code", Model.TransporterCode),
+        ("Transporter Name", Model.TransporterName),
+        ("BSL No.", Model.BslNo),
+        ("Staff Code", Model.StaffCode),
+        ("Staff Name", Model.StaffName),
+        ("Size", Model.ContainerSize),
+        ("Container No.", Model.ContainerNo),
+        ("Remarks", Model.Remarks),
+    };
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Delivery ISNE - @Model.SerialNo</title>
+    <style>
+        body{font-family:Arial,sans-serif;padding:30px;color:#10172a;}
+        h1{font-size:18px;margin-bottom:4px;} h2{font-size:14px;color:#555;font-weight:normal;margin-bottom:20px;}
+        table{width:100%;border-collapse:collapse;margin-bottom:20px;} td,th{border:1px solid #ddd;padding:6px 10px;font-size:12px;} th{background:#11192e;color:#fff;text-align:left;}
+    </style>
+</head>
+<body onload="window.print()">
+    <h1>DELIVERY — ISNE</h1>
+    <h2>Serial No: @Model.SerialNo &nbsp;|&nbsp; Job No: @Model.JobNo &nbsp;|&nbsp; Customer: @Model.CustomerName</h2>
+    <table>
+        <tr><th>Field</th><th>Value</th></tr>
+        @foreach (var f in fields)
+        {
+            <tr><td>@f.Label</td><td>@(f.Value ?? "—")</td></tr>
+        }
+    </table>
+    <p style="font-size:11px;color:#999;">Printed from CTD Management System &middot; @DateTime.Now.ToString("g")</p>
+</body>
+</html>
