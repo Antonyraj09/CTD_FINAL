@@ -14,10 +14,6 @@ namespace CTD_FINAL.Services;
 /// Installation Wizard Step 3 (create the client SQL Server database/login/user, assign
 /// db_owner, deploy the full application schema, seed roles/permissions/one Administrator
 /// account) and Step 4 (register Company/License/ClientDatabase rows in ADMIN_CTD).
-///
-/// ALTER ROLE ... ADD MEMBER (SQL Server 2012+) is used for the db_owner grant instead of
-/// the SQL-2008-compatible sp_addrolemember — a deliberate, narrower floor than the rest of
-/// this app's general SQL Server 2008 SP1+ target, scoped to this feature only.
 /// </summary>
 public class ProvisioningService : IProvisioningService
 {
@@ -81,7 +77,15 @@ public class ProvisioningService : IProvisioningService
             await CreateDatabaseAsync(serverBuilder.ConnectionString, request.DatabaseName, ct);
             await CreateLoginAsync(serverBuilder.ConnectionString, request.DatabaseUsername, request.DatabasePassword, ct);
 
-            var tenantAdminBuilder = new SqlConnectionStringBuilder(provisioningConnectionString) { InitialCatalog = request.DatabaseName };
+            // MultipleActiveResultSets must be off here even if ProvisioningConnection has it on:
+            // SqlScriptRunner executes the schema script's GO-separated batches as sequential
+            // ExecuteNonQueryAsync calls on one connection, and the idempotent script's
+            // per-migration BEGIN TRANSACTION/COMMIT pairs span several of those batches — under
+            // MARS, SQL Server treats each call as its own batch and rejects a transaction still
+            // open at the end of one ("A transaction that was started in a MARS batch is still
+            // active at the end of the batch"). This connection only ever runs one batch at a
+            // time in sequence, so it never needs concurrent result sets anyway.
+            var tenantAdminBuilder = new SqlConnectionStringBuilder(provisioningConnectionString) { InitialCatalog = request.DatabaseName, MultipleActiveResultSets = false };
 
             await using (var tenantConnection = new SqlConnection(tenantAdminBuilder.ConnectionString))
             {
@@ -201,14 +205,19 @@ END";
     private static async Task CreateUserAndAssignRoleAsync(SqlConnection tenantConnection, string userName, CancellationToken ct)
     {
         await using var command = tenantConnection.CreateCommand();
+        // sp_addrolemember instead of ALTER ROLE ... ADD MEMBER: the latter only parses on SQL
+        // Server 2012+ ("Incorrect syntax near the keyword 'ADD'" on anything older, e.g. 2008
+        // R2 Express) — sp_addrolemember does the same db_owner grant and has worked unchanged
+        // since SQL 2000, keeping this in line with the rest of the app's 2008 SP1+ floor. It
+        // also needs no QUOTENAME/dynamic SQL of its own: @userName is passed straight through
+        // as a stored-procedure parameter, not spliced into DDL text.
         command.CommandText = @"
 IF NOT EXISTS (SELECT 1 FROM sys.database_principals WHERE name = @userName)
 BEGIN
     DECLARE @sql nvarchar(max) = N'CREATE USER ' + QUOTENAME(@userName) + N' FOR LOGIN ' + QUOTENAME(@userName) + N';';
     EXEC sp_executesql @sql;
 END
-DECLARE @roleSql nvarchar(max) = N'ALTER ROLE db_owner ADD MEMBER ' + QUOTENAME(@userName) + N';';
-EXEC sp_executesql @roleSql;";
+EXEC sp_addrolemember N'db_owner', @userName;";
         command.Parameters.AddWithValue("@userName", userName);
         await command.ExecuteNonQueryAsync(ct);
     }
