@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using CTD_FINAL.Constants;
 using CTD_FINAL.Data;
 using CTD_FINAL.Enums;
 using CTD_FINAL.Interfaces;
@@ -14,8 +15,12 @@ namespace CTD_FINAL.Controllers;
 /// The Installation Wizard (Steps 1-4 of the spec): collects Client Information and
 /// Database Configuration, then drives ProvisioningService to create the tenant database
 /// and register it in ADMIN_CTD. Open to anonymous users only until the first company is
-/// registered — after that, re-running it requires the shared Setup:InstallKey, since
-/// there's no admin-auth system of its own to gate repeat installs.
+/// registered — after that, re-running it requires either the shared Setup:InstallKey (no
+/// sign-in needed, e.g. for scripted/first-touch provisioning), or being signed in as an
+/// Administrator under the designated "master" license (Setup:MasterLicenseNumber, defaults
+/// to ERC00001 — the license every fresh deployment's first tenant is issued) — the license
+/// the reseller/operator uses day-to-day to onboard new clients, without needing to carry the
+/// shared key around separately. Every other license's Administrator gets neither path.
 /// </summary>
 [AllowAnonymous]
 public class InstallController : Controller
@@ -37,7 +42,7 @@ public class InstallController : Controller
     public async Task<IActionResult> Index(string? key)
     {
         var hasExistingCompany = await _adminContext.Companies.AnyAsync();
-        if (hasExistingCompany && !IsSetupKeyValid(key))
+        if (hasExistingCompany && !IsSetupKeyValid(key) && !IsMasterLicenseAdmin())
             return View("Locked", !string.IsNullOrEmpty(key)); // model: true = a key WAS supplied and was wrong, false = none supplied yet
 
         return View(new InstallIndexViewModel { RequiresSetupKey = hasExistingCompany, SetupKey = key });
@@ -48,7 +53,7 @@ public class InstallController : Controller
     public async Task<IActionResult> Provision([FromBody] InstallProvisionRequest request)
     {
         var hasExistingCompany = await _adminContext.Companies.AnyAsync();
-        if (hasExistingCompany && !IsSetupKeyValid(request.SetupKey))
+        if (hasExistingCompany && !IsSetupKeyValid(request.SetupKey) && !IsMasterLicenseAdmin())
             return Json(new { success = false, message = "A valid setup key is required to run the installer again." });
 
         if (!ModelState.IsValid)
@@ -82,6 +87,20 @@ public class InstallController : Controller
             companyCode = result.CompanyCode,
             message = $"Installation complete. License number {result.LicenseNumber} has been issued."
         });
+    }
+
+    /// <summary>True when the current request is signed in as an Administrator under the
+    /// designated master license — the reseller/operator's own day-to-day login, allowed to
+    /// re-run the wizard without the shared setup key.</summary>
+    private bool IsMasterLicenseAdmin()
+    {
+        if (User.Identity?.IsAuthenticated != true || !User.IsInRole(RoleNames.Administrator)) return false;
+
+        var masterLicense = _configuration["Setup:MasterLicenseNumber"];
+        if (string.IsNullOrEmpty(masterLicense)) return false;
+
+        var currentLicense = User.FindFirst("LicenseNumber")?.Value;
+        return string.Equals(currentLicense, masterLicense, StringComparison.OrdinalIgnoreCase);
     }
 
     private bool IsSetupKeyValid(string? suppliedKey)

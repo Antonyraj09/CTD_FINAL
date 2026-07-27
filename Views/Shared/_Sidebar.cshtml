@@ -1,6 +1,7 @@
 @using CTD_FINAL.Interfaces
 @using CTD_FINAL.Constants
 @inject IPermissionService PermissionService
+@inject IConfiguration Configuration
 @{
     var role = User.IsInRole(RoleNames.Administrator) ? RoleNames.Administrator
         : User.IsInRole(RoleNames.Manager) ? RoleNames.Manager
@@ -9,6 +10,14 @@
 
     var matrix = await PermissionService.GetMatrixAsync();
     bool Can(string key) => matrix.TryGetValue(role, out var m) && m.TryGetValue(key, out var a) && a;
+
+    // "Install New Client" is only offered to the Administrator signed in under the designated
+    // master license (Setup:MasterLicenseNumber, defaults to ERC00001 — every fresh deployment's
+    // first-ever tenant) — the reseller/operator's own day-to-day login, not a per-tenant
+    // permission any client's Administrator can be granted.
+    var masterLicense = Configuration["Setup:MasterLicenseNumber"];
+    bool isMasterLicenseAdmin = role == RoleNames.Administrator && !string.IsNullOrEmpty(masterLicense)
+        && string.Equals(User.FindFirst("LicenseNumber")?.Value, masterLicense, StringComparison.OrdinalIgnoreCase);
 
     string activeNav = ViewData["ActiveNav"] as string ?? "";
     string activeModule = ViewData["ActiveModule"] as string ?? "";
@@ -183,6 +192,16 @@
         }
 
         <div class="nav-section-label" style="margin-top:8px;">System</div>
+        @if (isMasterLicenseAdmin)
+        {
+            <div class="sidebar-link-wrap">
+                <a class="@NavClass("install")" asp-controller="Install" asp-action="Index" target="_blank">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    <span>Install New Client</span>
+                </a>
+                <div class="collapsed-tip">Install New Client</div>
+            </div>
+        }
         @if (Can(PermissionKeys.UsersRolesManage))
         {
             <div class="sidebar-link-wrap">
