@@ -996,6 +996,22 @@ GO
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260711082734_Ctd_Final_Init'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260711082734_Ctd_Final_Init', N'8.0.11');
+END;
+GO
+
+COMMIT;
+GO
+
+BEGIN TRANSACTION;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
     WHERE [MigrationId] = N'20260711105120_MergePartyMaster'
 )
 BEGIN
@@ -2287,6 +2303,144 @@ IF NOT EXISTS (
 BEGIN
     INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
     VALUES (N'20260718054304_ShrinkImporterCodeToSixChars', N'8.0.11');
+END;
+GO
+
+COMMIT;
+GO
+
+BEGIN TRANSACTION;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260727101645_AddDeliveryIsne'
+)
+BEGIN
+    CREATE TABLE [DeliveryIsnes] (
+        [Id] int NOT NULL IDENTITY,
+        [SerialNo] int NOT NULL,
+        [DeliveryDate] datetime2 NOT NULL,
+        [PartYN] nvarchar(1) NOT NULL,
+        [JobIsneId] int NOT NULL,
+        [JobNo] nvarchar(30) NOT NULL,
+        [CustomerName] nvarchar(200) NULL,
+        [ConsigneeName] nvarchar(200) NULL,
+        [TruckRailwayReckNo] nvarchar(40) NULL,
+        [Shed] nvarchar(60) NULL,
+        [KeyNo] nvarchar(40) NULL,
+        [Package] decimal(18,3) NULL,
+        [Route] nvarchar(150) NULL,
+        [TransporterId] int NULL,
+        [TransporterCode] nvarchar(30) NULL,
+        [TransporterName] nvarchar(200) NULL,
+        [BslNo] nvarchar(40) NULL,
+        [StaffId] int NULL,
+        [StaffCode] nvarchar(50) NULL,
+        [StaffName] nvarchar(150) NULL,
+        [ContainerNo] nvarchar(15) NULL,
+        [ContainerSize] nvarchar(10) NULL,
+        [Remarks] nvarchar(2000) NULL,
+        [Deleted] bit NOT NULL,
+        [DeletedAt] datetime2 NULL,
+        [DeletedBy] nvarchar(150) NULL,
+        [CreatedBy] nvarchar(150) NULL,
+        [ModifiedBy] nvarchar(150) NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        [UpdatedAt] datetime2 NULL,
+        CONSTRAINT [PK_DeliveryIsnes] PRIMARY KEY ([Id]),
+        CONSTRAINT [FK_DeliveryIsnes_JobIsnes_JobIsneId] FOREIGN KEY ([JobIsneId]) REFERENCES [JobIsnes] ([Id]) ON DELETE NO ACTION
+    );
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260727101645_AddDeliveryIsne'
+)
+BEGIN
+    CREATE INDEX [IX_DeliveryIsnes_Deleted] ON [DeliveryIsnes] ([Deleted]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260727101645_AddDeliveryIsne'
+)
+BEGIN
+    CREATE INDEX [IX_DeliveryIsnes_DeliveryDate] ON [DeliveryIsnes] ([DeliveryDate]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260727101645_AddDeliveryIsne'
+)
+BEGIN
+    CREATE INDEX [IX_DeliveryIsnes_JobIsneId] ON [DeliveryIsnes] ([JobIsneId]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260727101645_AddDeliveryIsne'
+)
+BEGIN
+    CREATE INDEX [IX_DeliveryIsnes_JobNo] ON [DeliveryIsnes] ([JobNo]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260727101645_AddDeliveryIsne'
+)
+BEGIN
+    CREATE UNIQUE INDEX [IX_DeliveryIsnes_SerialNo] ON [DeliveryIsnes] ([SerialNo]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260727101645_AddDeliveryIsne'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260727101645_AddDeliveryIsne', N'8.0.11');
+END;
+GO
+
+COMMIT;
+GO
+
+BEGIN TRANSACTION;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260727101736_BackfillDeliveryIsnePermission'
+)
+BEGIN
+
+    IF EXISTS (SELECT 1 FROM RolePermissions WHERE ModuleKey = 'JobIsne.Manage')
+       AND NOT EXISTS (SELECT 1 FROM RolePermissions WHERE ModuleKey = 'DeliveryIsne.Manage')
+    BEGIN
+        INSERT INTO RolePermissions (Role, ModuleKey, Allowed, CreatedAt) VALUES
+            (N'Administrator', N'DeliveryIsne.Manage', 1, SYSUTCDATETIME()),
+            (N'Manager', N'DeliveryIsne.Manage', 1, SYSUTCDATETIME()),
+            (N'Operator', N'DeliveryIsne.Manage', 0, SYSUTCDATETIME()),
+            (N'Viewer', N'DeliveryIsne.Manage', 0, SYSUTCDATETIME());
+    END
+
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260727101736_BackfillDeliveryIsnePermission'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260727101736_BackfillDeliveryIsnePermission', N'8.0.11');
 END;
 GO
 
