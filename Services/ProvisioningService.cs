@@ -4,7 +4,6 @@ using CTD_FINAL.Data;
 using CTD_FINAL.Data.Seed;
 using CTD_FINAL.Entities.Admin;
 using CTD_FINAL.Enums;
-using CTD_FINAL.Infrastructure.Provisioning;
 using CTD_FINAL.Interfaces;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -36,7 +35,6 @@ public class ProvisioningService : IProvisioningService
     private readonly IEncryptionService _encryptionService;
     private readonly ILicenseService _licenseService;
     private readonly IConfiguration _configuration;
-    private readonly IHostEnvironment _environment;
     private readonly ILoggerFactory _loggerFactory;
     private readonly ILogger<ProvisioningService> _logger;
 
@@ -45,7 +43,6 @@ public class ProvisioningService : IProvisioningService
         IEncryptionService encryptionService,
         ILicenseService licenseService,
         IConfiguration configuration,
-        IHostEnvironment environment,
         ILoggerFactory loggerFactory,
         ILogger<ProvisioningService> logger)
     {
@@ -53,7 +50,6 @@ public class ProvisioningService : IProvisioningService
         _encryptionService = encryptionService;
         _licenseService = licenseService;
         _configuration = configuration;
-        _environment = environment;
         _loggerFactory = loggerFactory;
         _logger = logger;
     }
@@ -118,24 +114,35 @@ public class ProvisioningService : IProvisioningService
             await CreateDatabaseAsync(serverBuilder.ConnectionString, request.DatabaseName, ct);
             await CreateLoginAsync(serverBuilder.ConnectionString, request.DatabaseUsername, request.DatabasePassword, ct);
 
-            // MultipleActiveResultSets must be off here even if ProvisioningConnection has it on:
-            // SqlScriptRunner executes the schema script's GO-separated batches as sequential
-            // ExecuteNonQueryAsync calls on one connection, and the idempotent script's
-            // per-migration BEGIN TRANSACTION/COMMIT pairs span several of those batches — under
-            // MARS, SQL Server treats each call as its own batch and rejects a transaction still
-            // open at the end of one ("A transaction that was started in a MARS batch is still
-            // active at the end of the batch"). This connection only ever runs one batch at a
-            // time in sequence, so it never needs concurrent result sets anyway.
+            // MultipleActiveResultSets must be off here even if ProvisioningConnection has it on
+            // — this connection only ever runs one thing at a time (CreateUserAndAssignRoleAsync,
+            // then EF's migrator below), so it never needs concurrent result sets.
             var tenantAdminBuilder = new SqlConnectionStringBuilder(provisioningConnectionString) { InitialCatalog = request.DatabaseName, MultipleActiveResultSets = false };
 
             await using (var tenantConnection = new SqlConnection(tenantAdminBuilder.ConnectionString))
             {
                 await tenantConnection.OpenAsync(ct);
                 await CreateUserAndAssignRoleAsync(tenantConnection, request.DatabaseUsername, ct);
+            }
 
-                var scriptPath = Path.Combine(_environment.ContentRootPath, "database", "scripts", "01_InitialCreate.sql");
-                var script = await File.ReadAllTextAsync(scriptPath, ct);
-                await SqlScriptRunner.ExecuteAsync(tenantConnection, script, ct);
+            // EF Core's own migrator, not the static database/scripts/01_InitialCreate.sql script:
+            // MigrateAsync only ever generates and sends SQL for migrations not yet recorded in
+            // __EFMigrationsHistory, so re-running it against a database that's already partway
+            // (or fully) migrated — the Resume path's whole point — is safe by construction. The
+            // static idempotent script can't offer that guarantee for every migration: one that
+            // adds a temporary column, uses it, then drops it within the same migration (e.g.
+            // MergePartyMaster's LegacyImporterId) generates a batch that still *references* that
+            // column even though its IF-guard would skip it at runtime — and SQL Server resolves
+            // column names against an existing table at compile time regardless of which branch
+            // of an IF actually runs, so the batch fails with "Invalid column name" once that
+            // column is gone, on a second run against an already-migrated database. A real
+            // install hit exactly this resuming after an unrelated first-attempt failure.
+            var migrationOptions = new DbContextOptionsBuilder<AppDbContext>()
+                .UseSqlServer(tenantAdminBuilder.ConnectionString, sql => sql.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName))
+                .Options;
+            await using (var migrationContext = new AppDbContext(migrationOptions))
+            {
+                await migrationContext.Database.MigrateAsync(ct);
             }
 
             await SeedTenantAsync(tenantAdminBuilder.ConnectionString, request);
