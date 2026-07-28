@@ -9,6 +9,9 @@
         <h2>Installation Wizard</h2>
         <p>Provision a new client database and issue its license — this only needs to run once per client.</p>
     </div>
+    <div class="section-actions">
+        <a class="btn btn-outline btn-sm" asp-controller="Install" asp-action="Clients" asp-route-key="@Model.SetupKey">View installed clients</a>
+    </div>
 </div>
 
 <div class="wizard-shell" id="installShell" data-setup-key="@Model.SetupKey">

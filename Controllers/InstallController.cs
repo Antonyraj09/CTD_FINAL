@@ -48,6 +48,75 @@ public class InstallController : Controller
         return View(new InstallIndexViewModel { RequiresSetupKey = hasExistingCompany, SetupKey = key });
     }
 
+    /// <summary>Read-only view of every company/license/database provisioned so far, plus any
+    /// provisioning attempt that failed before a Company row was even created (e.g. a database/
+    /// login/schema step that errored out) — same access gate as re-running the wizard itself.
+    /// Lets the master-license Administrator verify an install actually completed, and see the
+    /// error text if one didn't, without needing direct database access.</summary>
+    [HttpGet]
+    public async Task<IActionResult> Clients(string? key)
+    {
+        var hasExistingCompany = await _adminContext.Companies.AnyAsync();
+        if (hasExistingCompany && !IsSetupKeyValid(key) && !IsMasterLicenseAdmin())
+            return View("Locked", !string.IsNullOrEmpty(key));
+
+        var companies = await _adminContext.Companies
+            .Include(c => c.Licenses)
+            .Include(c => c.ClientDatabases)
+            .OrderByDescending(c => c.Id)
+            .ToListAsync();
+
+        // Loaded in full rather than aggregated server-side: this table stays small (one row
+        // per provisioning attempt, not per request), and grouping "latest attempt per company"
+        // via GroupBy().OrderByDescending().First() doesn't translate reliably to SQL anyway.
+        var allHistory = await _adminContext.InstallationHistories
+            .OrderByDescending(h => h.InstallationDate)
+            .ToListAsync();
+        var latestHistoryByCompany = allHistory
+            .Where(h => h.CompanyId.HasValue)
+            .GroupBy(h => h.CompanyId!.Value)
+            .ToDictionary(g => g.Key, g => g.First());
+
+        var model = new ClientsViewModel
+        {
+            Clients = companies.Select(c =>
+            {
+                var license = c.Licenses.OrderByDescending(l => l.IssueDate).FirstOrDefault();
+                var db = c.ClientDatabases.OrderByDescending(d => d.Id).FirstOrDefault();
+                latestHistoryByCompany.TryGetValue(c.Id, out var lastHistory);
+                return new ClientListItem
+                {
+                    CompanyName = c.CompanyName,
+                    CompanyCode = c.CompanyCode,
+                    CompanyStatus = c.Status,
+                    LicenseNumber = license?.LicenseNumber,
+                    LicenseType = license?.LicenseType ?? LicenseType.Trial,
+                    LicenseStatus = license?.Status ?? LicenseStatus.Active,
+                    IssueDate = license?.IssueDate,
+                    ExpiryDate = license?.ExpiryDate,
+                    Activated = license?.Activated ?? false,
+                    DatabaseName = db?.DatabaseName,
+                    ServerName = db?.ServerName,
+                    DatabaseStatus = db?.Status,
+                    LastInstallDate = lastHistory?.InstallationDate,
+                    LastInstallStatus = lastHistory?.InstallationStatus,
+                    LastInstallError = lastHistory?.ErrorLog
+                };
+            }).ToList(),
+            OrphanedAttempts = allHistory
+                .Where(h => !h.CompanyId.HasValue && h.InstallationStatus == InstallationStatus.Failed)
+                .Select(h => new OrphanedInstallAttempt
+                {
+                    InstallationDate = h.InstallationDate,
+                    InstalledBy = h.InstalledBy,
+                    MachineName = h.MachineName,
+                    ErrorLog = h.ErrorLog
+                }).ToList()
+        };
+
+        return View(model);
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Provision([FromBody] InstallProvisionRequest request)

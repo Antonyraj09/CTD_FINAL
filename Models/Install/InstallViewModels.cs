@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using CTD_FINAL.Enums;
 
 namespace CTD_FINAL.Models.Install;
 
@@ -77,4 +78,45 @@ public class InstallProvisionRequest
 
     /// <summary>Only required once a company already exists (re-running the wizard against a live install) — see InstallController.IsSetupKeyValid.</summary>
     public string? SetupKey { get; set; }
+}
+
+/// <summary>One row of the "Installed Clients" list — a Company joined with its most recent
+/// License and ClientDatabase, plus the latest Step-3 provisioning attempt's outcome.</summary>
+public class ClientListItem
+{
+    public string CompanyName { get; set; } = string.Empty;
+    public string CompanyCode { get; set; } = string.Empty;
+    public CompanyStatus CompanyStatus { get; set; }
+
+    public string? LicenseNumber { get; set; }
+    public LicenseType LicenseType { get; set; }
+    public LicenseStatus LicenseStatus { get; set; }
+    public DateTime? IssueDate { get; set; }
+    public DateTime? ExpiryDate { get; set; }
+    public bool Activated { get; set; }
+
+    public string? DatabaseName { get; set; }
+    public string? ServerName { get; set; }
+    public ClientDatabaseStatus? DatabaseStatus { get; set; }
+
+    public DateTime? LastInstallDate { get; set; }
+    public InstallationStatus? LastInstallStatus { get; set; }
+    public string? LastInstallError { get; set; }
+}
+
+/// <summary>A provisioning attempt that never reached the point of creating a Company row
+/// (failed during database/login/schema setup) — surfaced separately since it has no
+/// license/database of its own to show, only what triggered it and why it failed.</summary>
+public class OrphanedInstallAttempt
+{
+    public DateTime InstallationDate { get; set; }
+    public string? InstalledBy { get; set; }
+    public string? MachineName { get; set; }
+    public string? ErrorLog { get; set; }
+}
+
+public class ClientsViewModel
+{
+    public List<ClientListItem> Clients { get; set; } = new();
+    public List<OrphanedInstallAttempt> OrphanedAttempts { get; set; } = new();
 }
