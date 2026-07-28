@@ -7,6 +7,7 @@ using CTD_FINAL.Enums;
 using CTD_FINAL.Infrastructure.Provisioning;
 using CTD_FINAL.Interfaces;
 using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 
 namespace CTD_FINAL.Services;
 
@@ -54,6 +55,16 @@ public class ProvisioningService : IProvisioningService
             return new ProvisioningResult(false, null, null, "Database name must start with a letter and contain only letters, digits and underscores (3-63 characters).");
         if (!IdentifierPattern.IsMatch(request.DatabaseUsername))
             return new ProvisioningResult(false, null, null, "Database username must start with a letter and contain only letters, digits and underscores (3-63 characters).");
+
+        // A Company row has no uniqueness constraint of its own — without this check, retrying
+        // the same client's details after a partial failure (Company created, then something
+        // later failed) would silently create a second Company for the same code instead of
+        // erroring, since ProvisionAsync always inserts a brand-new row. Resume (from Installed
+        // Clients) is the intended path for finishing an existing attempt; a genuinely new client
+        // needs its own, different Company Code.
+        var existingCompany = await _adminContext.Companies.FirstOrDefaultAsync(c => c.CompanyCode == request.CompanyCode, ct);
+        if (existingCompany is not null)
+            return new ProvisioningResult(false, null, null, $"A client with company code '{request.CompanyCode}' already exists (\"{existingCompany.CompanyName}\"). If an earlier installation for it didn't finish, resume it from the pending-installation screen instead, or choose a different Company Code for a genuinely new client.");
 
         var provisioningConnectionString = _configuration.GetConnectionString("ProvisioningConnection")
             ?? throw new InvalidOperationException("Connection string 'ProvisioningConnection' not found.");
@@ -150,6 +161,15 @@ public class ProvisioningService : IProvisioningService
             _adminContext.Companies.Add(company);
             await _adminContext.SaveChangesAsync(ct);
 
+            // Linked immediately, not after License/ClientDatabase creation below: if either of
+            // those steps throws, the Company row genuinely exists in ADMIN_CTD by this point,
+            // and the history row needs to say so — not look like a fully orphaned attempt with
+            // nothing to show for it (which is exactly what happened before this fix: a real
+            // Company got created, a later step failed, and the operator had no way to tell the
+            // two apart from "Installed Clients").
+            history.CompanyId = company.Id;
+            await _adminContext.SaveChangesAsync(ct);
+
             var license = await _licenseService.GenerateLicenseAsync(company.Id, company.CompanyCode, request.LicenseType, LicenseConstants.CurrentApplicationVersion, ct);
             _adminContext.Licenses.Add(license);
 
@@ -167,7 +187,6 @@ public class ProvisioningService : IProvisioningService
             };
             _adminContext.ClientDatabases.Add(clientDatabase);
 
-            history.CompanyId = company.Id;
             history.InstallationStatus = InstallationStatus.Succeeded;
 
             await _adminContext.SaveChangesAsync(ct);

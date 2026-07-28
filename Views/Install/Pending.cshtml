@@ -1,0 +1,71 @@
+@using CTD_FINAL.Models.Install
+@model List<ClientListItem>
+@{
+    Layout = "_SetupLayout";
+    ViewData["Title"] = "Finish Pending Installation";
+    string D(DateTime? d) => d?.ToString("d MMM yyyy, h:mm tt") ?? "—";
+}
+<div class="section-head">
+    <div>
+        <h2>Finish the Pending Installation First</h2>
+        <p>@(Model.Count == 1 ? "There's an installation that didn't complete." : $"There are {Model.Count} installations that didn't complete.") Resume it (or discard it if there's nothing worth continuing) before starting a new client.</p>
+    </div>
+    <div class="section-actions">
+        <a class="btn btn-outline btn-sm" asp-controller="Install" asp-action="Clients" asp-route-key="@(ViewBag.SetupKey as string)">View installed clients</a>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="table-scroll">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Company</th>
+                    <th>Attempted</th>
+                    <th>By</th>
+                    <th>Error</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var p in Model)
+                {
+                    <tr>
+                        <td>
+                            <div class="cell-strong">@p.CompanyName</div>
+                            <div class="text-muted" style="font-size:11px;">@p.CompanyCode</div>
+                        </td>
+                        <td>@D(p.InstallationDate)</td>
+                        <td>@(p.InstalledBy ?? "—")</td>
+                        <td style="font-size:11px;color:#c0392b;max-width:320px;white-space:normal;">@((p.LastInstallError?.Split('\n').FirstOrDefault()) ?? "—")</td>
+                        <td class="no-print">
+                            <div class="row-actions">
+                                <a class="btn btn-amber btn-xs" asp-controller="Install" asp-action="Index" asp-route-resumeId="@p.Id" asp-route-key="@(ViewBag.SetupKey as string)">Resume</a>
+                                <form method="post" asp-controller="Install" asp-action="Discard" style="display:inline;">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@p.Id" />
+                                    <input type="hidden" name="key" value="@(ViewBag.SetupKey as string)" />
+                                    <button type="submit" class="btn btn-outline btn-xs discard-btn" data-company="@p.CompanyName">Discard</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            $all(".discard-btn").forEach(function (btn) {
+                btn.addEventListener("click", function (e) {
+                    if (!confirm("Discard the pending installation for \"" + btn.dataset.company + "\"? This can't be undone, but nothing installed will be affected — there's nothing to install for it yet.")) {
+                        e.preventDefault();
+                    }
+                });
+            });
+        })();
+    </script>
+}

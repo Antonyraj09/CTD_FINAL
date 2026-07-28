@@ -11,10 +11,19 @@
     var jsonOptions = new System.Text.Json.JsonSerializerOptions();
     jsonOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
 }
+@{ var pendingCount = (int)(ViewBag.PendingCount ?? 0); }
 <div class="section-head">
     <div>
         <h2>Installed Clients</h2>
-        <p>Double-click a row to view its details (read-only) or, for a highlighted row, resume where the installation stopped.</p>
+        <p>Double-click a row to view its details (read-only).</p>
+        @if (pendingCount > 0)
+        {
+            <p style="margin-top:6px;">
+                <a href="/Install" style="color:#c0392b;font-weight:600;">
+                    @(pendingCount == 1 ? "1 installation" : $"{pendingCount} installations") didn't complete — resume or discard it →
+                </a>
+            </p>
+        }
     </div>
     <div class="section-actions">
         <a class="btn btn-amber btn-sm" asp-controller="Install" asp-action="Index">
@@ -46,24 +55,14 @@
                 {
                     foreach (var c in Model)
                     {
-                        var rowClass = c.IsComplete ? "" : "client-row-incomplete";
-                        <tr class="@rowClass" data-id="@c.Id" data-complete="@(c.IsComplete ? "true" : "false")">
+                        <tr data-id="@c.Id">
                             <td>
                                 <div class="cell-strong">@c.CompanyName</div>
                                 <div class="text-muted" style="font-size:11px;">@c.CompanyCode</div>
                             </td>
                             <td class="cell-strong">@(c.LicenseNumber ?? "—")</td>
                             <td>@c.LicenseType</td>
-                            <td>
-                                @if (c.IsComplete)
-                                {
-                                    <span class="badge badge-approved">@c.LicenseStatus</span>
-                                }
-                                else
-                                {
-                                    <span class="badge badge-draft" style="background:#fde2e1;color:#c0392b;">Installation Not Completed</span>
-                                }
-                            </td>
+                            <td><span class="badge badge-approved">@c.LicenseStatus</span></td>
                             <td>
                                 <div>@(c.DatabaseName ?? "—")</div>
                                 <div class="text-muted" style="font-size:11px;">@(c.ServerName ?? "")</div>
@@ -88,7 +87,5 @@
 
 <style>
     #clientsTable tbody tr { cursor: pointer; }
-    #clientsTable tbody tr[data-complete="true"]:hover { background: #f5f7fb; }
-    .client-row-incomplete { background: #fff5f4; }
-    .client-row-incomplete:hover { background: #fde8e6; }
+    #clientsTable tbody tr:hover { background: #f5f7fb; }
 </style>

@@ -35,5 +35,10 @@ public enum InstallationStatus
 {
     Started = 0,
     Succeeded = 1,
-    Failed = 2
+    Failed = 2,
+
+    /// <summary>Operator explicitly dismissed a failed attempt that has nothing worth resuming
+    /// (or that they no longer intend to finish) — stops it from blocking new installs, while
+    /// keeping the row for audit instead of deleting it.</summary>
+    Abandoned = 3
 }
