@@ -72,7 +72,8 @@
                 <div class="field"><label>Database Name <span class="req">*</span></label><input type="text" id="i2_databaseName" placeholder="CTD_ABC_LOGISTICS">
                     <span class="field-error">Letters, digits and underscores only, starting with a letter</span>
                 </div>
-                <div class="field"><label>Database Username <span class="req">*</span></label><input type="text" id="i2_databaseUsername" placeholder="ctd_user">
+                <div class="field"><label>Database Username <span class="req">*</span></label><input type="text" id="i2_databaseUsername" placeholder="ctd_abclog_user">
+                    <div style="font-size:11px;color:var(--ink-500);margin-top:4px;">Must be unique across every client on this SQL Server — logins aren't per-database.</div>
                     <span class="field-error">Letters, digits and underscores only, starting with a letter</span>
                 </div>
                 <div class="field"><label>Database Password <span class="req">*</span></label><input type="password" id="i2_databasePassword" placeholder="At least 8 characters">

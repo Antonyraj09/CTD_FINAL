@@ -73,6 +73,29 @@ public class ProvisioningService : IProvisioningService
         if (existingCompany is not null)
             return new ProvisioningResult(false, null, null, $"A client with company code '{request.CompanyCode}' already exists (\"{existingCompany.CompanyName}\"). If an earlier installation for it didn't finish, resume it from the pending-installation screen instead, or choose a different Company Code for a genuinely new client.");
 
+        // SQL Server logins are server-wide, not per-database — the wizard's own suggested
+        // default used to be the fixed literal "ctd_user" for every client, so a second client
+        // that never customized it would collide with the first: CreateLoginAsync sees the login
+        // already exists and skips creating it, but the second client's password still gets
+        // encrypted and stored as if it were correct — resulting in "Login failed for user
+        // 'ctd_user'" the first time anyone signs in to it. Checked against both completed
+        // clients (ClientDatabases) and other companies' still-pending attempts (Installation-
+        // Histories, excluding Abandoned ones, which have released their claim on the name) —
+        // excluding this same Company Code so a legitimate resume isn't blocked by its own
+        // earlier attempt.
+        var usernameTakenByCompany = await _adminContext.ClientDatabases
+            .Include(d => d.Company)
+            .Where(d => d.DatabaseUsername == request.DatabaseUsername && d.Company.CompanyCode != request.CompanyCode)
+            .Select(d => d.Company.CompanyCode)
+            .FirstOrDefaultAsync(ct)
+            ?? await _adminContext.InstallationHistories
+                .Where(h => h.DatabaseUsername == request.DatabaseUsername && h.CompanyCode != request.CompanyCode
+                    && h.InstallationStatus != InstallationStatus.Abandoned)
+                .Select(h => h.CompanyCode)
+                .FirstOrDefaultAsync(ct);
+        if (usernameTakenByCompany is not null)
+            return new ProvisioningResult(false, null, null, $"Database username '{request.DatabaseUsername}' is already used by another client ('{usernameTakenByCompany}'). SQL Server logins must be unique across every client on the server — choose a different Database Username.");
+
         var provisioningConnectionString = _configuration.GetConnectionString("ProvisioningConnection")
             ?? throw new InvalidOperationException("Connection string 'ProvisioningConnection' not found.");
 
@@ -247,11 +270,24 @@ public class ProvisioningService : IProvisioningService
         // used for identifiers above, applied to a value instead of a name. CHECK_POLICY is
         // off because password strength is enforced by the Install Wizard's own validation,
         // not SQL Server's local policy (which may not even be configured on the target box).
+        //
+        // ALTERs the password when the login already exists, rather than leaving it untouched:
+        // by this point ProvisionAsync's duplicate-username guard has already confirmed this
+        // login name belongs to this same Company Code (or is a fresh, unclaimed name), so
+        // "already exists" here only ever means a legitimate resume of this same client's own
+        // earlier attempt — and that resume's freshly-typed Database Password needs to actually
+        // take effect, or the login stays on whatever password an earlier, possibly-abandoned
+        // attempt set, silently mismatching what's about to be stored in ClientDatabase.
         command.CommandText = @"
 IF NOT EXISTS (SELECT 1 FROM sys.server_principals WHERE name = @loginName)
 BEGIN
     DECLARE @sql nvarchar(max) = N'CREATE LOGIN ' + QUOTENAME(@loginName) + N' WITH PASSWORD = ' + QUOTENAME(@password, '''') + N', CHECK_POLICY = OFF;';
     EXEC sp_executesql @sql;
+END
+ELSE
+BEGIN
+    DECLARE @alterSql nvarchar(max) = N'ALTER LOGIN ' + QUOTENAME(@loginName) + N' WITH PASSWORD = ' + QUOTENAME(@password, '''') + N';';
+    EXEC sp_executesql @alterSql;
 END";
         command.Parameters.AddWithValue("@loginName", loginName);
         command.Parameters.AddWithValue("@password", password);
