@@ -105,7 +105,12 @@
     if (defaultsApplied) return;
     const code = ($("#i1_companyCode").value || "").toUpperCase().replace(/[^A-Z0-9]+/g, "_").replace(/^_+|_+$/g, "");
     if (code && !$("#i2_databaseName").value) $("#i2_databaseName").value = "CTD_" + code;
-    if (!$("#i2_databaseUsername").value) $("#i2_databaseUsername").value = "ctd_user";
+    // Derived from the company code, not a fixed literal: SQL Server logins are server-wide, so
+    // every client suggesting the same "ctd_user" default would collide the moment a second one
+    // is provisioned without the field being manually changed — CreateLoginAsync would find the
+    // login already exists and skip creating it, leaving that second client's stored password
+    // not actually matching the real login ("Login failed for user 'ctd_user'" on its first sign-in).
+    if (code && !$("#i2_databaseUsername").value) $("#i2_databaseUsername").value = "ctd_" + code.toLowerCase() + "_user";
     defaultsApplied = true;
   }
 
