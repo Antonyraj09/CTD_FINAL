@@ -13,7 +13,11 @@
   let step = 1;
   let installing = false;
 
-  /* ---------------- RESUME PREFILL (from Installed Clients screen's "resume" action) ---------------- */
+  // Mirrors InstallProvisionRequest.AdminPassword's [RegularExpression] / ProvisioningService's
+  // AdminPasswordPolicy — the Identity password policy TenantSeeder's UserManager enforces.
+  const ADMIN_PASSWORD_POLICY = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$/;
+
+  /* ---------------- RESUME PREFILL (from the pending-installation screen's "Resume" action) ---------------- */
   const prefill = JSON.parse($("#installPrefillData")?.textContent || "null");
   if (prefill) {
     const map = {
@@ -85,7 +89,11 @@
     });
     if (n === 2) {
       if ($("#i2_databasePassword").value && $("#i2_databasePassword").value.length < 8) { setFieldError($("#i2_databasePassword")); valid = false; }
-      if ($("#i2_adminPassword").value && $("#i2_adminPassword").value.length < 8) { setFieldError($("#i2_adminPassword")); valid = false; }
+      // Must match the Identity password policy TenantSeeder's UserManager actually enforces
+      // (uppercase + lowercase + digit + symbol, 8+ chars) — a weaker client check here used to
+      // let a doomed password through, only to fail deep inside TenantSeeder after the database,
+      // login and full schema had already been created for nothing.
+      if (!ADMIN_PASSWORD_POLICY.test($("#i2_adminPassword").value)) { setFieldError($("#i2_adminPassword")); valid = false; }
     }
     if (!valid) toast("Missing information", "Please complete all required fields before continuing", "error");
     return valid;
@@ -156,6 +164,11 @@
         toast("Missing information", `${FIELD_LABELS[key]} is required`, "error");
         return;
       }
+    }
+    if (!ADMIN_PASSWORD_POLICY.test(req.adminPassword)) {
+      toast("Weak password", "Administrator password must be at least 8 characters and include an uppercase letter, a lowercase letter, a digit, and a symbol", "error");
+      goToStep(2);
+      return;
     }
 
     installing = true;
