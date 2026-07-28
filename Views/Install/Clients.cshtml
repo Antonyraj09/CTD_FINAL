@@ -1,0 +1,129 @@
+@using CTD_FINAL.Enums
+@model CTD_FINAL.Models.Install.ClientsViewModel
+@{
+    Layout = "_SetupLayout";
+    ViewData["Title"] = "Installed Clients";
+    string D(DateTime? d) => d?.ToString("d MMM yyyy") ?? "—";
+    string BadgeClass<T>(T status) where T : Enum => status switch
+    {
+        CompanyStatus.Active => "badge-approved",
+        LicenseStatus.Active => "badge-approved",
+        ClientDatabaseStatus.Active => "badge-approved",
+        InstallationStatus.Succeeded => "badge-approved",
+        CompanyStatus.Suspended => "badge-submitted",
+        LicenseStatus.Suspended => "badge-submitted",
+        ClientDatabaseStatus.Provisioning => "badge-submitted",
+        InstallationStatus.Started => "badge-submitted",
+        _ => "badge-draft"
+    };
+}
+<div class="section-head">
+    <div>
+        <h2>Installed Clients</h2>
+        <p>Every company provisioned so far, its license and database status, and the outcome of its last install attempt.</p>
+    </div>
+    <div class="section-actions">
+        <a class="btn btn-amber btn-sm" asp-controller="Install" asp-action="Index">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+            Install New Client
+        </a>
+    </div>
+</div>
+
+<div class="panel" style="margin-bottom:18px;">
+    <div class="table-scroll">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Company</th>
+                    <th>License No.</th>
+                    <th>License Type</th>
+                    <th>License Status</th>
+                    <th>Expiry</th>
+                    <th>Database</th>
+                    <th>DB Status</th>
+                    <th>Last Install</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Clients.Count == 0)
+                {
+                    <tr><td colspan="8" class="table-empty">
+                        <div>No clients installed yet.</div>
+                    </td></tr>
+                }
+                else
+                {
+                    foreach (var c in Model.Clients)
+                    {
+                        <tr>
+                            <td>
+                                <div class="cell-strong">@c.CompanyName</div>
+                                <div class="text-muted" style="font-size:11px;">@c.CompanyCode</div>
+                            </td>
+                            <td class="cell-strong">@(c.LicenseNumber ?? "—")</td>
+                            <td>@c.LicenseType</td>
+                            <td><span class="badge @BadgeClass(c.LicenseStatus)">@c.LicenseStatus</span> @(c.Activated ? "" : "(not activated)")</td>
+                            <td>@D(c.ExpiryDate)</td>
+                            <td>
+                                <div>@(c.DatabaseName ?? "—")</div>
+                                <div class="text-muted" style="font-size:11px;">@(c.ServerName ?? "")</div>
+                            </td>
+                            <td>@(c.DatabaseStatus.HasValue ? Html.Raw($"<span class='badge {BadgeClass(c.DatabaseStatus.Value)}'>{c.DatabaseStatus}</span>") : Html.Raw("—"))</td>
+                            <td>
+                                @if (c.LastInstallStatus.HasValue)
+                                {
+                                    <div><span class="badge @BadgeClass(c.LastInstallStatus.Value)">@c.LastInstallStatus</span></div>
+                                    <div class="text-muted" style="font-size:11px;">@D(c.LastInstallDate)</div>
+                                    @if (c.LastInstallStatus == InstallationStatus.Failed && !string.IsNullOrEmpty(c.LastInstallError))
+                                    {
+                                        <div style="font-size:11px;color:#c0392b;max-width:260px;white-space:normal;">@(c.LastInstallError.Length > 200 ? c.LastInstallError[..200] + "…" : c.LastInstallError)</div>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="text-muted">—</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@if (Model.OrphanedAttempts.Count > 0)
+{
+    <div class="section-head">
+        <div>
+            <h2>Failed Attempts (no client created)</h2>
+            <p>These provisioning attempts failed before a company/license/database was registered — nothing to clean up, just re-run the wizard with the same details to continue.</p>
+        </div>
+    </div>
+    <div class="panel">
+        <div class="table-scroll">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Installed By</th>
+                        <th>Machine</th>
+                        <th>Error</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var a in Model.OrphanedAttempts)
+                    {
+                        <tr>
+                            <td>@a.InstallationDate.ToString("d MMM yyyy, h:mm tt")</td>
+                            <td>@(a.InstalledBy ?? "—")</td>
+                            <td>@(a.MachineName ?? "—")</td>
+                            <td style="font-size:11px;color:#c0392b;max-width:400px;white-space:normal;">@(a.ErrorLog?.Split('\n').FirstOrDefault() ?? "—")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
