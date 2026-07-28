@@ -211,3 +211,163 @@ GO
 COMMIT;
 GO
 
+BEGIN TRANSACTION;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260728073228_AddInstallationHistoryRequestSnapshot'
+)
+BEGIN
+    ALTER TABLE [InstallationHistories] ADD [Address] nvarchar(500) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260728073228_AddInstallationHistoryRequestSnapshot'
+)
+BEGIN
+    ALTER TABLE [InstallationHistories] ADD [AdminEmail] nvarchar(200) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260728073228_AddInstallationHistoryRequestSnapshot'
+)
+BEGIN
+    ALTER TABLE [InstallationHistories] ADD [AdminFullName] nvarchar(150) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260728073228_AddInstallationHistoryRequestSnapshot'
+)
+BEGIN
+    ALTER TABLE [InstallationHistories] ADD [City] nvarchar(100) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260728073228_AddInstallationHistoryRequestSnapshot'
+)
+BEGIN
+    ALTER TABLE [InstallationHistories] ADD [CompanyCode] nvarchar(20) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260728073228_AddInstallationHistoryRequestSnapshot'
+)
+BEGIN
+    ALTER TABLE [InstallationHistories] ADD [CompanyName] nvarchar(200) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260728073228_AddInstallationHistoryRequestSnapshot'
+)
+BEGIN
+    ALTER TABLE [InstallationHistories] ADD [ContactPerson] nvarchar(150) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260728073228_AddInstallationHistoryRequestSnapshot'
+)
+BEGIN
+    ALTER TABLE [InstallationHistories] ADD [Country] nvarchar(100) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260728073228_AddInstallationHistoryRequestSnapshot'
+)
+BEGIN
+    ALTER TABLE [InstallationHistories] ADD [DatabaseName] nvarchar(63) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260728073228_AddInstallationHistoryRequestSnapshot'
+)
+BEGIN
+    ALTER TABLE [InstallationHistories] ADD [DatabaseUsername] nvarchar(63) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260728073228_AddInstallationHistoryRequestSnapshot'
+)
+BEGIN
+    ALTER TABLE [InstallationHistories] ADD [Email] nvarchar(200) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260728073228_AddInstallationHistoryRequestSnapshot'
+)
+BEGIN
+    ALTER TABLE [InstallationHistories] ADD [GstNumber] nvarchar(20) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260728073228_AddInstallationHistoryRequestSnapshot'
+)
+BEGIN
+    ALTER TABLE [InstallationHistories] ADD [InstallationLocation] nvarchar(200) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260728073228_AddInstallationHistoryRequestSnapshot'
+)
+BEGIN
+    ALTER TABLE [InstallationHistories] ADD [LicenseType] nvarchar(20) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260728073228_AddInstallationHistoryRequestSnapshot'
+)
+BEGIN
+    ALTER TABLE [InstallationHistories] ADD [Phone] nvarchar(30) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260728073228_AddInstallationHistoryRequestSnapshot'
+)
+BEGIN
+    ALTER TABLE [InstallationHistories] ADD [State] nvarchar(100) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260728073228_AddInstallationHistoryRequestSnapshot'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260728073228_AddInstallationHistoryRequestSnapshot', N'8.0.11');
+END;
+GO
+
+COMMIT;
+GO
+
