@@ -39,20 +39,54 @@ public class InstallController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Index(string? key)
+    public async Task<IActionResult> Index(string? key, int? resumeId)
     {
         var hasExistingCompany = await _adminContext.Companies.AnyAsync();
         if (hasExistingCompany && !IsSetupKeyValid(key) && !IsMasterLicenseAdmin())
             return View("Locked", !string.IsNullOrEmpty(key)); // model: true = a key WAS supplied and was wrong, false = none supplied yet
 
-        return View(new InstallIndexViewModel { RequiresSetupKey = hasExistingCompany, SetupKey = key });
+        InstallPrefill? prefill = null;
+        if (resumeId.HasValue)
+        {
+            // Only a genuinely incomplete attempt (no Company ever created) can be resumed —
+            // a succeeded one has nothing left to continue, and re-running it would just
+            // create a second, duplicate company.
+            var history = await _adminContext.InstallationHistories
+                .FirstOrDefaultAsync(h => h.Id == resumeId.Value && !h.CompanyId.HasValue);
+            if (history is not null)
+            {
+                prefill = new InstallPrefill
+                {
+                    CompanyName = history.CompanyName,
+                    CompanyCode = history.CompanyCode,
+                    Address = history.Address,
+                    Country = history.Country,
+                    State = history.State,
+                    City = history.City,
+                    GstNumber = history.GstNumber,
+                    ContactPerson = history.ContactPerson,
+                    Email = history.Email,
+                    Phone = history.Phone,
+                    InstallationLocation = history.InstallationLocation,
+                    LicenseType = history.LicenseType,
+                    DatabaseName = history.DatabaseName,
+                    DatabaseUsername = history.DatabaseUsername,
+                    AdminFullName = history.AdminFullName,
+                    AdminEmail = history.AdminEmail
+                };
+            }
+        }
+
+        return View(new InstallIndexViewModel { RequiresSetupKey = hasExistingCompany, SetupKey = key, Prefill = prefill });
     }
 
     /// <summary>Read-only view of every company/license/database provisioned so far, plus any
     /// provisioning attempt that failed before a Company row was even created (e.g. a database/
     /// login/schema step that errored out) — same access gate as re-running the wizard itself.
-    /// Lets the master-license Administrator verify an install actually completed, and see the
-    /// error text if one didn't, without needing direct database access.</summary>
+    /// Lets the master-license Administrator verify an install actually completed, drill into a
+    /// completed one's (read-only) details, or resume an incomplete one, without needing direct
+    /// database access. One merged, chronologically-sorted list rather than two separate tables
+    /// — an incomplete row is just visually flagged, not split out.</summary>
     [HttpGet]
     public async Task<IActionResult> Clients(string? key)
     {
@@ -63,7 +97,6 @@ public class InstallController : Controller
         var companies = await _adminContext.Companies
             .Include(c => c.Licenses)
             .Include(c => c.ClientDatabases)
-            .OrderByDescending(c => c.Id)
             .ToListAsync();
 
         // Loaded in full rather than aggregated server-side: this table stays small (one row
@@ -77,42 +110,76 @@ public class InstallController : Controller
             .GroupBy(h => h.CompanyId!.Value)
             .ToDictionary(g => g.Key, g => g.First());
 
-        var model = new ClientsViewModel
+        var completedRows = companies.Select(c =>
         {
-            Clients = companies.Select(c =>
+            var license = c.Licenses.OrderByDescending(l => l.IssueDate).FirstOrDefault();
+            var db = c.ClientDatabases.OrderByDescending(d => d.Id).FirstOrDefault();
+            latestHistoryByCompany.TryGetValue(c.Id, out var lastHistory);
+            return new ClientListItem
             {
-                var license = c.Licenses.OrderByDescending(l => l.IssueDate).FirstOrDefault();
-                var db = c.ClientDatabases.OrderByDescending(d => d.Id).FirstOrDefault();
-                latestHistoryByCompany.TryGetValue(c.Id, out var lastHistory);
-                return new ClientListItem
-                {
-                    CompanyName = c.CompanyName,
-                    CompanyCode = c.CompanyCode,
-                    CompanyStatus = c.Status,
-                    LicenseNumber = license?.LicenseNumber,
-                    LicenseType = license?.LicenseType ?? LicenseType.Trial,
-                    LicenseStatus = license?.Status ?? LicenseStatus.Active,
-                    IssueDate = license?.IssueDate,
-                    ExpiryDate = license?.ExpiryDate,
-                    Activated = license?.Activated ?? false,
-                    DatabaseName = db?.DatabaseName,
-                    ServerName = db?.ServerName,
-                    DatabaseStatus = db?.Status,
-                    LastInstallDate = lastHistory?.InstallationDate,
-                    LastInstallStatus = lastHistory?.InstallationStatus,
-                    LastInstallError = lastHistory?.ErrorLog
-                };
-            }).ToList(),
-            OrphanedAttempts = allHistory
-                .Where(h => !h.CompanyId.HasValue && h.InstallationStatus == InstallationStatus.Failed)
-                .Select(h => new OrphanedInstallAttempt
-                {
-                    InstallationDate = h.InstallationDate,
-                    InstalledBy = h.InstalledBy,
-                    MachineName = h.MachineName,
-                    ErrorLog = h.ErrorLog
-                }).ToList()
-        };
+                Id = c.Id,
+                IsComplete = true,
+                CompanyName = c.CompanyName,
+                CompanyCode = c.CompanyCode,
+                Address = c.Address,
+                Country = c.Country,
+                State = c.State,
+                City = c.City,
+                GstNumber = c.GstNumber,
+                ContactPerson = c.ContactPerson,
+                Email = c.Email,
+                Phone = c.Phone,
+                InstallationLocation = c.InstallationLocation,
+                CompanyStatus = c.Status,
+                LicenseNumber = license?.LicenseNumber,
+                LicenseType = license?.LicenseType.ToString() ?? "Trial",
+                LicenseStatus = license?.Status ?? LicenseStatus.Active,
+                ExpiryDate = license?.ExpiryDate,
+                Activated = license?.Activated ?? false,
+                DatabaseName = db?.DatabaseName,
+                DatabaseUsername = db?.DatabaseUsername,
+                ServerName = db?.ServerName,
+                DatabaseStatus = db?.Status,
+                InstallationDate = lastHistory?.InstallationDate ?? c.CreatedAt,
+                InstalledBy = lastHistory?.InstalledBy,
+                MachineName = lastHistory?.MachineName,
+                LastInstallStatus = lastHistory?.InstallationStatus ?? InstallationStatus.Succeeded,
+                LastInstallError = lastHistory?.ErrorLog
+            };
+        });
+
+        var incompleteRows = allHistory
+            .Where(h => !h.CompanyId.HasValue)
+            .Select(h => new ClientListItem
+            {
+                Id = h.Id,
+                IsComplete = false,
+                CompanyName = h.CompanyName ?? "(unnamed attempt)",
+                CompanyCode = h.CompanyCode ?? "—",
+                Address = h.Address,
+                Country = h.Country,
+                State = h.State,
+                City = h.City,
+                GstNumber = h.GstNumber,
+                ContactPerson = h.ContactPerson,
+                Email = h.Email,
+                Phone = h.Phone,
+                InstallationLocation = h.InstallationLocation,
+                LicenseType = h.LicenseType ?? "Trial",
+                DatabaseName = h.DatabaseName,
+                DatabaseUsername = h.DatabaseUsername,
+                AdminFullName = h.AdminFullName,
+                AdminEmail = h.AdminEmail,
+                InstallationDate = h.InstallationDate,
+                InstalledBy = h.InstalledBy,
+                MachineName = h.MachineName,
+                LastInstallStatus = h.InstallationStatus,
+                LastInstallError = h.ErrorLog
+            });
+
+        var model = completedRows.Concat(incompleteRows)
+            .OrderByDescending(r => r.InstallationDate)
+            .ToList();
 
         return View(model);
     }

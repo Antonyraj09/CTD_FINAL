@@ -58,13 +58,32 @@ public class ProvisioningService : IProvisioningService
         var provisioningConnectionString = _configuration.GetConnectionString("ProvisioningConnection")
             ?? throw new InvalidOperationException("Connection string 'ProvisioningConnection' not found.");
 
+        // Snapshot the request up front (passwords excluded) so a failure that happens before
+        // a Company row exists still leaves enough for the Installed Clients screen to show
+        // what was attempted and let the operator resume without retyping everything.
         var history = new InstallationHistory
         {
             InstallationDate = DateTime.UtcNow,
             InstalledBy = request.InstalledBy,
             MachineName = request.MachineName,
             ApplicationVersion = LicenseConstants.CurrentApplicationVersion,
-            InstallationStatus = InstallationStatus.Started
+            InstallationStatus = InstallationStatus.Started,
+            CompanyName = request.CompanyName,
+            CompanyCode = request.CompanyCode,
+            Address = request.Address,
+            Country = request.Country,
+            State = request.State,
+            City = request.City,
+            GstNumber = request.GstNumber,
+            ContactPerson = request.ContactPerson,
+            Email = request.Email,
+            Phone = request.Phone,
+            InstallationLocation = request.InstallationLocation,
+            LicenseType = request.LicenseType.ToString(),
+            DatabaseName = request.DatabaseName,
+            DatabaseUsername = request.DatabaseUsername,
+            AdminFullName = request.AdminFullName,
+            AdminEmail = request.AdminEmail
         };
         _adminContext.InstallationHistories.Add(history);
         await _adminContext.SaveChangesAsync(ct);

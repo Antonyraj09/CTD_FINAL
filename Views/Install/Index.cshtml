@@ -7,7 +7,16 @@
 <div class="section-head">
     <div>
         <h2>Installation Wizard</h2>
-        <p>Provision a new client database and issue its license — this only needs to run once per client.</p>
+        <p>
+            @if (Model.Prefill != null)
+            {
+                <text>Resuming a previous incomplete installation for <strong>@Model.Prefill.CompanyName</strong> — everything below is filled in from where it stopped except the Database and Administrator passwords, which you'll need to re-enter.</text>
+            }
+            else
+            {
+                <text>Provision a new client database and issue its license — this only needs to run once per client.</text>
+            }
+        </p>
     </div>
     <div class="section-actions">
         <a class="btn btn-outline btn-sm" asp-controller="Install" asp-action="Clients" asp-route-key="@Model.SetupKey">View installed clients</a>
@@ -125,6 +134,8 @@
         </div>
     </div>
 </div>
+
+<script id="installPrefillData" type="application/json">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Prefill))</script>
 
 @section Scripts {
     <script src="~/js/install-wizard.js" asp-append-version="true"></script>

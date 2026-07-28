@@ -4,11 +4,36 @@ using CTD_FINAL.Enums;
 namespace CTD_FINAL.Models.Install;
 
 /// <summary>What the Install Wizard's landing page (GET /Install) needs to render — whether
-/// a setup key is required (any company already exists) and whether one was supplied.</summary>
+/// a setup key is required (any company already exists) and whether one was supplied, plus
+/// (when opened via "Resume" from the Installed Clients screen) the fields to prefill.</summary>
 public class InstallIndexViewModel
 {
     public bool RequiresSetupKey { get; set; }
     public string? SetupKey { get; set; }
+    public InstallPrefill? Prefill { get; set; }
+}
+
+/// <summary>The non-sensitive fields of a previously-failed attempt, read back from
+/// InstallationHistory to repopulate Steps 1-2 of the wizard on Resume — everything except
+/// Database/Administrator passwords, which are never persisted and must be re-entered.</summary>
+public class InstallPrefill
+{
+    public string? CompanyName { get; set; }
+    public string? CompanyCode { get; set; }
+    public string? Address { get; set; }
+    public string? Country { get; set; }
+    public string? State { get; set; }
+    public string? City { get; set; }
+    public string? GstNumber { get; set; }
+    public string? ContactPerson { get; set; }
+    public string? Email { get; set; }
+    public string? Phone { get; set; }
+    public string? InstallationLocation { get; set; }
+    public string? LicenseType { get; set; }
+    public string? DatabaseName { get; set; }
+    public string? DatabaseUsername { get; set; }
+    public string? AdminFullName { get; set; }
+    public string? AdminEmail { get; set; }
 }
 
 /// <summary>Everything the wizard's three data-entry steps collect, posted as JSON to
@@ -80,43 +105,50 @@ public class InstallProvisionRequest
     public string? SetupKey { get; set; }
 }
 
-/// <summary>One row of the "Installed Clients" list — a Company joined with its most recent
-/// License and ClientDatabase, plus the latest Step-3 provisioning attempt's outcome.</summary>
+/// <summary>One row of the "Installed Clients" list. Either a completed install (a real
+/// Company, joined with its License/ClientDatabase — <see cref="IsComplete"/> true) or an
+/// attempt that failed before a Company was ever created (fields read back from
+/// InstallationHistory's request snapshot instead — <see cref="IsComplete"/> false). Both
+/// shapes share the same row/columns so the list is one table, not two, with incomplete rows
+/// simply highlighted rather than split into a separate section.</summary>
 public class ClientListItem
 {
+    /// <summary>CompanyId when complete, InstallationHistory.Id when not — id space differs
+    /// by row kind, so callers must branch on <see cref="IsComplete"/> before using this.</summary>
+    public int Id { get; set; }
+    public bool IsComplete { get; set; }
+
     public string CompanyName { get; set; } = string.Empty;
     public string CompanyCode { get; set; } = string.Empty;
-    public CompanyStatus CompanyStatus { get; set; }
+    public string? Address { get; set; }
+    public string? Country { get; set; }
+    public string? State { get; set; }
+    public string? City { get; set; }
+    public string? GstNumber { get; set; }
+    public string? ContactPerson { get; set; }
+    public string? Email { get; set; }
+    public string? Phone { get; set; }
+    public string? InstallationLocation { get; set; }
+
+    public CompanyStatus? CompanyStatus { get; set; }
 
     public string? LicenseNumber { get; set; }
-    public LicenseType LicenseType { get; set; }
-    public LicenseStatus LicenseStatus { get; set; }
-    public DateTime? IssueDate { get; set; }
+    public string LicenseType { get; set; } = "Trial";
+    public LicenseStatus? LicenseStatus { get; set; }
     public DateTime? ExpiryDate { get; set; }
     public bool Activated { get; set; }
 
     public string? DatabaseName { get; set; }
+    public string? DatabaseUsername { get; set; }
     public string? ServerName { get; set; }
     public ClientDatabaseStatus? DatabaseStatus { get; set; }
 
-    public DateTime? LastInstallDate { get; set; }
-    public InstallationStatus? LastInstallStatus { get; set; }
-    public string? LastInstallError { get; set; }
-}
+    public string? AdminFullName { get; set; }
+    public string? AdminEmail { get; set; }
 
-/// <summary>A provisioning attempt that never reached the point of creating a Company row
-/// (failed during database/login/schema setup) — surfaced separately since it has no
-/// license/database of its own to show, only what triggered it and why it failed.</summary>
-public class OrphanedInstallAttempt
-{
     public DateTime InstallationDate { get; set; }
     public string? InstalledBy { get; set; }
     public string? MachineName { get; set; }
-    public string? ErrorLog { get; set; }
-}
-
-public class ClientsViewModel
-{
-    public List<ClientListItem> Clients { get; set; } = new();
-    public List<OrphanedInstallAttempt> OrphanedAttempts { get; set; } = new();
+    public InstallationStatus LastInstallStatus { get; set; }
+    public string? LastInstallError { get; set; }
 }

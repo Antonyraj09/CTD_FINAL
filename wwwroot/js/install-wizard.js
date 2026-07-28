@@ -13,6 +13,22 @@
   let step = 1;
   let installing = false;
 
+  /* ---------------- RESUME PREFILL (from Installed Clients screen's "resume" action) ---------------- */
+  const prefill = JSON.parse($("#installPrefillData")?.textContent || "null");
+  if (prefill) {
+    const map = {
+      i1_companyName: prefill.CompanyName, i1_companyCode: prefill.CompanyCode, i1_address: prefill.Address,
+      i1_country: prefill.Country, i1_state: prefill.State, i1_city: prefill.City, i1_gstNumber: prefill.GstNumber,
+      i1_contactPerson: prefill.ContactPerson, i1_email: prefill.Email, i1_phone: prefill.Phone,
+      i1_installationLocation: prefill.InstallationLocation,
+      i2_databaseName: prefill.DatabaseName, i2_databaseUsername: prefill.DatabaseUsername,
+      i2_adminFullName: prefill.AdminFullName, i2_adminEmail: prefill.AdminEmail
+      // Database/Administrator passwords are never persisted — left blank for re-entry.
+    };
+    Object.keys(map).forEach(id => { if (map[id]) $("#" + id).value = map[id]; });
+    if (prefill.LicenseType) $("#i1_licenseType").value = prefill.LicenseType;
+  }
+
   const FIELD_LABELS = {
     companyName: "Company Name", companyCode: "Company Code", email: "Email",
     databaseName: "Database Name", databaseUsername: "Database Username",
