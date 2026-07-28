@@ -23,6 +23,15 @@ public class ProvisioningService : IProvisioningService
     // relying on QUOTENAME as the only line of defense against identifier injection.
     private static readonly Regex IdentifierPattern = new(@"^[A-Za-z][A-Za-z0-9_]{2,62}$", RegexOptions.Compiled);
 
+    // Mirrors the Identity password policy TenantSeeder's UserManager actually enforces
+    // (RequireUppercase/RequireDigit/RequireNonAlphanumeric + Identity's RequireLowercase
+    // default) — InstallProvisionRequest's own [RegularExpression] already checks this at
+    // model-binding time, but a request built directly against this service (bypassing MVC
+    // model validation) still needs the same guard, and it belongs here before any SQL work
+    // starts rather than failing deep inside TenantSeeder after the database/schema already
+    // exist.
+    private static readonly Regex AdminPasswordPolicy = new(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$", RegexOptions.Compiled);
+
     private readonly AdminDbContext _adminContext;
     private readonly IEncryptionService _encryptionService;
     private readonly ILicenseService _licenseService;
@@ -55,13 +64,15 @@ public class ProvisioningService : IProvisioningService
             return new ProvisioningResult(false, null, null, "Database name must start with a letter and contain only letters, digits and underscores (3-63 characters).");
         if (!IdentifierPattern.IsMatch(request.DatabaseUsername))
             return new ProvisioningResult(false, null, null, "Database username must start with a letter and contain only letters, digits and underscores (3-63 characters).");
+        if (!AdminPasswordPolicy.IsMatch(request.AdminPassword))
+            return new ProvisioningResult(false, null, null, "Administrator password must be at least 8 characters and include an uppercase letter, a lowercase letter, a digit, and a symbol.");
 
         // A Company row has no uniqueness constraint of its own — without this check, retrying
         // the same client's details after a partial failure (Company created, then something
         // later failed) would silently create a second Company for the same code instead of
-        // erroring, since ProvisionAsync always inserts a brand-new row. Resume (from Installed
-        // Clients) is the intended path for finishing an existing attempt; a genuinely new client
-        // needs its own, different Company Code.
+        // erroring, since ProvisionAsync always inserts a brand-new row. Resume (from the
+        // pending-installation screen) is the intended path for finishing an existing attempt;
+        // a genuinely new client needs its own, different Company Code.
         var existingCompany = await _adminContext.Companies.FirstOrDefaultAsync(c => c.CompanyCode == request.CompanyCode, ct);
         if (existingCompany is not null)
             return new ProvisioningResult(false, null, null, $"A client with company code '{request.CompanyCode}' already exists (\"{existingCompany.CompanyName}\"). If an earlier installation for it didn't finish, resume it from the pending-installation screen instead, or choose a different Company Code for a genuinely new client.");

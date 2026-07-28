@@ -98,19 +98,25 @@ public class InstallProvisionRequest
     [Required(ErrorMessage = "Administrator email is required"), EmailAddress, StringLength(200)]
     public string AdminEmail { get; set; } = string.Empty;
 
+    // Must match the Identity password policy TenantSeeder's UserManager actually enforces
+    // (Program.cs/TenantSeeder.cs: RequireUppercase/RequireDigit/RequireNonAlphanumeric, plus
+    // Identity's own RequireLowercase default) — checking only length here let a password
+    // through that was guaranteed to fail deep inside TenantSeeder.SeedDefaultAdminAsync,
+    // after the database, login, and full schema had already been created for nothing.
     [Required(ErrorMessage = "Administrator password is required"), StringLength(100, MinimumLength = 8)]
+    [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$",
+        ErrorMessage = "Administrator password must be at least 8 characters and include an uppercase letter, a lowercase letter, a digit, and a symbol.")]
     public string AdminPassword { get; set; } = string.Empty;
 
     /// <summary>Only required once a company already exists (re-running the wizard against a live install) — see InstallController.IsSetupKeyValid.</summary>
     public string? SetupKey { get; set; }
 }
 
-/// <summary>One row of the "Installed Clients" list. Either a completed install (a real
-/// Company, joined with its License/ClientDatabase — <see cref="IsComplete"/> true) or an
-/// attempt that failed before a Company was ever created (fields read back from
-/// InstallationHistory's request snapshot instead — <see cref="IsComplete"/> false). Both
-/// shapes share the same row/columns so the list is one table, not two, with incomplete rows
-/// simply highlighted rather than split into a separate section.</summary>
+/// <summary>One row of either the "Installed Clients" list (a real Company joined with its
+/// License/ClientDatabase — <see cref="IsComplete"/> true) or the "pending installation" block
+/// screen (an attempt with no Company yet, fields read back from InstallationHistory's request
+/// snapshot instead — <see cref="IsComplete"/> false). Both screens use the same shape since
+/// most fields overlap, even though only one of them is ever populated for a given row.</summary>
 public class ClientListItem
 {
     /// <summary>CompanyId when complete, InstallationHistory.Id when not — id space differs
