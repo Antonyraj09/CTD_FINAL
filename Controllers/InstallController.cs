@@ -54,39 +54,48 @@ public class InstallController : Controller
             var history = await _adminContext.InstallationHistories
                 .FirstOrDefaultAsync(h => h.Id == resumeId.Value && !h.CompanyId.HasValue);
             if (history is not null)
+                prefill = ToPrefill(history);
+        }
+        else
+        {
+            // One incomplete attempt has to be resolved (resumed or discarded) before another
+            // can start — otherwise retrying with different details just piles up more
+            // half-finished attempts instead of finishing the one already in progress.
+            var pending = await GetPendingAttemptsAsync();
+            if (pending.Count > 0)
             {
-                prefill = new InstallPrefill
-                {
-                    CompanyName = history.CompanyName,
-                    CompanyCode = history.CompanyCode,
-                    Address = history.Address,
-                    Country = history.Country,
-                    State = history.State,
-                    City = history.City,
-                    GstNumber = history.GstNumber,
-                    ContactPerson = history.ContactPerson,
-                    Email = history.Email,
-                    Phone = history.Phone,
-                    InstallationLocation = history.InstallationLocation,
-                    LicenseType = history.LicenseType,
-                    DatabaseName = history.DatabaseName,
-                    DatabaseUsername = history.DatabaseUsername,
-                    AdminFullName = history.AdminFullName,
-                    AdminEmail = history.AdminEmail
-                };
+                ViewBag.SetupKey = key;
+                return View("Pending", pending);
             }
         }
 
         return View(new InstallIndexViewModel { RequiresSetupKey = hasExistingCompany, SetupKey = key, Prefill = prefill });
     }
 
-    /// <summary>Read-only view of every company/license/database provisioned so far, plus any
-    /// provisioning attempt that failed before a Company row was even created (e.g. a database/
-    /// login/schema step that errored out) — same access gate as re-running the wizard itself.
-    /// Lets the master-license Administrator verify an install actually completed, drill into a
-    /// completed one's (read-only) details, or resume an incomplete one, without needing direct
-    /// database access. One merged, chronologically-sorted list rather than two separate tables
-    /// — an incomplete row is just visually flagged, not split out.</summary>
+    /// <summary>Dismisses an incomplete attempt that has nothing worth resuming (or that the
+    /// operator no longer intends to finish) so it stops blocking new installs. The history row
+    /// stays for the audit trail, just marked Abandoned instead of Failed.</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Discard(int id, string? key)
+    {
+        if (!IsSetupKeyValid(key) && !IsMasterLicenseAdmin())
+            return Forbid();
+
+        var history = await _adminContext.InstallationHistories.FirstOrDefaultAsync(h => h.Id == id && !h.CompanyId.HasValue);
+        if (history is not null)
+        {
+            history.InstallationStatus = InstallationStatus.Abandoned;
+            await _adminContext.SaveChangesAsync();
+        }
+
+        return RedirectToAction(nameof(Index), new { key });
+    }
+
+    /// <summary>Read-only view of every real client provisioned so far — Company joined with its
+    /// License/ClientDatabase — same access gate as re-running the wizard itself. Incomplete
+    /// attempts are deliberately not shown here; they're surfaced on the Index landing page
+    /// instead, since an unresolved one blocks starting a new install anyway.</summary>
     [HttpGet]
     public async Task<IActionResult> Clients(string? key)
     {
@@ -102,15 +111,14 @@ public class InstallController : Controller
         // Loaded in full rather than aggregated server-side: this table stays small (one row
         // per provisioning attempt, not per request), and grouping "latest attempt per company"
         // via GroupBy().OrderByDescending().First() doesn't translate reliably to SQL anyway.
-        var allHistory = await _adminContext.InstallationHistories
-            .OrderByDescending(h => h.InstallationDate)
-            .ToListAsync();
-        var latestHistoryByCompany = allHistory
-            .Where(h => h.CompanyId.HasValue)
+        var latestHistoryByCompany = (await _adminContext.InstallationHistories
+                .Where(h => h.CompanyId.HasValue)
+                .OrderByDescending(h => h.InstallationDate)
+                .ToListAsync())
             .GroupBy(h => h.CompanyId!.Value)
             .ToDictionary(g => g.Key, g => g.First());
 
-        var completedRows = companies.Select(c =>
+        var model = companies.Select(c =>
         {
             var license = c.Licenses.OrderByDescending(l => l.IssueDate).FirstOrDefault();
             var db = c.ClientDatabases.OrderByDescending(d => d.Id).FirstOrDefault();
@@ -146,43 +154,69 @@ public class InstallController : Controller
                 LastInstallStatus = lastHistory?.InstallationStatus ?? InstallationStatus.Succeeded,
                 LastInstallError = lastHistory?.ErrorLog
             };
-        });
+        })
+        .OrderByDescending(r => r.InstallationDate)
+        .ToList();
 
-        var incompleteRows = allHistory
-            .Where(h => !h.CompanyId.HasValue)
-            .Select(h => new ClientListItem
-            {
-                Id = h.Id,
-                IsComplete = false,
-                CompanyName = h.CompanyName ?? "(unnamed attempt)",
-                CompanyCode = h.CompanyCode ?? "—",
-                Address = h.Address,
-                Country = h.Country,
-                State = h.State,
-                City = h.City,
-                GstNumber = h.GstNumber,
-                ContactPerson = h.ContactPerson,
-                Email = h.Email,
-                Phone = h.Phone,
-                InstallationLocation = h.InstallationLocation,
-                LicenseType = h.LicenseType ?? "Trial",
-                DatabaseName = h.DatabaseName,
-                DatabaseUsername = h.DatabaseUsername,
-                AdminFullName = h.AdminFullName,
-                AdminEmail = h.AdminEmail,
-                InstallationDate = h.InstallationDate,
-                InstalledBy = h.InstalledBy,
-                MachineName = h.MachineName,
-                LastInstallStatus = h.InstallationStatus,
-                LastInstallError = h.ErrorLog
-            });
-
-        var model = completedRows.Concat(incompleteRows)
-            .OrderByDescending(r => r.InstallationDate)
-            .ToList();
-
+        ViewBag.PendingCount = (await GetPendingAttemptsAsync()).Count;
         return View(model);
     }
+
+    /// <summary>Attempts that never reached the point of creating a Company row — Started (the
+    /// app never got to record an outcome, e.g. it crashed mid-install) or Failed. Succeeded and
+    /// Abandoned are excluded: a succeeded one has a Company by definition, and Abandoned means
+    /// the operator already dismissed it.</summary>
+    private async Task<List<ClientListItem>> GetPendingAttemptsAsync() =>
+        (await _adminContext.InstallationHistories
+            .Where(h => !h.CompanyId.HasValue && (h.InstallationStatus == InstallationStatus.Started || h.InstallationStatus == InstallationStatus.Failed))
+            .OrderByDescending(h => h.InstallationDate)
+            .ToListAsync())
+        .Select(h => new ClientListItem
+        {
+            Id = h.Id,
+            IsComplete = false,
+            CompanyName = h.CompanyName ?? "(unnamed attempt)",
+            CompanyCode = h.CompanyCode ?? "—",
+            Address = h.Address,
+            Country = h.Country,
+            State = h.State,
+            City = h.City,
+            GstNumber = h.GstNumber,
+            ContactPerson = h.ContactPerson,
+            Email = h.Email,
+            Phone = h.Phone,
+            InstallationLocation = h.InstallationLocation,
+            LicenseType = h.LicenseType ?? "Trial",
+            DatabaseName = h.DatabaseName,
+            DatabaseUsername = h.DatabaseUsername,
+            AdminFullName = h.AdminFullName,
+            AdminEmail = h.AdminEmail,
+            InstallationDate = h.InstallationDate,
+            InstalledBy = h.InstalledBy,
+            MachineName = h.MachineName,
+            LastInstallStatus = h.InstallationStatus,
+            LastInstallError = h.ErrorLog
+        }).ToList();
+
+    private static InstallPrefill ToPrefill(Entities.Admin.InstallationHistory history) => new()
+    {
+        CompanyName = history.CompanyName,
+        CompanyCode = history.CompanyCode,
+        Address = history.Address,
+        Country = history.Country,
+        State = history.State,
+        City = history.City,
+        GstNumber = history.GstNumber,
+        ContactPerson = history.ContactPerson,
+        Email = history.Email,
+        Phone = history.Phone,
+        InstallationLocation = history.InstallationLocation,
+        LicenseType = history.LicenseType,
+        DatabaseName = history.DatabaseName,
+        DatabaseUsername = history.DatabaseUsername,
+        AdminFullName = history.AdminFullName,
+        AdminEmail = history.AdminEmail
+    };
 
     [HttpPost]
     [ValidateAntiForgeryToken]

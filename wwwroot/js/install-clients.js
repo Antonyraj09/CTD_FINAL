@@ -1,15 +1,16 @@
 /* ============================================================
-   INSTALLED CLIENTS — double-click a row to either view read-only
-   details (completed install) or resume an incomplete one where it
-   stopped, picking up InstallController.Index's ?resumeId= prefill.
+   INSTALLED CLIENTS — double-click a row to view its read-only
+   details. Incomplete attempts aren't listed here at all — they
+   block a new install on the /Install landing page instead, where
+   Resume/Discard live.
    ============================================================ */
 (function () {
   const table = $("#clientsTable");
   if (!table) return;
 
   const items = JSON.parse($("#clientsDetailData")?.textContent || "[]");
-  const byKey = {};
-  items.forEach(item => { byKey[(item.IsComplete ? "c" : "h") + item.Id] = item; });
+  const byId = {};
+  items.forEach(item => { byId[item.Id] = item; });
 
   function row(label, value) {
     return `<tr><td style="width:200px;color:var(--ink-500);">${esc(label)}</td><td>${esc(value == null || value === "" ? "—" : value)}</td></tr>`;
@@ -52,16 +53,8 @@
 
   $all("tbody tr[data-id]", table).forEach(tr => {
     tr.addEventListener("dblclick", () => {
-      const isComplete = tr.dataset.complete === "true";
-      const id = Number(tr.dataset.id);
-      const item = byKey[(isComplete ? "c" : "h") + id];
-      if (!item) return;
-
-      if (isComplete) {
-        showDetail(item);
-      } else {
-        window.location.href = "/Install?resumeId=" + id;
-      }
+      const item = byId[Number(tr.dataset.id)];
+      if (item) showDetail(item);
     });
   });
 })();
