@@ -329,7 +329,22 @@ END";
     private static async Task SetDatabaseOwnerAsync(SqlConnection tenantConnection, string databaseName, string loginName, CancellationToken ct)
     {
         await using var command = tenantConnection.CreateCommand();
-        command.CommandText = "DECLARE @sql nvarchar(max) = N'ALTER AUTHORIZATION ON DATABASE::' + QUOTENAME(@dbName) + N' TO ' + QUOTENAME(@loginName) + N';'; EXEC sp_executesql @sql;";
+        // A database provisioned by an earlier install of this same client — before this
+        // ownership step existed — already has an explicit CREATE USER mapping for this same
+        // login (the old CreateUserAndAssignRoleAsync's db_owner-role-membership approach).
+        // SQL Server refuses to make a login the owner while it already has any other mapping
+        // in that database ("The proposed new database owner is already a user or aliased in
+        // the database"), so that leftover mapping — not just a fresh explicit user created
+        // moments earlier in this same call — has to be dropped first, every time, not only
+        // on a brand-new database.
+        command.CommandText = @"
+IF EXISTS (SELECT 1 FROM sys.database_principals WHERE name = @loginName AND name <> N'dbo')
+BEGIN
+    DECLARE @dropSql nvarchar(max) = N'DROP USER ' + QUOTENAME(@loginName) + N';';
+    EXEC sp_executesql @dropSql;
+END
+DECLARE @sql nvarchar(max) = N'ALTER AUTHORIZATION ON DATABASE::' + QUOTENAME(@dbName) + N' TO ' + QUOTENAME(@loginName) + N';';
+EXEC sp_executesql @sql;";
         command.Parameters.AddWithValue("@dbName", databaseName);
         command.Parameters.AddWithValue("@loginName", loginName);
         await command.ExecuteNonQueryAsync(ct);
