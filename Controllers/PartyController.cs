@@ -30,7 +30,7 @@ public class PartyController : Controller
     public IActionResult Index()
     {
         ViewData["Title"] = "Party Master";
-        ViewData["Breadcrumb"] = "CTD Suite / Entry-Edit / Party";
+        ViewData["Breadcrumb"] = "Eroyal Suite / Entry-Edit / Party";
         ViewData["ActiveNav"] = "party";
         return View();
     }
@@ -46,7 +46,7 @@ public class PartyController : Controller
     public async Task<IActionResult> Edit(int? id)
     {
         ViewData["Title"] = id.HasValue ? "Edit Party" : "New Party";
-        ViewData["Breadcrumb"] = "CTD Suite / Entry-Edit / Party";
+        ViewData["Breadcrumb"] = "Eroyal Suite / Entry-Edit / Party";
         ViewData["ActiveNav"] = "party";
 
         Party? party = id.HasValue ? await _partyService.GetByIdAsync(id.Value) : null;

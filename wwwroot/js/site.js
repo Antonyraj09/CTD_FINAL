@@ -162,7 +162,7 @@ function exportTablePDF(tableSelector, title, filename) {
       tr:nth-child(even){background:#f5f6fa;}
     </style></head><body>
     <h1>${esc(title || "Report")}</h1>
-    <p class="meta">Generated ${fmtDateTime(new Date().toISOString())} · CTD Management System</p>
+    <p class="meta">Generated ${fmtDateTime(new Date().toISOString())} · Eroyal Suite</p>
     ${table.outerHTML}
     </body></html>`);
   w.document.close();

@@ -52,7 +52,7 @@ public class JobsController : Controller
         if (id.HasValue && job is null) return NotFound();
 
         ViewData["Title"] = job is null ? "New CTD Job" : $"Edit CTD Job — {job.JobNo}";
-        ViewData["Breadcrumb"] = "CTD Suite / Operations";
+        ViewData["Breadcrumb"] = "Eroyal Suite / Operations";
 
         var model = new JobWizardViewModel
         {
@@ -227,7 +227,7 @@ public class JobsController : Controller
     public async Task<IActionResult> Tracking()
     {
         ViewData["Title"] = "CTD Tracking";
-        ViewData["Breadcrumb"] = "CTD Suite / Operations";
+        ViewData["Breadcrumb"] = "Eroyal Suite / Operations";
         ViewData["ActiveNav"] = "tracking";
         ViewData["ActiveModule"] = "jobs";
         ViewBag.Importers = await _parties.FindAsync(p => p.IsImporter);

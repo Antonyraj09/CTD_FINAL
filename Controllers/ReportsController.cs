@@ -22,7 +22,7 @@ public class ReportsController : Controller
     public IActionResult Index()
     {
         ViewData["Title"] = "Reports";
-        ViewData["Breadcrumb"] = "CTD Suite / Reports";
+        ViewData["Breadcrumb"] = "Eroyal Suite / Reports";
         ViewData["ActiveNav"] = "reports";
         return View();
     }
