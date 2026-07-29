@@ -81,6 +81,10 @@ builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
 
+// Reversible (AES) password storage instead of Identity's default one-way PBKDF2 hash —
+// explicitly requested. See ReversiblePasswordHasher for the security trade-off this makes.
+builder.Services.AddScoped<IPasswordHasher<ApplicationUser>, ReversiblePasswordHasher>();
+
 builder.Services.AddMemoryCache();
 
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
@@ -197,7 +201,7 @@ using (var scope = app.Services.CreateScope())
             const string devAdminPassword = "ChangeMe#2026";
 
             var loggerFactory = scope.ServiceProvider.GetRequiredService<ILoggerFactory>();
-            await TenantSeeder.SeedNewTenantAsync(connectionString, loggerFactory, devAdminEmail, "System Administrator", devAdminPassword);
+            await TenantSeeder.SeedNewTenantAsync(connectionString, loggerFactory, builder.Configuration, devAdminEmail, "System Administrator", devAdminPassword);
 
             var company = new Company
             {

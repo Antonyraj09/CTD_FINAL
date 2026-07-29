@@ -172,7 +172,7 @@ Re-running the wizard once any company already exists is gated by either of two 
 
 1. Validates the license (`ILicenseService.ValidateAsync`) — status, expiry, and an RSA signature check against the stored `LicenseKey` (skipped only if a license predates signing). A machine-identifier mismatch is logged, not blocked — a web-hosted app's "machine" is the deployment server, and legitimate hardware migrations shouldn't lock a paying customer out.
 2. Resolves and decrypts the tenant's connection string (`ITenantResolutionService.ResolveAsync`, backed by `AdminDbContext`, cached 5 minutes) and stores it on `ITenantContextAccessor` — a scoped service the request's `AppDbContext` registration reads to build its connection (`Program.cs`'s `AddDbContext<AppDbContext>((sp, options) => ...)` resolves `ITenantContextAccessor` from the same DI scope the `DbContext` belongs to, so no existing service/repository/controller that depends on `AppDbContext` needed to change). `UserManager`/`SignInManager` are resolved lazily in `AccountController` (via `HttpContext.RequestServices`, not constructor injection) specifically so *loading* the login page never needs a tenant that hasn't been established yet.
-3. Authenticates the user from *that* database via the existing `UserManager`/`SignInManager` — unchanged PBKDF2 password hashing, never reversible encryption.
+3. Authenticates the user from *that* database via the existing `UserManager`/`SignInManager` — password verification goes through `ReversiblePasswordHasher` (see "Password storage" below), not Identity's default PBKDF2 hashing.
 4. On success, adds a `LicenseNumber` claim to the auth cookie (`Infrastructure/Identity/AppUserClaimsPrincipalFactory.cs`) so `Infrastructure/Identity/TenantCookieValidator.cs` — wired as the auth cookie's `OnValidatePrincipal` event — can re-resolve the same tenant on every later request in the session, re-checking status/expiry each time (cheap — no RSA verification), so a license suspended mid-session signs the user out on their next request instead of waiting for cookie expiry. This runs *inside* `OnValidatePrincipal` (before `UseAuthorization()`, even before MVC) rather than as separate middleware deliberately: ASP.NET Core Identity's own `OnValidatePrincipal` default (`SecurityStampValidator`) fires on every request carrying a cookie, and merely constructing it needs `AppDbContext` — so tenant resolution has to happen at that same point, ahead of it, or every authenticated request (not just login) hits the same "no tenant established" failure.
 
 ### Encryption
@@ -188,6 +188,14 @@ openssl rsa -in private.pem -pubout -out public.pem         # Encryption:RsaPriv
 ```
 
 `appsettings.Production.json`/`appsettings.Testing.json` ship placeholders for all of these (`Encryption:*`, `ConnectionStrings:AdminConnection`/`ProvisioningConnection`, `Setup:InstallKey`) — override via environment variables or a secrets manager, same as `DefaultConnection`.
+
+### Password storage (reversible, by explicit request)
+
+`Services/ReversiblePasswordHasher.cs` is registered as the `IPasswordHasher<ApplicationUser>` for every tenant (main app DI in `Program.cs`, and `TenantSeeder`'s isolated mini DI container used during provisioning) in place of ASP.NET Core Identity's default one-way PBKDF2 hasher. It encrypts a user's login password with the same AES-256-GCM `IEncryptionService`/`Encryption:AesKeyBase64` key already used for ADMIN_CTD's stored credentials, so an Administrator (or anyone with the AES key and database access) can recover a user's actual password instead of only being able to reset it.
+
+**This is a deliberate security downgrade, done at explicit user request against the default recommendation, and it applies to every end-user account in every tenant** — not just infrastructure credentials. Unlike a one-way hash, a stolen copy of `AspNetUsers.PasswordHash` (or a leaked `Encryption:AesKeyBase64`) is immediately useful to an attacker with no cracking effort at all. The existing `Users & Roles → Reset Password` flow (`UsersController.ResetPassword`, unaffected by this change) remains the safe way to help a user regain access without ever needing to recover their old password.
+
+**Operational consequence**: any user account created *before* this change has a real PBKDF2 hash on file, not AES ciphertext. `ReversiblePasswordHasher.VerifyHashedPassword` detects this (decryption throws) and returns `Failed` — a clean login rejection, not a crash — but that account cannot log in again until an Administrator resets its password via `Users & Roles → Reset Password`, which stores a fresh, decryptable value.
 
 ## Project layout
 
