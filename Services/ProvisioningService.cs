@@ -138,14 +138,26 @@ public class ProvisioningService : IProvisioningService
             await CreateLoginAsync(serverBuilder.ConnectionString, request.DatabaseUsername, request.DatabasePassword, ct);
 
             // MultipleActiveResultSets must be off here even if ProvisioningConnection has it on
-            // — this connection only ever runs one thing at a time (CreateUserAndAssignRoleAsync,
-            // then EF's migrator below), so it never needs concurrent result sets.
+            // — this connection only ever runs one thing at a time (SetDatabaseOwnerAsync, then
+            // EF's migrator below), so it never needs concurrent result sets.
             var tenantAdminBuilder = new SqlConnectionStringBuilder(provisioningConnectionString) { InitialCatalog = request.DatabaseName, MultipleActiveResultSets = false };
 
             await using (var tenantConnection = new SqlConnection(tenantAdminBuilder.ConnectionString))
             {
                 await tenantConnection.OpenAsync(ct);
-                await CreateUserAndAssignRoleAsync(tenantConnection, request.DatabaseUsername, ct);
+
+                // CREATE DATABASE leaves the database owned by whichever login ProvisioningConnection
+                // runs as (e.g. sa) — every tenant database ending up nominally owned by that same
+                // shared account instead of its own dedicated login, recorded in ClientDatabases,
+                // means the record doesn't match reality. Making the tenant's own login the real
+                // owner here (sys.databases.owner_sid) — before it has any other mapping in this
+                // database — gives it full permissions via the implicit "dbo" principal, the same
+                // as db_owner role membership would, so no separate CREATE USER/role-membership step
+                // is needed. This must run before the login is ever mapped as an explicit database
+                // user: SQL Server rejects ALTER AUTHORIZATION with "already a user or aliased in
+                // the database" once that mapping exists, which is exactly what a CREATE USER step
+                // running first used to do.
+                await SetDatabaseOwnerAsync(tenantConnection, request.DatabaseName, request.DatabaseUsername, ct);
             }
 
             // EF Core's own migrator, not the static database/scripts/01_InitialCreate.sql script:
@@ -183,6 +195,26 @@ public class ProvisioningService : IProvisioningService
                 TrustServerCertificate = serverBuilder.TrustServerCertificate,
                 MultipleActiveResultSets = true
             };
+
+            // Prove the exact credentials that get stored are the exact credentials the app will
+            // actually use on every future login, before anything is recorded as a success. Without
+            // this, a login/password mismatch (wrong state left behind by CreateLoginAsync, an
+            // unexpected character mangled by the dynamic SQL, a stale login from an earlier attempt
+            // that never got its password updated) surfaces as "installation completed" here and a
+            // cryptic SQL login failure the first time anyone actually signs in — potentially days
+            // later, with no clue which of the several moving pieces is at fault.
+            try
+            {
+                await using var verifyConnection = new SqlConnection(runtimeConnectionBuilder.ConnectionString);
+                await verifyConnection.OpenAsync(ct);
+            }
+            catch (Exception verifyEx)
+            {
+                throw new InvalidOperationException(
+                    $"Database and schema were created, but the app could not sign in as '{request.DatabaseUsername}' using the Database Password just entered. " +
+                    "This usually means a leftover SQL Server login from an earlier attempt didn't get its password updated, or the entered password contains a character SQL Server rejected. " +
+                    "Resume this installation and re-enter the Database Password to retry.", verifyEx);
+            }
 
             var company = new Company
             {
@@ -294,23 +326,12 @@ END";
         await command.ExecuteNonQueryAsync(ct);
     }
 
-    private static async Task CreateUserAndAssignRoleAsync(SqlConnection tenantConnection, string userName, CancellationToken ct)
+    private static async Task SetDatabaseOwnerAsync(SqlConnection tenantConnection, string databaseName, string loginName, CancellationToken ct)
     {
         await using var command = tenantConnection.CreateCommand();
-        // sp_addrolemember instead of ALTER ROLE ... ADD MEMBER: the latter only parses on SQL
-        // Server 2012+ ("Incorrect syntax near the keyword 'ADD'" on anything older, e.g. 2008
-        // R2 Express) — sp_addrolemember does the same db_owner grant and has worked unchanged
-        // since SQL 2000, keeping this in line with the rest of the app's 2008 SP1+ floor. It
-        // also needs no QUOTENAME/dynamic SQL of its own: @userName is passed straight through
-        // as a stored-procedure parameter, not spliced into DDL text.
-        command.CommandText = @"
-IF NOT EXISTS (SELECT 1 FROM sys.database_principals WHERE name = @userName)
-BEGIN
-    DECLARE @sql nvarchar(max) = N'CREATE USER ' + QUOTENAME(@userName) + N' FOR LOGIN ' + QUOTENAME(@userName) + N';';
-    EXEC sp_executesql @sql;
-END
-EXEC sp_addrolemember N'db_owner', @userName;";
-        command.Parameters.AddWithValue("@userName", userName);
+        command.CommandText = "DECLARE @sql nvarchar(max) = N'ALTER AUTHORIZATION ON DATABASE::' + QUOTENAME(@dbName) + N' TO ' + QUOTENAME(@loginName) + N';'; EXEC sp_executesql @sql;";
+        command.Parameters.AddWithValue("@dbName", databaseName);
+        command.Parameters.AddWithValue("@loginName", loginName);
         await command.ExecuteNonQueryAsync(ct);
     }
 
