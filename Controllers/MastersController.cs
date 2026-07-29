@@ -30,7 +30,7 @@ public class MastersController : Controller
     {
         var cfg = MasterRegistry.Get(tab);
         ViewData["Title"] = "Master Data — Setup";
-        ViewData["Breadcrumb"] = "CTD Suite / Entry-Edit / Master";
+        ViewData["Breadcrumb"] = "Eroyal Suite / Entry-Edit / Master";
         ViewData["ActiveNav"] = "masters";
         ViewData["ActiveTab"] = cfg.Key;
         return View();

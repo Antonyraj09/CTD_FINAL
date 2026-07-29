@@ -40,7 +40,7 @@ public class DeliveryIsneController : Controller
     public IActionResult Index()
     {
         ViewData["Title"] = "Delivery — ISNE";
-        ViewData["Breadcrumb"] = "CTD Suite / Delivery";
+        ViewData["Breadcrumb"] = "Eroyal Suite / Delivery";
         ViewData["ActiveNav"] = "delivery-isne";
         ViewData["ActiveModule"] = "delivery";
         return View();
@@ -68,7 +68,7 @@ public class DeliveryIsneController : Controller
     public async Task<IActionResult> Entry(int? id, bool view = false)
     {
         ViewData["Title"] = id.HasValue ? "Delivery — ISNE" : "Delivery — ISNE (New)";
-        ViewData["Breadcrumb"] = "CTD Suite / Delivery";
+        ViewData["Breadcrumb"] = "Eroyal Suite / Delivery";
         ViewData["ActiveNav"] = "delivery-isne";
         ViewData["ActiveModule"] = "delivery";
         ViewData["ViewOnly"] = view;

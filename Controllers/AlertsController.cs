@@ -25,7 +25,7 @@ public class AlertsController : Controller
     public async Task<IActionResult> Index()
     {
         ViewData["Title"] = "Email / SMS Alerts";
-        ViewData["Breadcrumb"] = "CTD Suite / System";
+        ViewData["Breadcrumb"] = "Eroyal Suite / System";
         ViewData["ActiveNav"] = "alerts";
 
         ViewBag.Rules = await _alertService.GetRulesAsync();

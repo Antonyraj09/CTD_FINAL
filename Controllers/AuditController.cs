@@ -19,7 +19,7 @@ public class AuditController : Controller
     public async Task<IActionResult> Index(string? jobNo, string? user, [FromQuery(Name = "actionType")] AuditActionType? actionType, int page = 1)
     {
         ViewData["Title"] = "Audit History";
-        ViewData["Breadcrumb"] = "CTD Suite / System";
+        ViewData["Breadcrumb"] = "Eroyal Suite / System";
         ViewData["ActiveNav"] = "audit";
 
         var result = await _auditService.SearchAsync(jobNo, user, actionType, page, 50);

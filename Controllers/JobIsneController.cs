@@ -35,7 +35,7 @@ public class JobIsneController : Controller
     public async Task<IActionResult> Index(int? id)
     {
         ViewData["Title"] = "Job — ISNE";
-        ViewData["Breadcrumb"] = "CTD Suite / Jobs / ISNE";
+        ViewData["Breadcrumb"] = "Eroyal Suite / Jobs / ISNE";
         ViewData["ActiveNav"] = "job-isne";
         ViewData["ActiveModule"] = "jobs";
 
@@ -297,7 +297,7 @@ public class JobIsneController : Controller
     public IActionResult Tracking()
     {
         ViewData["Title"] = "CTD Tracking";
-        ViewData["Breadcrumb"] = "CTD Suite / Operations";
+        ViewData["Breadcrumb"] = "Eroyal Suite / Operations";
         ViewData["ActiveNav"] = "tracking";
         ViewData["ActiveModule"] = "jobs";
         return View();

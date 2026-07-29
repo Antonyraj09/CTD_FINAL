@@ -23,7 +23,7 @@ public class DashboardController : Controller
     public IActionResult Index()
     {
         ViewData["Title"] = "Dashboard";
-        ViewData["Breadcrumb"] = "CTD Suite / Overview";
+        ViewData["Breadcrumb"] = "Eroyal Suite / Overview";
         ViewData["ActiveNav"] = "dashboard";
         return View();
     }
@@ -32,7 +32,7 @@ public class DashboardController : Controller
     public async Task<IActionResult> Customer(int? importerId)
     {
         ViewData["Title"] = "Customer Dashboard";
-        ViewData["Breadcrumb"] = "CTD Suite / Overview";
+        ViewData["Breadcrumb"] = "Eroyal Suite / Overview";
         ViewData["ActiveNav"] = "customerDashboard";
 
         var importers = await _partyRepository.FindAsync(p => p.IsImporter);

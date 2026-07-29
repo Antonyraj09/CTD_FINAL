@@ -33,7 +33,7 @@ public class UsersController : Controller
     public async Task<IActionResult> Index()
     {
         ViewData["Title"] = "Users & Roles";
-        ViewData["Breadcrumb"] = "CTD Suite / System";
+        ViewData["Breadcrumb"] = "Eroyal Suite / System";
         ViewData["ActiveNav"] = "users";
 
         var users = await _userManager.Users.OrderBy(u => u.FullName).ToListAsync();

@@ -1,6 +1,6 @@
 @{
     var pageTitle = ViewData["Title"] as string ?? "Dashboard";
-    var breadcrumb = ViewData["Breadcrumb"] as string ?? "CTD Suite / Overview";
+    var breadcrumb = ViewData["Breadcrumb"] as string ?? "Eroyal Suite / Overview";
     var initials = string.Concat((User.FindFirst("FullName")?.Value ?? User.Identity?.Name ?? "U ").Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(s => s[0])).ToUpperInvariant();
     var fullName = User.FindFirst("FullName")?.Value ?? User.Identity?.Name ?? "User";
     var roleLabel = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Role)?.Value ?? "";

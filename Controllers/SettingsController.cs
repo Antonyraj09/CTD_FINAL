@@ -23,7 +23,7 @@ public class SettingsController : Controller
     public async Task<IActionResult> Index()
     {
         ViewData["Title"] = "Settings";
-        ViewData["Breadcrumb"] = "CTD Suite / System";
+        ViewData["Breadcrumb"] = "Eroyal Suite / System";
         ViewData["ActiveNav"] = "settings";
 
         var settings = await _settingsService.GetAsync();

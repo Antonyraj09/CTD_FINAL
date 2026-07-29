@@ -39,7 +39,7 @@ public class DocumentsController : Controller
     public IActionResult Index()
     {
         ViewData["Title"] = "Document Attachment & PDF Archive";
-        ViewData["Breadcrumb"] = "CTD Suite / Operations";
+        ViewData["Breadcrumb"] = "Eroyal Suite / Operations";
         ViewData["ActiveNav"] = "documents";
         ViewData["ActiveModule"] = "jobs";
         return View();
@@ -103,7 +103,7 @@ public class DocumentsController : Controller
         }
 
         // System-generated documents have no physical file — serve a text summary instead.
-        var content = $"CTD Management System — Document Record\n\nDocument: {record.Name}\nType: {record.Type}\nJob: {record.JobNo}\nUploaded by: {record.UploadedBy}\nDate: {record.DocumentDate:d MMM yyyy}\n\nThis is a system-generated record. Open the source job to regenerate the live document.";
+        var content = $"Eroyal Suite — Document Record\n\nDocument: {record.Name}\nType: {record.Type}\nJob: {record.JobNo}\nUploaded by: {record.UploadedBy}\nDate: {record.DocumentDate:d MMM yyyy}\n\nThis is a system-generated record. Open the source job to regenerate the live document.";
         return File(System.Text.Encoding.UTF8.GetBytes(content), "text/plain", record.Name.Replace(".pdf", ".txt"));
     }
 
