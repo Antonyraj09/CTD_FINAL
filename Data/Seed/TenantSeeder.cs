@@ -1,10 +1,7 @@
 using CTD_FINAL.Entities;
 using CTD_FINAL.Constants;
-using CTD_FINAL.Interfaces;
-using CTD_FINAL.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -30,11 +27,10 @@ public static class TenantSeeder
     /// seeds it — for callers that don't already have a scope pointed at the target tenant
     /// database (ProvisioningService mid-install, or Program.cs's Development bootstrap
     /// attaching an already-migrated database directly).</summary>
-    public static async Task SeedNewTenantAsync(string connectionString, ILoggerFactory loggerFactory, IConfiguration configuration, string adminEmail, string adminFullName, string adminPassword)
+    public static async Task SeedNewTenantAsync(string connectionString, ILoggerFactory loggerFactory, string adminEmail, string adminFullName, string adminPassword)
     {
         var services = new ServiceCollection();
         services.AddSingleton(loggerFactory);
-        services.AddSingleton(configuration);
         services.AddLogging();
         services.AddDbContext<AppDbContext>(options =>
             options.UseSqlServer(connectionString, sql => sql.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName)));
@@ -47,8 +43,6 @@ public static class TenantSeeder
             })
             .AddEntityFrameworkStores<AppDbContext>()
             .AddDefaultTokenProviders();
-        services.AddScoped<IEncryptionService, EncryptionService>();
-        services.AddScoped<IPasswordHasher<ApplicationUser>, ReversiblePasswordHasher>();
 
         await using var provider = services.BuildServiceProvider();
         using var scope = provider.CreateScope();
