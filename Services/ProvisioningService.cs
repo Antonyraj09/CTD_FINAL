@@ -318,5 +318,5 @@ EXEC sp_addrolemember N'db_owner', @userName;";
     // main app's AppDbContext registration resolves its connection from ITenantContextAccessor
     // (a per-HTTP-request value), which doesn't exist here since provisioning isn't a login.
     private Task SeedTenantAsync(string tenantConnectionString, ProvisioningRequest request) =>
-        TenantSeeder.SeedNewTenantAsync(tenantConnectionString, _loggerFactory, _configuration, request.AdminEmail, request.AdminFullName, request.AdminPassword);
+        TenantSeeder.SeedNewTenantAsync(tenantConnectionString, _loggerFactory, request.AdminEmail, request.AdminFullName, request.AdminPassword);
 }
