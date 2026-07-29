@@ -184,6 +184,26 @@ public class ProvisioningService : IProvisioningService
                 MultipleActiveResultSets = true
             };
 
+            // Prove the exact credentials that get stored are the exact credentials the app will
+            // actually use on every future login, before anything is recorded as a success. Without
+            // this, a login/password mismatch (wrong state left behind by CreateLoginAsync, an
+            // unexpected character mangled by the dynamic SQL, a stale login from an earlier attempt
+            // that never got its password updated) surfaces as "installation completed" here and a
+            // cryptic SQL login failure the first time anyone actually signs in — potentially days
+            // later, with no clue which of the several moving pieces is at fault.
+            try
+            {
+                await using var verifyConnection = new SqlConnection(runtimeConnectionBuilder.ConnectionString);
+                await verifyConnection.OpenAsync(ct);
+            }
+            catch (Exception verifyEx)
+            {
+                throw new InvalidOperationException(
+                    $"Database and schema were created, but the app could not sign in as '{request.DatabaseUsername}' using the Database Password just entered. " +
+                    "This usually means a leftover SQL Server login from an earlier attempt didn't get its password updated, or the entered password contains a character SQL Server rejected. " +
+                    "Resume this installation and re-enter the Database Password to retry.", verifyEx);
+            }
+
             var company = new Company
             {
                 CompanyName = request.CompanyName,
