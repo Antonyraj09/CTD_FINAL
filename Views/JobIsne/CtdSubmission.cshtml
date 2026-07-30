@@ -5,6 +5,16 @@
     var agent = ViewBag.Agent as SubAgent;
     string D(DateTime? d) => d?.ToString("dd.MM.yyyy") ?? "";
     string V(object? v) => v?.ToString() ?? "";
+
+    // Default forwarding agent letterhead — see CtdDeclaration.cshtml for the same default.
+    const string DefaultAgentName = "EASTERN CLEARING & FORWARDING AGENCY PVT. LTD.";
+    const string DefaultAgentLicenseNo = "E-18";
+
+    var agentName = agent?.Name ?? Model.SubAgentName;
+    if (string.IsNullOrWhiteSpace(agentName)) agentName = DefaultAgentName;
+
+    var agentLicenseNo = agent?.LicenseNo;
+    if (string.IsNullOrWhiteSpace(agentLicenseNo)) agentLicenseNo = DefaultAgentLicenseNo;
 }
 <!DOCTYPE html>
 <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
@@ -45,7 +55,7 @@
     </div>
     <div class="divider"></div>
 
-    <p><span class="num">1.</span> CHA CODE: <span class="val">@V(agent?.LicenseNo)</span>, CHA NAME: <span class="val">@V(agent?.Name ?? Model.SubAgentName)</span>,</p>
+    <p><span class="num">1.</span> CHA CODE: <span class="val">@agentLicenseNo</span>, CHA NAME: <span class="val">@agentName</span>,</p>
     <p><span class="num">2.</span> EXIT CUSTOMS SITE: (PL TICK), ROUTE OF TRANSIT: <span class="val">@V(Model.RouteOfTransit)</span></p>
     <p><span class="num">3.</span> IMPORTER'S CODE: <span class="val">@V(Model.ImporterCode)</span></p>
     <p><span class="num">4.</span> IMPORTER'S NAME &amp; ADDRESS: <span class="val">@V(Model.PartyName)</span></p>
@@ -118,7 +128,7 @@
     <p><span class="num">20.</span> ENGINE NO: <span class="val">&nbsp;</span>&nbsp;&nbsp;&nbsp;DATE OF REGN: <span class="val">&nbsp;</span></p>
     <p><span class="num">21.</span> MODE OF TRANSPORT &ndash; ROAD</p>
 
-    <p style="margin-top:18px;">FOR <span class="val">@V(agent?.Name ?? Model.SubAgentName)</span></p>
+    <p style="margin-top:18px;">FOR <span class="val">@agentName</span></p>
     <p>&nbsp;</p>
     <p>&nbsp;</p>
     <p><span class="val">@V(agent?.ContactPersonName)</span></p>

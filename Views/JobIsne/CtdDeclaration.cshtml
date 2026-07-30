@@ -17,7 +17,28 @@
     var blNo = !string.IsNullOrWhiteSpace(Model.MblNo) ? Model.MblNo : Model.HblNo;
     var blDate = !string.IsNullOrWhiteSpace(Model.MblNo) ? Model.MblDate : Model.HblDate;
 
+    // Default forwarding agent letterhead — every job printed without its own matching
+    // Sub-Agent master record (no SubAgentCode set, or the code doesn't resolve to one)
+    // used to print this whole header blank. Falls back to this agency's own details
+    // (the reference form's own letterhead) rather than leaving it empty.
+    const string DefaultAgentName = "EASTERN CLEARING & FORWARDING AGENCY PVT. LTD.";
+    const string DefaultAgentLicenseNo = "E-18";
+    const string DefaultAgentAddress = "501 'MANGALAM' 24, HEMANTA BASU SARANI, KOLKATA-700001";
+    const string DefaultAgentPhone = "2243-5348";
+    const string DefaultAgentGstin = "19AAACE5876H1ZB";
+
     var agentName = agent?.Name ?? Model.SubAgentName;
+    if (string.IsNullOrWhiteSpace(agentName)) agentName = DefaultAgentName;
+
+    var agentLicenseNo = agent?.LicenseNo;
+    if (string.IsNullOrWhiteSpace(agentLicenseNo)) agentLicenseNo = DefaultAgentLicenseNo;
+
+    var agentPhone = agent?.Phone;
+    if (string.IsNullOrWhiteSpace(agentPhone)) agentPhone = DefaultAgentPhone;
+
+    var agentGstin = agent?.GstinNo;
+    if (string.IsNullOrWhiteSpace(agentGstin)) agentGstin = DefaultAgentGstin;
+
     // Reference form's header cell is exactly 3 lines: Name<tab>CHA No. / full address on
     // one line ending with the copy-type marker / Phone immediately followed by GSTIN with
     // no separator (verified against the reference .docx paragraph-by-paragraph, including
@@ -26,6 +47,7 @@
         ? null
         : string.Join(", ", new[] { agent.AddressLine1, agent.AddressLine2, string.Join("-", new[] { agent.City, agent.PinCode }.Where(s => !string.IsNullOrWhiteSpace(s))) }
             .Where(s => !string.IsNullOrWhiteSpace(s)));
+    if (string.IsNullOrWhiteSpace(agentAddress)) agentAddress = DefaultAgentAddress;
 }
 <!DOCTYPE html>
 <html>
@@ -92,23 +114,12 @@
         </colgroup>
         <tr style="height:22.35mm">
             <td colspan="3">
-                @if (!string.IsNullOrWhiteSpace(agent?.LicenseNo))
-                {
-                    <span class="agent-cha">C.H.Aagent No. <b>@agent!.LicenseNo</b></span>
-                }
+                <span class="agent-cha">C.H.Aagent No. <b>@agentLicenseNo</b></span>
                 <div class="agent-name">@V(agentName)</div>
-                @if (!string.IsNullOrWhiteSpace(agentAddress))
-                {
-                    <div class="agent-addr"><b>@agentAddress</b> D</div>
-                }
+                <div class="agent-addr"><b>@agentAddress</b> D</div>
                 <div class="agent-phone-gst">
-                    @if (!string.IsNullOrWhiteSpace(agent?.Phone))
-                    {
-                        <text>Phone : <b>@agent!.Phone</b></text>
-                    }@if (!string.IsNullOrWhiteSpace(agent?.GstinNo))
-                    {
-                        <text>GSTIN <b>@agent!.GstinNo</b></text>
-                    }
+                    <text>Phone : <b>@agentPhone</b></text>
+                    <text>GSTIN <b>@agentGstin</b></text>
                 </div>
             </td>
             <td colspan="6" class="title-cell">

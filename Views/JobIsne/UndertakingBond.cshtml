@@ -11,11 +11,26 @@
     string D(DateTime? d) => d?.ToString("dd/MM/yyyy") ?? "";
     string V(object? v) => v?.ToString() ?? "";
 
+    // Default forwarding agent letterhead — see CtdDeclaration.cshtml for the same default,
+    // used here for the same reason: a job printed without a matching Sub-Agent master
+    // record used to leave every one of these fields blank instead of falling back to
+    // this agency's own details (the reference form's own letterhead).
+    const string DefaultAgentName = "EASTERN CLEARING & FORWARDING AGENCY PVT. LTD.";
+    const string DefaultAgentAddressLine1 = "501 'MANGALAM' 24";
+    const string DefaultAgentAddressLine2 = "HEMANTA BASU SARANI";
+    const string DefaultAgentCity = "KOLKATA";
+    const string DefaultAgentPinCode = "700001";
+
     var agentName = agent?.Name ?? Model.SubAgentName;
-    var agentAddress = agent is null
-        ? null
-        : string.Join(", ", new[] { agent.AddressLine1, agent.AddressLine2, string.Join(" - ", new[] { agent.City, agent.PinCode }.Where(s => !string.IsNullOrWhiteSpace(s))) }
-            .Where(s => !string.IsNullOrWhiteSpace(s)));
+    if (string.IsNullOrWhiteSpace(agentName)) agentName = DefaultAgentName;
+
+    var agentAddressLine1 = string.IsNullOrWhiteSpace(agent?.AddressLine1) ? DefaultAgentAddressLine1 : agent!.AddressLine1;
+    var agentAddressLine2 = string.IsNullOrWhiteSpace(agent?.AddressLine2) ? DefaultAgentAddressLine2 : agent!.AddressLine2;
+    var agentCity = string.IsNullOrWhiteSpace(agent?.City) ? DefaultAgentCity : agent!.City;
+    var agentPinCode = string.IsNullOrWhiteSpace(agent?.PinCode) ? DefaultAgentPinCode : agent!.PinCode;
+
+    var agentAddress = string.Join(", ", new[] { agentAddressLine1, agentAddressLine2, string.Join(" - ", new[] { agentCity, agentPinCode }.Where(s => !string.IsNullOrWhiteSpace(s))) }
+        .Where(s => !string.IsNullOrWhiteSpace(s)));
 
     // Bond amount is the difference between market value and CIF value — the reference
     // form's own condition clause (1) spells this out ("the difference between the market
@@ -89,8 +104,8 @@
         <div class="ln" style="top:25.86mm;left:112.69mm;">DATE : <b>@D(Model.CtdDate)</b></div>
         <div class="ln" style="top:28.78mm;left:7.41mm;">CTD NO.            : <b>@V(Model.CtdNumber)</b></div>
         <div class="wrap" style="top:33.82mm;left:7.41mm;width:183mm;">CHA'S NAME     :     @V(agentName)</div>
-        <div class="wrap" style="top:38.81mm;left:7.66mm;width:183mm;">&amp; ADDRESS      :     @V(agent?.AddressLine1)@(!string.IsNullOrWhiteSpace(agent?.AddressLine2) ? ", " + agent!.AddressLine2 : "")</div>
-        <div class="ln" style="top:43.05mm;left:26mm;">@V(agent?.City)@(!string.IsNullOrWhiteSpace(agent?.PinCode) ? " - " + agent!.PinCode : "").</div>
+        <div class="wrap" style="top:38.81mm;left:7.66mm;width:183mm;">&amp; ADDRESS      :     @agentAddressLine1@(!string.IsNullOrWhiteSpace(agentAddressLine2) ? ", " + agentAddressLine2 : "")</div>
+        <div class="ln" style="top:43.05mm;left:26mm;">@agentCity@(!string.IsNullOrWhiteSpace(agentPinCode) ? " - " + agentPinCode : "").</div>
 
         <div class="ln" style="top:49.14mm;left:7.92mm;">Importer's Name &amp; Address     :</div>
         <div class="wrap" style="top:49.27mm;left:59.27mm;width:130mm;"><b>@V(Model.PartyName)</b></div>
