@@ -9,7 +9,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(circle at 20% 20%, var(--navy-800) 0%, var(--navy-950) 60%);
+  background: var(--bg-app);
   font-family: 'Inter Sub', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
   padding: 24px;
 }
@@ -26,14 +26,15 @@
 }
 
 .auth-hero {
-  background: linear-gradient(160deg, var(--navy-900) 0%, var(--navy-950) 100%);
-  color: #fff;
+  background: var(--surface-1);
+  color: var(--ink-900);
   padding: 48px 40px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   position: relative;
   overflow: hidden;
+  border-right: 1px solid var(--surface-border);
 }
 .auth-hero::after {
   content: '';
@@ -54,11 +55,11 @@
   justify-content: flex-start;
 }
 .auth-hero .brand-mark-full img { width: 100%; height: auto; object-fit: contain; }
-.auth-hero h2 { font-size: 22px; margin: 0 0 8px; font-weight: 700; letter-spacing: -.01em; }
-.auth-hero p { font-size: 13.5px; color: #aab4cc; line-height: 1.6; margin: 0; max-width: 320px; }
+.auth-hero h2 { font-size: 22px; margin: 0 0 8px; font-weight: 700; letter-spacing: -.01em; color: var(--ink-900); }
+.auth-hero p { font-size: 13.5px; color: var(--ink-500); line-height: 1.6; margin: 0; max-width: 320px; }
 .auth-hero .auth-feature-list { margin-top: 32px; display: flex; flex-direction: column; gap: 14px; }
-.auth-hero .auth-feature { display: flex; align-items: center; gap: 10px; font-size: 12.8px; color: #dfe3ee; }
-.auth-hero .auth-feature svg { width: 16px; height: 16px; color: var(--amber-400); flex-shrink: 0; }
+.auth-hero .auth-feature { display: flex; align-items: center; gap: 10px; font-size: 12.8px; color: var(--ink-700); }
+.auth-hero .auth-feature svg { width: 16px; height: 16px; color: var(--amber-500); flex-shrink: 0; }
 .auth-hero .auth-footnote { font-size: 11px; color: var(--ink-400); margin-top: 32px; }
 
 .auth-form-panel { padding: 48px 44px; display: flex; flex-direction: column; justify-content: center; }

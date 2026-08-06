@@ -890,7 +890,7 @@ fieldset.form-section legend{padding:0 10px;font-size:13px;font-weight:700;color
   padding: 10px 12px;
   margin-bottom: 0;
   border-radius: var(--r-md);
-  color: #aab4cc;
+  color: var(--ink-700);
   cursor: pointer;
   position: relative;
   transition: background .18s var(--ease), color .18s;
@@ -900,12 +900,13 @@ fieldset.form-section legend{padding:0 10px;font-size:13px;font-weight:700;color
   font-weight: 500;
   user-select: none;
 }
-.erp-module-header:hover { background: rgba(255,255,255,.06); color: #fff; }
-.erp-module.open > .erp-module-header { background: rgba(255,255,255,.05); color: #fff; }
+.erp-module-header:hover { background: rgba(37,99,235,.08); color: var(--ink-900); }
+.erp-module.open > .erp-module-header { background: rgba(37,99,235,.06); color: var(--ink-900); }
 .erp-module-icon { width: 18px; height: 18px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; opacity: .85; }
 .erp-module-icon svg { width: 18px; height: 18px; }
 .erp-module-label { flex: 1; opacity: 1; transition: opacity .2s; }
-.erp-arrow { width: 14px; height: 14px; flex-shrink: 0; color: #7d8aab; transition: transform .22s var(--ease), opacity .2s; }
+.erp-arrow { width: 14px; height: 14px; flex-shrink: 0; color: var(--ink-400); transition: transform .22s var(--ease), opacity .2s; }
+#module-jobs .erp-module-label { font-weight: 700; }
 .erp-module.open > .erp-module-header .erp-arrow { transform: rotate(180deg); color: var(--amber-400); }
 .erp-submenu {
   overflow: hidden;
