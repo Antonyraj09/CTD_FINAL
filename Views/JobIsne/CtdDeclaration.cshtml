@@ -230,6 +230,10 @@
                             }
                             <div>Container</div>
                             <b>@V(c.ContainerNo)</b>
+                            @if (!string.IsNullOrWhiteSpace(c.SealNumbers))
+                            {
+                                <div>Seal No. <b>@c.SealNumbers</b></div>
+                            }
                         </div>
                     }
                 }

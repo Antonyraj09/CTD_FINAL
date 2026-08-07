@@ -41,7 +41,8 @@
             netWeight = c.NetWeight,
             netWeightUnit = c.NetWeightUnit,
             marksSerial = c.MarksSerial,
-            customsCode = c.CustomsCode
+            customsCode = c.CustomsCode,
+            sealNumbers = c.SealNumbers
         })
         : new[] { new
         {
@@ -55,7 +56,8 @@
             netWeight = (decimal?)null,
             netWeightUnit = "KG",
             marksSerial = (string?)"",
-            customsCode = (string?)""
+            customsCode = (string?)"",
+            sealNumbers = (string?)""
         } };
 }
 
@@ -353,17 +355,18 @@
                             <tr>
                                 <th style="width:28px;"><input type="checkbox" id="isneSelectAllRows" style="width:16px;height:16px;padding:0;accent-color:var(--amber-500);"></th>
                                 <th style="width:34px;">S.No</th>
-                                <th style="min-width:140px;">Container No. <span style="color:var(--seal-red);">*</span></th>
-                                <th style="min-width:90px;">Size <span style="color:var(--seal-red);">*</span></th>
-                                <th style="min-width:100px;">Shipment Type <span style="color:var(--seal-red);">*</span></th>
-                                <th style="min-width:80px;">Packages <span style="color:var(--seal-red);">*</span></th>
-                                <th style="min-width:110px;">Package Type <span style="color:var(--seal-red);">*</span></th>
-                                <th style="min-width:100px;">Gross Weight <span style="color:var(--seal-red);">*</span></th>
+                                <th style="min-width:140px;">Container No.</th>
+                                <th style="min-width:90px;">Size</th>
+                                <th style="min-width:100px;">Shipment Type</th>
+                                <th style="min-width:80px;">Packages</th>
+                                <th style="min-width:110px;">Package Type</th>
+                                <th style="min-width:100px;">Gross Weight</th>
                                 <th style="min-width:70px;">Unit</th>
-                                <th style="min-width:100px;">Net Weight <span style="color:var(--seal-red);">*</span></th>
+                                <th style="min-width:100px;">Net Weight</th>
                                 <th style="min-width:70px;">Unit</th>
                                 <th style="min-width:140px;">Marks &amp; Serial No.</th>
                                 <th style="min-width:130px;">Customs Code</th>
+                                <th style="min-width:130px;">Seal Numbers</th>
                                 <th style="width:36px;"></th>
                             </tr>
                         </thead>
@@ -397,7 +400,7 @@
             <div class="form-grid cols-4">
                 <div class="field">
                     <label>Importer Code</label>
-                    <input type="text" id="isne_importerCode" maxlength="6" placeholder="e.g. NP0001" value="@(Model?.ImporterCode ?? (Model is null ? "NP" : ""))">
+                    <input type="text" id="isne_importerCode" maxlength="10" placeholder="e.g. NP00012345" value="@(Model?.ImporterCode ?? (Model is null ? "NP" : ""))">
                 </div>
                 <div class="field">
                     <label>Invoice Number</label>
@@ -432,8 +435,8 @@
                     </button>
                 </div>
             </div>
-            <div class="form-grid cols-2" id="isne_sensitiveFields" style="margin-top:14px;display:@(Model?.SensitiveCargo == true ? "grid" : "none");">
-                <div class="field">
+            <div class="form-grid cols-2" id="isne_sensitiveFields" style="margin-top:14px;">
+                <div class="field" id="isne_insuranceAddressField" style="display:@(Model?.SensitiveCargo == true ? "block" : "none");">
                     <label>Insurance Company Name &amp; Address</label>
                     <textarea id="isne_insuranceCompanyAddress" maxlength="200" placeholder="Insurance company name and full address" style="min-height:80px;">@Model?.InsuranceCompanyNameAddress</textarea>
                 </div>
@@ -477,7 +480,7 @@
                 <div class="field"><label>Insurance Rate</label><input type="number" id="isne_insRate" placeholder="0.000" step="0.001" value="@Model?.InsuranceRate"></div>
                 <div class="field"><label>Insurance Value (INR)</label><div class="field-suffix-wrap"><input type="number" id="isne_insValueINR" placeholder="0.00" step="0.01" value="@Model?.InsuranceValueInr"><span class="field-suffix">₹</span></div></div>
                 <div class="field"><label>CIF Value (INR)</label><div class="field-suffix-wrap"><input type="number" id="isne_cifINR" placeholder="0.00" step="0.01" value="@Model?.CifInr"><span class="field-suffix">₹</span></div></div>
-                <div class="field"><label>Market Rate</label><input type="number" id="isne_marketRate" placeholder="0.00" step="0.01" value="@Model?.MarketRate"></div>
+                <div class="field"><label>Market Rate</label><input type="number" id="isne_marketRate" placeholder="0.00" step="0.01" value="@(Model?.MarketRate?.ToString() ?? (Model is null ? "1.75" : ""))"></div>
                 <div class="field"><label>Market Value (INR)</label><div class="field-suffix-wrap"><input type="number" id="isne_marketValueINR" placeholder="0.00" step="0.01" value="@Model?.MarketValueInr"><span class="field-suffix">₹</span></div></div>
                 <div class="field"><label>Gross Weight (KGS)</label><div class="field-suffix-wrap"><input type="number" id="isne_grossWt" placeholder="0.000" step="0.001" value="@Model?.GrossWeight"><span class="field-suffix">KG</span></div></div>
                 <div class="field"><label>Net Weight (KGS)</label><div class="field-suffix-wrap"><input type="number" id="isne_netWt" placeholder="0.000" step="0.001" value="@Model?.NetWeight"><span class="field-suffix">KG</span></div></div>

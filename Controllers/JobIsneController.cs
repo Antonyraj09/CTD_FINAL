@@ -80,8 +80,8 @@ public class JobIsneController : Controller
 
         // Entry for Data Sheet fields are all optional — only format/length is
         // re-checked server-side, and only when a value was actually provided.
-        if (!string.IsNullOrEmpty(request.ImporterCode) && !System.Text.RegularExpressions.Regex.IsMatch(request.ImporterCode, "^[A-Za-z]{2}[0-9]{4}$"))
-            return Json(new { success = false, message = "Importer Code must be 2 letters followed by exactly 4 numeric digits." });
+        if (!string.IsNullOrEmpty(request.ImporterCode) && !System.Text.RegularExpressions.Regex.IsMatch(request.ImporterCode, "^[A-Za-z]{2}[0-9]{1,8}$"))
+            return Json(new { success = false, message = "Importer Code must be 2 letters followed by up to 8 numeric digits (10 characters max)." });
 
         if (!string.IsNullOrEmpty(request.InvoiceNumber) && request.InvoiceNumber.Length > 20)
             return Json(new { success = false, message = "Invoice Number cannot exceed 20 characters." });
@@ -152,7 +152,7 @@ public class JobIsneController : Controller
             CertificateOfOriginDate = request.CertificateOfOriginDate,
             SensitiveCargo = request.SensitiveCargo,
             InsuranceCompanyNameAddress = request.SensitiveCargo ? request.InsuranceCompanyNameAddress : null,
-            SensitiveCifValue = request.SensitiveCargo ? request.SensitiveCifValue : null,
+            SensitiveCifValue = request.SensitiveCifValue,
             Currency = request.Currency,
             ExchangeRate = request.ExchangeRate,
             FobValue = request.FobValue,
@@ -190,7 +190,8 @@ public class JobIsneController : Controller
                 NetWeight = c.NetWeight,
                 NetWeightUnit = c.NetWeightUnit,
                 MarksSerial = c.MarksSerial,
-                CustomsCode = c.CustomsCode
+                CustomsCode = c.CustomsCode,
+                SealNumbers = c.SealNumbers
             };
         }).ToList();
 

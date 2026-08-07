@@ -106,4 +106,5 @@ public class JobIsneContainerRequest
     public string NetWeightUnit { get; set; } = "KG";
     public string? MarksSerial { get; set; }
     public string? CustomsCode { get; set; }
+    public string? SealNumbers { get; set; }
 }

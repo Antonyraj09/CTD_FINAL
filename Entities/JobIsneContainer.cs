@@ -46,4 +46,9 @@ public class JobIsneContainer : BaseEntity
 
     [StringLength(60)]
     public string? CustomsCode { get; set; }
+
+    /// <summary>Container seal number(s), as affixed at stuffing — free text since
+    /// multiple seals (carrier + customs) are common on a single container.</summary>
+    [StringLength(100)]
+    public string? SealNumbers { get; set; }
 }

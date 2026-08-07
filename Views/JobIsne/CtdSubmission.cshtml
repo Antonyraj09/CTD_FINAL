@@ -84,13 +84,14 @@
         var first = true;
         foreach (var c in Model.Containers)
         {
+            var sealSuffix = string.IsNullOrWhiteSpace(c.SealNumbers) ? "" : $" / SEAL: {c.SealNumbers}";
             if (first)
             {
-                <p><span class="num">14.</span> CONTAINER NO/SHIPPER SEAL NO: <span class="val">@V(c.ContainerNo) &ndash; @V(c.ContainerSize.TrimEnd('t', 'f'))'</span></p>
+                <p><span class="num">14.</span> CONTAINER NO/SHIPPER SEAL NO: <span class="val">@V(c.ContainerNo) &ndash; @V(c.ContainerSize.TrimEnd('t', 'f'))'@sealSuffix</span></p>
             }
             else
             {
-                <p class="cont">CONTAINER NO/SHIPPER SEAL NO: <span class="val">@V(c.ContainerNo) &ndash; @V(c.ContainerSize.TrimEnd('t', 'f'))'</span></p>
+                <p class="cont">CONTAINER NO/SHIPPER SEAL NO: <span class="val">@V(c.ContainerNo) &ndash; @V(c.ContainerSize.TrimEnd('t', 'f'))'@sealSuffix</span></p>
             }
             first = false;
         }

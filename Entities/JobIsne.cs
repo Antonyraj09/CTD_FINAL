@@ -135,9 +135,9 @@ public class JobIsne : BaseEntity
     public string? CargoDescription { get; set; }
 
     // ---- Section E: Entry for Data Sheet (all optional) ----
-    /// <summary>6 alphanumeric characters: 2 letters (editable, defaults to "NP") + 4 numeric digits, e.g. NP0001, when provided.</summary>
-    [StringLength(6)]
-    [RegularExpression(@"^([A-Za-z]{2}\d{4})?$", ErrorMessage = "Importer Code must be 2 letters followed by exactly 4 digits.")]
+    /// <summary>Up to 10 alphanumeric characters: 2 letters (editable, defaults to "NP") + up to 8 numeric digits, e.g. NP0001, when provided.</summary>
+    [StringLength(10)]
+    [RegularExpression(@"^([A-Za-z]{2}\d{1,8})?$", ErrorMessage = "Importer Code must be 2 letters followed by up to 8 digits (10 characters max).")]
     public string? ImporterCode { get; set; }
 
     [StringLength(20)]

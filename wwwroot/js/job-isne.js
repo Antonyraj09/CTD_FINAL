@@ -72,16 +72,16 @@
   const importerCode = $("#isne_importerCode");
   if (importerCode) {
     importerCode.addEventListener("input", function () {
-      const cleaned = importerCode.value.replace(/[^a-zA-Z0-9]/g, "").slice(0, 6);
+      const cleaned = importerCode.value.replace(/[^a-zA-Z0-9]/g, "").slice(0, 10);
       if (cleaned !== importerCode.value) importerCode.value = cleaned;
     });
   }
 
-  /* ---------------- Sensitive Cargo: show/hide Insurance Company / CIF Value ---------------- */
+  /* ---------------- Sensitive Cargo: show/hide Insurance Company (CIF Value always visible) ---------------- */
   const sensitiveToggle = $("#isne_sensitiveCargo");
   if (sensitiveToggle) {
     sensitiveToggle.addEventListener("change", function () {
-      $("#isne_sensitiveFields").style.display = sensitiveToggle.checked ? "grid" : "none";
+      $("#isne_insuranceAddressField").style.display = sensitiveToggle.checked ? "block" : "none";
       $("#isne_sensitiveCargoLabel").textContent = sensitiveToggle.checked ? "Yes" : "No";
       if (!sensitiveToggle.checked) {
         $("#isne_insuranceCompanyAddress").closest(".field")?.classList.remove("invalid");
@@ -126,7 +126,7 @@
     return {
       containerNo: "", containerSize: "20ft", shipmentType: shipmentType || "FCL",
       noPackages: 0, packageType: "", grossWeight: null, grossWeightUnit: "KG",
-      netWeight: null, netWeightUnit: "KG", marksSerial: "", customsCode: ""
+      netWeight: null, netWeightUnit: "KG", marksSerial: "", customsCode: "", sealNumbers: ""
     };
   }
 
@@ -165,6 +165,7 @@
       + '<td><select class="cr-field" data-field="netWeightUnit">' + weightUnitOptions(row.netWeightUnit || "KG") + '</select></td>'
       + '<td><input type="text" class="cr-field" data-field="marksSerial" value="' + esc(row.marksSerial || "") + '" placeholder="N/M"></td>'
       + '<td><input type="text" class="cr-field" data-field="customsCode" value="' + esc(row.customsCode || "") + '" placeholder="e.g. HSITC/72199090"></td>'
+      + '<td><input type="text" class="cr-field" data-field="sealNumbers" value="' + esc(row.sealNumbers || "") + '" placeholder="e.g. SL123456"></td>'
       + '<td><button type="button" class="iconbtn-table danger" data-remove-row="' + i + '" title="Delete row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m5 0V4a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v2"/></svg></button></td>'
       + '</tr>';
   }
@@ -304,7 +305,8 @@
       grossweight: "grossWeight", grossweightunit: "grossWeightUnit",
       netweight: "netWeight", netweightunit: "netWeightUnit",
       marksserial: "marksSerial", marksserialno: "marksSerial", marksandserialnumber: "marksSerial",
-      customscode: "customsCode"
+      customscode: "customsCode",
+      sealnumbers: "sealNumbers", sealnumber: "sealNumbers", sealno: "sealNumbers"
     };
     const headers = lines[0].split(",").map(function (h) { return h.trim().toLowerCase().replace(/[^a-z0-9]/g, ""); });
     return lines.slice(1).map(function (line) {
@@ -435,7 +437,8 @@
           netWeight: r.netWeight === "" || r.netWeight == null ? null : parseFloat(r.netWeight),
           netWeightUnit: r.netWeightUnit,
           marksSerial: r.marksSerial,
-          customsCode: r.customsCode
+          customsCode: r.customsCode,
+          sealNumbers: r.sealNumbers
         };
       }),
       importerCode: $("#isne_importerCode").value || null,
@@ -488,7 +491,7 @@
     // the expected format; an empty field is never blocking.
     const importerCodeField = importerCode?.closest(".field");
     const importerCodeVal = importerCode?.value || "";
-    if (importerCodeVal && !/^[A-Za-z]{2}\d{4}$/.test(importerCodeVal)) {
+    if (importerCodeVal && !/^[A-Za-z]{2}\d{1,8}$/.test(importerCodeVal)) {
       valid = false;
       if (importerCodeField) importerCodeField.classList.add("invalid");
     } else if (importerCodeField) {
@@ -510,35 +513,15 @@
     return valid;
   }
 
+  // Container Details fields are all optional — no per-field mandatory
+  // enforcement, only a border-color reset in case an earlier validation
+  // pass had flagged rows before this behavior was relaxed.
   function validateContainerRows() {
     if (!containerTbody) return true;
-    if (containerRows.length === 0) {
-      toast("Validation Error", "At least one container row is required", "error");
-      return false;
-    }
-    let valid = true;
-    $all("tr", containerTbody).forEach(function (tr, i) {
-      const row = containerRows[i];
-      ["containerNo", "packageType"].forEach(function (field) {
-        const input = tr.querySelector('[data-field="' + field + '"]');
-        if (!input) return;
-        const bad = !row[field] || !String(row[field]).trim();
-        input.style.borderColor = bad ? "var(--seal-red)" : "";
-        if (bad) valid = false;
-      });
-      const packagesInput = tr.querySelector('[data-field="noPackages"]');
-      const badPackages = !(Number(row.noPackages) > 0);
-      if (packagesInput) packagesInput.style.borderColor = badPackages ? "var(--seal-red)" : "";
-      if (badPackages) valid = false;
-      ["grossWeight", "netWeight"].forEach(function (field) {
-        const input = tr.querySelector('[data-field="' + field + '"]');
-        if (!input) return;
-        const bad = row[field] === null || row[field] === "" || row[field] === undefined;
-        input.style.borderColor = bad ? "var(--seal-red)" : "";
-        if (bad) valid = false;
-      });
+    $all("tr", containerTbody).forEach(function (tr) {
+      $all("[data-field]", tr).forEach(function (input) { input.style.borderColor = ""; });
     });
-    return valid;
+    return true;
   }
 
   /* ---------------- save / new / delete / print / cancel ---------------- */

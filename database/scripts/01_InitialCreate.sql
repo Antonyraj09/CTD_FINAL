@@ -1,8 +1,4 @@
-﻿-- sqlcmd's default session has QUOTED_IDENTIFIER OFF, which breaks the filtered
--- unique indexes below (WHERE [X] IS NOT NULL). dotnet ef database update is
--- unaffected (Microsoft.Data.SqlClient defaults it ON) but running this script
--- directly via sqlcmd requires it explicitly.
-SET QUOTED_IDENTIFIER ON;
+﻿SET QUOTED_IDENTIFIER ON;
 GO
 
 IF OBJECT_ID(N'[__EFMigrationsHistory]') IS NULL
@@ -2441,6 +2437,78 @@ IF NOT EXISTS (
 BEGIN
     INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
     VALUES (N'20260727101736_BackfillDeliveryIsnePermission', N'8.0.11');
+END;
+GO
+
+COMMIT;
+GO
+
+BEGIN TRANSACTION;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260727114331_AddDelivery'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260727114331_AddDelivery', N'8.0.11');
+END;
+GO
+
+COMMIT;
+GO
+
+BEGIN TRANSACTION;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260806155522_AddContainerSealNumbers'
+)
+BEGIN
+    ALTER TABLE [JobIsneContainers] ADD [SealNumbers] nvarchar(100) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260806155522_AddContainerSealNumbers'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260806155522_AddContainerSealNumbers', N'8.0.11');
+END;
+GO
+
+COMMIT;
+GO
+
+BEGIN TRANSACTION;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260806155930_ExpandImporterCodeToTenChars'
+)
+BEGIN
+    DECLARE @var25 sysname;
+    SELECT @var25 = [d].[name]
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[JobIsnes]') AND [c].[name] = N'ImporterCode');
+    IF @var25 IS NOT NULL EXEC(N'ALTER TABLE [JobIsnes] DROP CONSTRAINT [' + @var25 + '];');
+    ALTER TABLE [JobIsnes] ALTER COLUMN [ImporterCode] nvarchar(10) NULL;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260806155930_ExpandImporterCodeToTenChars'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260806155930_ExpandImporterCodeToTenChars', N'8.0.11');
 END;
 GO
 
