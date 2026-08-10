@@ -353,8 +353,8 @@
      CFR/CNF Value (FC) = FOB Value + Freight
      Insurance Rate -> Insurance Value (FC) & Insurance in Foreign Currency, both
        = CFR/CNF Value (FC) x Insurance Rate
-     CIF Value FC = CFR/CNF Value (FC) + Insurance Value (FC)
-     CIF Value (INR) = CIF Value FC x Insurance Exchange Rate
+     CIF Value FC = CFR/CNF Value (FC) + Insurance in Foreign Currency
+     CIF Value (INR) = CIF Value FC x Exchange Rate
      Market Value (INR) = CIF Value (INR) x Market Rate ---------------- */
   const fob = $("#isne_fobValue"), freight = $("#isne_freight"), cif = $("#isne_cifFC");
   function calcCfrCnf() {
@@ -372,13 +372,13 @@
 
   const cifRef = $("#isne_cifFCRef");
   function calcCifValueFc() {
-    const c = parseFloat(cif.value) || 0, ins = parseFloat(insValue.value) || 0;
+    const c = parseFloat(cif.value) || 0, ins = parseFloat(insFC.value) || 0;
     cifRef.value = (c + ins).toFixed(2);
   }
 
-  const insExRate = $("#isne_insExRate"), cifINR = $("#isne_cifINR");
+  const excRate = $("#isne_exchangeRate"), cifINR = $("#isne_cifINR");
   function calcCIFINR() {
-    const c = parseFloat(cifRef.value) || 0, r = parseFloat(insExRate.value) || 0;
+    const c = parseFloat(cifRef.value) || 0, r = parseFloat(excRate.value) || 0;
     cifINR.value = (c * r).toFixed(2);
   }
 
@@ -399,7 +399,7 @@
   if (fob) fob.addEventListener("input", recalcCommercialChain);
   if (freight) freight.addEventListener("input", recalcCommercialChain);
   if (insRate) insRate.addEventListener("input", recalcCommercialChain);
-  if (insExRate) insExRate.addEventListener("input", recalcCommercialChain);
+  if (excRate) excRate.addEventListener("input", recalcCommercialChain);
   if (mktRate) mktRate.addEventListener("input", calcMktVal);
 
   /* ---------------- gather / validate ---------------- */
