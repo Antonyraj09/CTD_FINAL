@@ -349,30 +349,58 @@
     });
   }
 
-  /* ---------------- auto-calculations ---------------- */
+  /* ---------------- auto-calculations ----------------
+     CFR/CNF Value (FC) = FOB Value + Freight
+     Insurance Rate -> Insurance Value (FC) & Insurance in Foreign Currency, both
+       = CFR/CNF Value (FC) x Insurance Rate
+     CIF Value FC = CFR/CNF Value (FC) + Insurance Value (FC)
+     CIF Value (INR) = CIF Value FC x Insurance Exchange Rate
+     Market Value (INR) = CIF Value (INR) x Market Rate ---------------- */
   const fob = $("#isne_fobValue"), freight = $("#isne_freight"), cif = $("#isne_cifFC");
-  function calcCIF() {
+  function calcCfrCnf() {
     const f = parseFloat(fob.value) || 0, fr = parseFloat(freight.value) || 0;
     cif.value = (f + fr).toFixed(2);
   }
-  if (fob) fob.addEventListener("input", calcCIF);
-  if (freight) freight.addEventListener("input", calcCIF);
 
-  const excRate = $("#isne_exchangeRate"), cifINR = $("#isne_cifINR");
+  const insRate = $("#isne_insRate"), insValue = $("#isne_insValue"), insFC = $("#isne_insFC");
+  function calcInsurance() {
+    const base = parseFloat(cif.value) || 0, rate = parseFloat(insRate.value) || 0;
+    const amount = (base * rate).toFixed(2);
+    insValue.value = amount;
+    insFC.value = amount;
+  }
+
+  const cifRef = $("#isne_cifFCRef");
+  function calcCifValueFc() {
+    const c = parseFloat(cif.value) || 0, ins = parseFloat(insValue.value) || 0;
+    cifRef.value = (c + ins).toFixed(2);
+  }
+
+  const insExRate = $("#isne_insExRate"), cifINR = $("#isne_cifINR");
   function calcCIFINR() {
-    const c = parseFloat(cif.value) || 0, r = parseFloat(excRate.value) || 0;
+    const c = parseFloat(cifRef.value) || 0, r = parseFloat(insExRate.value) || 0;
     cifINR.value = (c * r).toFixed(2);
   }
-  if (cif) cif.addEventListener("input", calcCIFINR);
-  if (excRate) excRate.addEventListener("input", function () { calcCIF(); calcCIFINR(); });
 
   const mktRate = $("#isne_marketRate"), mktVal = $("#isne_marketValueINR");
   function calcMktVal() {
     const r = parseFloat(mktRate.value) || 0, c = parseFloat(cifINR.value) || 0;
     mktVal.value = (r * c).toFixed(2);
   }
+
+  function recalcCommercialChain() {
+    calcCfrCnf();
+    calcInsurance();
+    calcCifValueFc();
+    calcCIFINR();
+    calcMktVal();
+  }
+
+  if (fob) fob.addEventListener("input", recalcCommercialChain);
+  if (freight) freight.addEventListener("input", recalcCommercialChain);
+  if (insRate) insRate.addEventListener("input", recalcCommercialChain);
+  if (insExRate) insExRate.addEventListener("input", recalcCommercialChain);
   if (mktRate) mktRate.addEventListener("input", calcMktVal);
-  if (cifINR) cifINR.addEventListener("input", calcMktVal);
 
   /* ---------------- gather / validate ---------------- */
   function gatherRequest() {
