@@ -396,10 +396,22 @@
     calcMktVal();
   }
 
+  // Insurance in Foreign Currency / Insurance Value can also be typed in directly
+  // (not just derived from Insurance Rate) — cascade downstream from a direct edit
+  // too, but without re-running calcInsurance(), which would overwrite what was
+  // just typed with the rate-derived amount.
+  function recalcFromInsuranceAmount() {
+    calcCifValueFc();
+    calcCIFINR();
+    calcMktVal();
+  }
+
   if (fob) fob.addEventListener("input", recalcCommercialChain);
   if (freight) freight.addEventListener("input", recalcCommercialChain);
   if (insRate) insRate.addEventListener("input", recalcCommercialChain);
   if (excRate) excRate.addEventListener("input", recalcCommercialChain);
+  if (insFC) insFC.addEventListener("input", recalcFromInsuranceAmount);
+  if (insValue) insValue.addEventListener("input", recalcFromInsuranceAmount);
   if (mktRate) mktRate.addEventListener("input", calcMktVal);
 
   /* ---------------- gather / validate ---------------- */
