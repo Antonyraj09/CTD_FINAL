@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using CTD_FINAL.Enums;
 
 namespace CTD_FINAL.Entities;
@@ -141,11 +142,13 @@ public class JobIsne : BaseEntity
     [StringLength(40)]
     public string? CargoPackageUnit { get; set; }
 
+    [Column(TypeName = "decimal(18,3)")]
     public decimal? CargoGrossWeight { get; set; }
 
     [StringLength(10)]
     public string CargoGrossWeightUnit { get; set; } = "KG";
 
+    [Column(TypeName = "decimal(18,3)")]
     public decimal? CargoNetWeight { get; set; }
 
     [StringLength(10)]
