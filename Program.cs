@@ -103,6 +103,7 @@ builder.Services.AddScoped<IEncryptionService, EncryptionService>();
 builder.Services.AddScoped<ITenantResolutionService, TenantResolutionService>();
 builder.Services.AddScoped<ILicenseService, LicenseService>();
 builder.Services.AddScoped<IProvisioningService, ProvisioningService>();
+builder.Services.AddScoped<ITenantMigrationService, TenantMigrationService>();
 
 builder.Services.AddScoped<IUserClaimsPrincipalFactory<ApplicationUser>, AppUserClaimsPrincipalFactory>();
 
@@ -140,6 +141,23 @@ builder.Services.AddAntiforgery(options =>
 });
 
 var app = builder.Build();
+
+// `migrate-tenants` [--dry-run]: applies any pending EF Core migrations to every active
+// tenant's own database in one pass, instead of running Update-Database against each
+// client's database by hand (see ITenantMigrationService for how). This never starts the
+// web pipeline — it runs the migration pass and exits.
+if (args.Length > 0 && string.Equals(args[0], "migrate-tenants", StringComparison.OrdinalIgnoreCase))
+{
+    var dryRun = args.Any(a => string.Equals(a, "--dry-run", StringComparison.OrdinalIgnoreCase));
+    using var cliScope = app.Services.CreateScope();
+
+    // ADMIN_CTD holds the ClientDatabases list this command reads — make sure it's current too.
+    await AdminDbInitializer.SeedAsync(cliScope.ServiceProvider);
+
+    var migrationService = cliScope.ServiceProvider.GetRequiredService<ITenantMigrationService>();
+    var exitCode = await migrationService.RunCliAsync(dryRun);
+    Environment.Exit(exitCode);
+}
 
 // Configure the HTTP request pipeline.
 app.UseGlobalExceptionMiddleware();
