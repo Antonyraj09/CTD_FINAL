@@ -58,6 +58,12 @@ public class JobIsneSaveRequest
     public string ShipmentType { get; set; } = "FCL";
     public string? MiscDescription { get; set; }
     public string? CargoDescription { get; set; }
+    public int? CargoPackages { get; set; }
+    public string? CargoPackageUnit { get; set; }
+    public decimal? CargoGrossWeight { get; set; }
+    public string CargoGrossWeightUnit { get; set; } = "KG";
+    public decimal? CargoNetWeight { get; set; }
+    public string CargoNetWeightUnit { get; set; } = "KG";
     public List<JobIsneContainerRequest> Containers { get; set; } = new();
 
     // Section E: Entry for Data Sheet (all optional)

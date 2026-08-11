@@ -351,8 +351,9 @@
 
   /* ---------------- auto-calculations ----------------
      CFR/CNF Value (FC) = FOB Value + Freight
-     Insurance Rate -> Insurance Value (FC) & Insurance in Foreign Currency, both
-       = CFR/CNF Value (FC) x Insurance Rate
+     Insurance in Foreign Currency = CFR/CNF Value (FC) x Insurance Rate% (Insurance
+       Rate is a percentage, e.g. 1.5 means 1.5%, not a fraction)
+     Insurance Value (INR) = Insurance in Foreign Currency x Exchange Rate
      CIF Value FC = CFR/CNF Value (FC) + Insurance in Foreign Currency
      CIF Value (INR) = CIF Value FC x Exchange Rate
      Market Value (INR) = CIF Value (INR) x Market Rate ---------------- */
@@ -362,12 +363,16 @@
     cif.value = (f + fr).toFixed(2);
   }
 
-  const insRate = $("#isne_insRate"), insValue = $("#isne_insValue"), insFC = $("#isne_insFC");
-  function calcInsurance() {
-    const base = parseFloat(cif.value) || 0, rate = parseFloat(insRate.value) || 0;
-    const amount = (base * rate).toFixed(2);
-    insValue.value = amount;
-    insFC.value = amount;
+  const insRate = $("#isne_insRate"), insFC = $("#isne_insFC");
+  function calcInsuranceFc() {
+    const base = parseFloat(cif.value) || 0, ratePct = parseFloat(insRate.value) || 0;
+    insFC.value = (base * (ratePct / 100)).toFixed(2);
+  }
+
+  const excRate = $("#isne_exchangeRate"), insValueINR = $("#isne_insValueINR");
+  function calcInsuranceValueInr() {
+    const ins = parseFloat(insFC.value) || 0, r = parseFloat(excRate.value) || 0;
+    insValueINR.value = (ins * r).toFixed(2);
   }
 
   const cifRef = $("#isne_cifFCRef");
@@ -376,7 +381,7 @@
     cifRef.value = (c + ins).toFixed(2);
   }
 
-  const excRate = $("#isne_exchangeRate"), cifINR = $("#isne_cifINR");
+  const cifINR = $("#isne_cifINR");
   function calcCIFINR() {
     const c = parseFloat(cifRef.value) || 0, r = parseFloat(excRate.value) || 0;
     cifINR.value = (c * r).toFixed(2);
@@ -390,17 +395,19 @@
 
   function recalcCommercialChain() {
     calcCfrCnf();
-    calcInsurance();
+    calcInsuranceFc();
+    calcInsuranceValueInr();
     calcCifValueFc();
     calcCIFINR();
     calcMktVal();
   }
 
-  // Insurance in Foreign Currency / Insurance Value can also be typed in directly
-  // (not just derived from Insurance Rate) — cascade downstream from a direct edit
-  // too, but without re-running calcInsurance(), which would overwrite what was
-  // just typed with the rate-derived amount.
+  // Insurance in Foreign Currency can also be typed in directly (not just derived
+  // from Insurance Rate) — cascade downstream from a direct edit too, but without
+  // re-running calcInsuranceFc(), which would overwrite what was just typed with
+  // the rate-derived amount.
   function recalcFromInsuranceAmount() {
+    calcInsuranceValueInr();
     calcCifValueFc();
     calcCIFINR();
     calcMktVal();
@@ -411,7 +418,6 @@
   if (insRate) insRate.addEventListener("input", recalcCommercialChain);
   if (excRate) excRate.addEventListener("input", recalcCommercialChain);
   if (insFC) insFC.addEventListener("input", recalcFromInsuranceAmount);
-  if (insValue) insValue.addEventListener("input", recalcFromInsuranceAmount);
   if (mktRate) mktRate.addEventListener("input", calcMktVal);
 
   /* ---------------- gather / validate ---------------- */
@@ -465,6 +471,12 @@
       shipmentType: currentShipmentType(),
       miscDescription: $("#isne_miscDesc").value,
       cargoDescription: $("#isne_cargoDesc").value,
+      cargoPackages: parseInt($("#isne_cargoPackages").value, 10) || null,
+      cargoPackageUnit: $("#isne_cargoPackageUnit").value || null,
+      cargoGrossWeight: parseFloat($("#isne_cargoGrossWeight").value) || null,
+      cargoGrossWeightUnit: $("#isne_cargoGrossWeightUnit").value,
+      cargoNetWeight: parseFloat($("#isne_cargoNetWeight").value) || null,
+      cargoNetWeightUnit: $("#isne_cargoNetWeightUnit").value,
       containers: containerRows.map(function (r) {
         return {
           containerNo: r.containerNo,
@@ -496,8 +508,6 @@
       cifFc: parseFloat($("#isne_cifFC").value) || null,
       cifFcReference: parseFloat($("#isne_cifFCRef").value) || null,
       insuranceFc: parseFloat($("#isne_insFC").value) || null,
-      insuranceValue: parseFloat($("#isne_insValue").value) || null,
-      insuranceExRate: parseFloat($("#isne_insExRate").value) || null,
       insuranceRate: parseFloat($("#isne_insRate").value) || null,
       insuranceValueInr: parseFloat($("#isne_insValueINR").value) || null,
       cifInr: parseFloat($("#isne_cifINR").value) || null,
@@ -526,17 +536,9 @@
       }
     });
 
-    // Entry for Data Sheet fields are all optional — only flag Importer Code /
-    // CIF Value as invalid when something was actually typed but doesn't fit
-    // the expected format; an empty field is never blocking.
-    const importerCodeField = importerCode?.closest(".field");
-    const importerCodeVal = importerCode?.value || "";
-    if (importerCodeVal && !/^[A-Za-z]{2}\d{1,8}$/.test(importerCodeVal)) {
-      valid = false;
-      if (importerCodeField) importerCodeField.classList.add("invalid");
-    } else if (importerCodeField) {
-      importerCodeField.classList.remove("invalid");
-    }
+    // Entry for Data Sheet fields are all optional — CIF Value is only flagged
+    // invalid when something was actually typed but doesn't fit; Importer Code
+    // has no format requirement and never blocks saving.
 
     const cifField = $("#isne_sensitiveCifValue").closest(".field");
     const cifRaw = $("#isne_sensitiveCifValue").value;

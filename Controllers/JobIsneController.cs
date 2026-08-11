@@ -78,10 +78,8 @@ public class JobIsneController : Controller
         if (!Enum.TryParse<ContainerStatus>(request.ShipmentType, true, out var shipmentType))
             shipmentType = ContainerStatus.FCL;
 
-        // Entry for Data Sheet fields are all optional — only format/length is
-        // re-checked server-side, and only when a value was actually provided.
-        if (!string.IsNullOrEmpty(request.ImporterCode) && !System.Text.RegularExpressions.Regex.IsMatch(request.ImporterCode, "^[A-Za-z]{2}[0-9]{1,8}$"))
-            return Json(new { success = false, message = "Importer Code must be 2 letters followed by up to 8 numeric digits (10 characters max)." });
+        // Entry for Data Sheet fields are all optional — Importer Code has no format
+        // requirement and never blocks saving, regardless of what's entered.
 
         if (!string.IsNullOrEmpty(request.InvoiceNumber) && request.InvoiceNumber.Length > 20)
             return Json(new { success = false, message = "Invoice Number cannot exceed 20 characters." });
@@ -145,6 +143,12 @@ public class JobIsneController : Controller
             ShipmentType = shipmentType,
             MiscDescription = request.MiscDescription,
             CargoDescription = request.CargoDescription,
+            CargoPackages = request.CargoPackages,
+            CargoPackageUnit = request.CargoPackageUnit,
+            CargoGrossWeight = request.CargoGrossWeight,
+            CargoGrossWeightUnit = request.CargoGrossWeightUnit,
+            CargoNetWeight = request.CargoNetWeight,
+            CargoNetWeightUnit = request.CargoNetWeightUnit,
             ImporterCode = request.ImporterCode,
             InvoiceNumber = request.InvoiceNumber,
             InvoiceDate = request.InvoiceDate,

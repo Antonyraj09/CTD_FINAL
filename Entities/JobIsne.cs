@@ -134,10 +134,27 @@ public class JobIsne : BaseEntity
     [StringLength(1000)]
     public string? CargoDescription { get; set; }
 
-    // ---- Section E: Entry for Data Sheet (all optional) ----
-    /// <summary>Up to 10 alphanumeric characters: 2 letters (editable, defaults to "NP") + up to 8 numeric digits, e.g. NP0001, when provided.</summary>
+    /// <summary>Common Cargo Details summary — applies across all containers, entered
+    /// separately from the per-container package/weight figures in the Container Details grid.</summary>
+    public int? CargoPackages { get; set; }
+
+    [StringLength(40)]
+    public string? CargoPackageUnit { get; set; }
+
+    public decimal? CargoGrossWeight { get; set; }
+
     [StringLength(10)]
-    [RegularExpression(@"^([A-Za-z]{2}\d{1,8})?$", ErrorMessage = "Importer Code must be 2 letters followed by up to 8 digits (10 characters max).")]
+    public string CargoGrossWeightUnit { get; set; } = "KG";
+
+    public decimal? CargoNetWeight { get; set; }
+
+    [StringLength(10)]
+    public string CargoNetWeightUnit { get; set; } = "KG";
+
+    // ---- Section E: Entry for Data Sheet (all optional) ----
+    /// <summary>Free-text, up to 10 characters. No format is enforced — entirely optional,
+    /// never blocks saving regardless of what's entered.</summary>
+    [StringLength(10)]
     public string? ImporterCode { get; set; }
 
     [StringLength(20)]

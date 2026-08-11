@@ -328,6 +328,32 @@
                         <div class="field"><label>Miscellaneous Description</label><textarea id="isne_miscDesc" placeholder="e.g. SHIPPER'S LOAD &amp; COUNT" style="min-height:96px;">@Model?.MiscDescription</textarea></div>
                         <div class="field"><label>Cargo Description</label><textarea id="isne_cargoDesc" placeholder="e.g. STAINLESS STEEL COLD ROLLED COILS GRADE 201/302 FINISHED MILL EDGE" style="min-height:96px;">@Model?.CargoDescription</textarea></div>
                     </div>
+                    <div class="form-grid cols-3" style="gap:14px;margin-top:14px;">
+                        <div class="field"><label>Package</label><input type="number" id="isne_cargoPackages" placeholder="e.g. 10" min="0" step="1" value="@Model?.CargoPackages"></div>
+                        <div class="field"><label>Package Unit</label><input type="text" id="isne_cargoPackageUnit" placeholder="e.g. BOX" value="@Model?.CargoPackageUnit"></div>
+                        <div></div>
+                        <div class="field"><label>Gross Weight</label><input type="number" id="isne_cargoGrossWeight" placeholder="0.000" min="0" step="0.001" value="@Model?.CargoGrossWeight"></div>
+                        <div class="field">
+                            <label>Gross Weight Unit</label>
+                            <select id="isne_cargoGrossWeightUnit">
+                                @foreach (var u in new[] { "KG", "MT", "LBS" })
+                                {
+                                    <option value="@u" selected="@((Model?.CargoGrossWeightUnit ?? "KG") == u)">@u</option>
+                                }
+                            </select>
+                        </div>
+                        <div></div>
+                        <div class="field"><label>Net Weight</label><input type="number" id="isne_cargoNetWeight" placeholder="0.000" min="0" step="0.001" value="@Model?.CargoNetWeight"></div>
+                        <div class="field">
+                            <label>Net Weight Unit</label>
+                            <select id="isne_cargoNetWeightUnit">
+                                @foreach (var u in new[] { "KG", "MT", "LBS" })
+                                {
+                                    <option value="@u" selected="@((Model?.CargoNetWeightUnit ?? "KG") == u)">@u</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -472,14 +498,10 @@
                 <div class="field"><label>Freight</label><div class="field-suffix-wrap"><input type="number" id="isne_freight" placeholder="0.00" step="0.01" value="@Model?.Freight"><span class="field-suffix" id="isne_freightSuffix">FC</span></div></div>
                 <div class="field"><label>CFR/CNF Value (FC)</label><div class="field-suffix-wrap"><input type="number" id="isne_cifFC" placeholder="0.00" step="0.01" value="@Model?.CifFc"><span class="field-suffix">FC</span></div></div>
                 <div class="field"><label>CIF Value FC</label><div class="field-suffix-wrap"><input type="number" id="isne_cifFCRef" placeholder="0.00" step="0.01" value="@Model?.CifFcReference"><span class="field-suffix">FC</span></div></div>
-                <div class="field"><label>Insurance in Foreign Currency</label><div class="field-suffix-wrap"><input type="number" id="isne_insFC" placeholder="0.00" step="0.01" value="@Model?.InsuranceFc"><span class="field-suffix">FC</span></div></div>
-                <div class="field"><label>Insurance Value</label><div class="field-suffix-wrap"><input type="number" id="isne_insValue" placeholder="0.00" step="0.01" value="@Model?.InsuranceValue"><span class="field-suffix">FC</span></div></div>
-
-                <div class="fin-group-title">Indian Rupee Details</div>
-                <div class="field"><label>Insurance Exchange Rate</label><input type="number" id="isne_insExRate" placeholder="0.00" step="0.0001" value="@Model?.InsuranceExRate"></div>
-                <div class="field"><label>Insurance Rate</label><input type="number" id="isne_insRate" placeholder="0.000" step="0.001" value="@Model?.InsuranceRate"></div>
-                <div class="field"><label>Insurance Value (INR)</label><div class="field-suffix-wrap"><input type="number" id="isne_insValueINR" placeholder="0.00" step="0.01" value="@Model?.InsuranceValueInr"><span class="field-suffix">₹</span></div></div>
                 <div class="field"><label>CIF Value (INR)</label><div class="field-suffix-wrap"><input type="number" id="isne_cifINR" placeholder="0.00" step="0.01" value="@Model?.CifInr"><span class="field-suffix">₹</span></div></div>
+                <div class="field"><label>Insurance Rate</label><div class="field-suffix-wrap"><input type="number" id="isne_insRate" placeholder="0.000" step="0.001" value="@Model?.InsuranceRate"><span class="field-suffix">%</span></div></div>
+                <div class="field"><label>Insurance in Foreign Currency</label><div class="field-suffix-wrap"><input type="number" id="isne_insFC" placeholder="0.00" step="0.01" value="@Model?.InsuranceFc"><span class="field-suffix">FC</span></div></div>
+                <div class="field"><label>Insurance Value (INR)</label><div class="field-suffix-wrap"><input type="number" id="isne_insValueINR" placeholder="0.00" step="0.01" value="@Model?.InsuranceValueInr"><span class="field-suffix">₹</span></div></div>
                 <div class="field"><label>Market Rate</label><input type="number" id="isne_marketRate" placeholder="0.00" step="0.01" value="@(Model?.MarketRate?.ToString() ?? (Model is null ? "1.75" : ""))"></div>
                 <div class="field"><label>Market Value (INR)</label><div class="field-suffix-wrap"><input type="number" id="isne_marketValueINR" placeholder="0.00" step="0.01" value="@Model?.MarketValueInr"><span class="field-suffix">₹</span></div></div>
                 <div class="field"><label>Gross Weight (KGS)</label><div class="field-suffix-wrap"><input type="number" id="isne_grossWt" placeholder="0.000" step="0.001" value="@Model?.GrossWeight"><span class="field-suffix">KG</span></div></div>
