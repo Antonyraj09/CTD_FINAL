@@ -26,12 +26,12 @@ public class JobIsneService : IJobIsneService
             .Include(j => j.Containers.OrderBy(c => c.SortOrder))
             .FirstOrDefaultAsync(j => j.Id == id, ct);
 
-    public async Task<string> PeekNextJobNumberAsync(CancellationToken ct = default)
-    {
-        var row = await _context.NumberSequences.AsNoTracking().FirstOrDefaultAsync(s => s.Key == "IsneJobNo", ct);
-        var next = (row?.CurrentValue ?? 0) + 1;
-        return $"ISNE/{next:D4}/{DateTime.UtcNow.Year}";
-    }
+    // Now that NextIsneJobNumberAsync is computed live from JobIsnes (MAX existing + 1)
+    // instead of a persisted counter, there's no longer a stateful "peek vs. consume"
+    // distinction to maintain — both just read the same live max, so this can delegate
+    // straight to it.
+    public Task<string> PeekNextJobNumberAsync(CancellationToken ct = default) =>
+        _numberSequenceService.NextIsneJobNumberAsync(ct);
 
     public async Task<JobIsne> SaveAsync(JobIsne record, List<JobIsneContainer> containers, string userName, CancellationToken ct = default)
     {

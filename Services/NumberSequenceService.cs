@@ -31,10 +31,21 @@ public class NumberSequenceService : INumberSequenceService
         return $"{prefix}-{8800 + seq}";
     }
 
+    /// <summary>Unlike the other Next*Async methods, this is computed live from the JobIsnes
+    /// table (MAX existing sequence + 1) rather than a persisted NumberSequences counter row —
+    /// deletes are hard deletes here, so the next number should always reflect what's actually
+    /// left, e.g. deleting the highest-numbered job frees its number back up for the next one.</summary>
     public async Task<string> NextIsneJobNumberAsync(CancellationToken ct = default)
     {
-        var seq = await NextAsync("IsneJobNo", ct);
-        return $"ISNE/{seq:D4}/{DateTime.UtcNow.Year}";
+        var existingNumbers = await _context.JobIsnes.AsNoTracking().Select(j => j.JobNumber).ToListAsync(ct);
+        var next = existingNumbers.Select(ParseIsneSequence).DefaultIfEmpty(0).Max() + 1;
+        return $"ISNE/{next:D4}/{DateTime.UtcNow.Year}";
+    }
+
+    private static int ParseIsneSequence(string jobNumber)
+    {
+        var parts = jobNumber.Split('/');
+        return parts.Length >= 2 && int.TryParse(parts[1], out var seq) ? seq : 0;
     }
 
     public Task<int> NextDeliveryIsneSerialAsync(CancellationToken ct = default) => NextAsync("DeliveryIsneSerial", ct);
