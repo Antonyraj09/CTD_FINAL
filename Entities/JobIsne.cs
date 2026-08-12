@@ -60,7 +60,10 @@ public class JobIsne : BaseEntity
     [StringLength(100)]
     public string? CountryOrigin { get; set; }
 
-    [StringLength(100)]
+    /// <summary>Copied in from the selected TransitRoute's Name at save time — must stay at
+    /// least as long as TransitRoute.Name's own limit, or a route long enough to be saved to
+    /// the master list can still fail here with a truncation error.</summary>
+    [StringLength(1000)]
     public string? RouteOfTransit { get; set; }
 
     [StringLength(40)]

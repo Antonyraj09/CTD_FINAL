@@ -208,6 +208,14 @@ public class JobIsneController : Controller
         {
             return Json(new { success = false, message = ex.Message });
         }
+        catch (Microsoft.EntityFrameworkCore.DbUpdateException)
+        {
+            // Most commonly a value too long for its column (e.g. StringLength mismatched
+            // against a related master field) — the global exception middleware would
+            // otherwise surface this as an opaque failure with no indication of which field
+            // or why.
+            return Json(new { success = false, message = "Could not save — one or more fields are too long or otherwise violate a database constraint. Please shorten the input and try again." });
+        }
     }
 
     [HttpPost]
