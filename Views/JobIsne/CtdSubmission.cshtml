@@ -35,22 +35,93 @@
     </xml>
     <![endif]-->
     <style>
-        @@page { size: A4; margin: 18mm 16mm; }
-        body { font-family: 'Times New Roman', Times, serif; color: #000; font-size: 10pt; }
-        p { margin: 0 0 10px; font-weight: 700; line-height: 1.5; }
-        p.cont { margin: 0 0 10px; padding-left: 22px; }
-        .hdr { text-align: center; margin-bottom: 4px; }
-        .hdr .title { font-size: 13pt; font-weight: 700; }
-        .hdr .subtitle { font-size: 11pt; font-weight: 700; }
-        .hdr .note { font-size: 10pt; font-weight: 700; }
-        .divider { border-top: 1px solid #000; margin: 8px 0 12px; }
-        .num { display: inline-block; min-width: 20px; }
-        .val { color: #FF0000; }
-        .footer { margin-top: 16px; font-size: 9pt; color: #888; text-align: right; font-weight: 400; }
+        @@page {
+            size: A4;
+            margin: 18mm 16mm;
+        }
+
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            color: #000;
+            font-size: 10pt;
+        }
+
+        p {
+            margin: 0 0 10px;
+            font-weight: 700;
+            line-height: 1.5;
+        }
+
+            p.cont {
+                margin: 0 0 10px;
+                padding-left: 22px;
+            }
+
+        .hdr {
+            text-align: center;
+            margin-bottom: 4px;
+        }
+
+            .hdr .title {
+                font-size: 13pt;
+                font-weight: 700;
+            }
+
+            .hdr .subtitle {
+                font-size: 11pt;
+                font-weight: 700;
+            }
+
+            .hdr .note {
+                font-size: 10pt;
+                font-weight: 700;
+            }
+
+        .divider {
+            border-top: 1px solid #000;
+            margin: 8px 0 12px;
+        }
+
+        .num {
+            display: inline-block;
+            min-width: 20px;
+        }
+
+        .val {
+            color: #FF0000;
+        }
+
+        .topline, .fieldrow {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0 0 10px;
+            font-weight: 700;
+        }
+
+            .topline td, .fieldrow td {
+                padding: 0;
+                vertical-align: top;
+                text-align: left;
+                line-height: 1.5;
+            }
+
+        .footer {
+            margin-top: 16px;
+            font-size: 9pt;
+            color: #888;
+            text-align: right;
+            font-weight: 400;
+        }
     </style>
 </head>
 <body>
-    <p>&nbsp;&nbsp;JOB NO: ISNE/<span class="val">@V(Model.JobNumber.Replace("ISNE/", ""))</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CTD NO: <span class="val">@V(Model.CtdNumber)</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DT: <span class="val">@D(Model.CtdDate)</span></p>
+    <table class="topline" width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+            <td width="40%">JOB NO: ISNE/<span class="val">@V(Model.JobNumber.Replace("ISNE/", ""))</span></td>
+            <td width="35%">CTD NO: <span class="val">@V(Model.CtdNumber)</span></td>
+            <td width="25%">DT: <span class="val">@D(Model.CtdDate)</span></td>
+        </tr>
+    </table>
 
     <div class="hdr">
         <p class="title">ANNEXURE &ndash; A</p>
@@ -69,9 +140,22 @@
     <p><span class="num">6.</span> CERTIFICATE OF ORIGIN: <span class="val">@V(Model.CertificateOfOrigin)</span>, DATE: <span class="val">@D(Model.CertificateOfOriginDate)</span></p>
     <p><span class="num">7.</span> LC / EL NO: <span class="val">@V(Model.LcNo)</span>,&nbsp; DATE: <span class="val">@D(Model.LcDate)</span>,&nbsp; COUNTRY OF ORIGIN: <span class="val">@V(Model.CountryOrigin)</span></p>
     <p class="cont">COUNTRY OF CONSIGNMENT: <span class="val">@V(Model.CountryCgn)</span>.&nbsp; CURRENCY CODE: <span class="val">@V(Model.Currency)</span></p>
-    <p><span class="num">8.</span> INS. POLICY NO: <span class="val">&nbsp;</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;, DATE: <span class="val">&nbsp;</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;, EXP DATE: <span class="val">&nbsp;</span></p>
+    <table class="fieldrow" width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+            <td width="40%"><span class="num">8.</span> INS. POLICY NO: <span class="val">&nbsp;</span></td>
+            <td width="30%">DATE: <span class="val">&nbsp;</span></td>
+            <td width="30%">EXP DATE: <span class="val">&nbsp;</span></td>
+        </tr>
+    </table>
     <p><span class="num">9.</span> INSURANCE COMPANY NAME &amp; ADD : <span class="val">@V(Model.SensitiveCargo ? Model.InsuranceCompanyNameAddress : null)</span></p>
-    <p><span class="num">10.</span> IGM NO: <span class="val">@V(Model.RotNo)</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;, IGM DATE: <span class="val">@D(Model.RotDate)</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;, LINE NO: <span class="val">@V(Model.LineNo)</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;, INWARD DATE: <span class="val">@D(Model.InwardDate)</span></p>
+    <table class="fieldrow" width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+            <td width="28%"><span class="num">10.</span> IGM NO: <span class="val">@V(Model.RotNo)</span></td>
+            <td width="24%">IGM DATE: <span class="val">@D(Model.RotDate)</span></td>
+            <td width="20%">LINE NO: <span class="val">@V(Model.LineNo)</span></td>
+            <td width="28%">INWARD DATE: <span class="val">@D(Model.InwardDate)</span></td>
+        </tr>
+    </table>
     <p><span class="num">11.</span> MBL NO: <span class="val">@V(Model.MblNo)</span>, DATE: <span class="val">@D(Model.MblDate)</span>, HBL NO: <span class="val">@V(Model.HblNo)</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DATE: <span class="val">@D(Model.HblDate)</span></p>
     <p>
         <span class="num">12.</span> TOTAL PACKAGE: <span class="val">@(Model.Containers.Sum(c => c.NoPackages) is var totalPkg && totalPkg > 0 ? totalPkg.ToString() : "")</span>,
@@ -79,8 +163,8 @@
         MARK AND NO: <span class="val">@(Model.Containers.Any(c => !string.IsNullOrWhiteSpace(c.MarksSerial)) ? string.Join(", ", Model.Containers.Select(c => c.MarksSerial).Where(m => !string.IsNullOrWhiteSpace(m))) : "N/M")</span>
     </p>
     <p>
-        <span class="num">13.</span> GROSS WT: <span class="val">@(Model.GrossWeight.HasValue ? Model.GrossWeight.Value.ToString("N3") : "")</span>,
-        NET WT: <span class="val">@(Model.NetWeight.HasValue ? Model.NetWeight.Value.ToString("N3") : "")</span>,
+        <span class="num">13.</span> GROSS WT: <span class="val">@(Model.GrossWeight.HasValue? Model.GrossWeight.Value.ToString("N3") : "")</span>,
+        NET WT: <span class="val">@(Model.NetWeight.HasValue? Model.NetWeight.Value.ToString("N3") : "")</span>,
         UNIT: <span class="val">KGS</span>
     </p>
     @if (Model.Containers.Any())
@@ -108,7 +192,9 @@
     {
         <p><span class="num">14.</span> CONTAINER NO/SHIPPER SEAL NO: <span class="val">&nbsp;</span></p>
     }
-    @{ var itemNo = 0; }
+    @{
+        var itemNo = 0;
+    }
     @if (Model.Containers.Any())
     {
         var first = true;
@@ -131,8 +217,8 @@
         <p><span class="num">15.</span> ITEM NO: <span class="val">&nbsp;</span>, CTH: <span class="val">&nbsp;</span>,&nbsp; SENSITIVE: <span class="val">@(Model.SensitiveCargo ? "YES" : "NO")</span></p>
     }
     <p><span class="num">16.</span> DESCRIPTION OF GOODS: <span class="val">@V(Model.CargoDescription ?? Model.MiscDescription)</span></p>
-    <p><span class="num">17.</span> CIF VALUE IN FC: @V(Model.Currency). <span class="val">@(Model.CifFcReference.HasValue ? Model.CifFcReference.Value.ToString("N2") : "")</span>,&nbsp; ANTI DUMPING DUTY(INR): <span class="val">&nbsp;</span></p>
-    <p><span class="num">18.</span> DUTY EXCLUDING ANTI DUMPING AND SAFEGUARD(INR): <span class="val">@(Model.DutyAmount.HasValue ? Model.DutyAmount.Value.ToString("N2") : "")</span></p>
+    <p><span class="num">17.</span> CIF VALUE IN FC: @V(Model.Currency). <span class="val">@(Model.CifFcReference.HasValue? Model.CifFcReference.Value.ToString("N2") : "")</span>,&nbsp; ANTI DUMPING DUTY(INR): <span class="val">&nbsp;</span></p>
+    <p><span class="num">18.</span> DUTY EXCLUDING ANTI DUMPING AND SAFEGUARD(INR): <span class="val">@(Model.DutyAmount.HasValue? Model.DutyAmount.Value.ToString("N2") : "")</span></p>
     <p><span class="num">19.</span> VHICLE NO: <span class="val">&nbsp;</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CHASSIS NO: <span class="val">&nbsp;</span></p>
     <p><span class="num">20.</span> ENGINE NO: <span class="val">&nbsp;</span>&nbsp;&nbsp;&nbsp;DATE OF REGN: <span class="val">&nbsp;</span></p>
     <p><span class="num">21.</span> MODE OF TRANSPORT &ndash; ROAD</p>
