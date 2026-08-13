@@ -10,11 +10,15 @@
     const string DefaultAgentName = "EASTERN CLEARING & FORWARDING AGENCY PVT. LTD.";
     const string DefaultAgentLicenseNo = "E-18";
 
-    var agentName = agent?.Name ?? Model.SubAgentName;
+    // CHA identity on this form is always the logged-in CHA/forwarding company itself —
+    // never the job's Party or SubAgent, which is a different party to the shipment.
+    var agentName = ViewBag.CompanyName as string;
     if (string.IsNullOrWhiteSpace(agentName)) agentName = DefaultAgentName;
 
     var agentLicenseNo = agent?.LicenseNo;
     if (string.IsNullOrWhiteSpace(agentLicenseNo)) agentLicenseNo = DefaultAgentLicenseNo;
+
+    var importerPan = ViewBag.ImporterPan as string;
 }
 <!DOCTYPE html>
 <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
@@ -46,7 +50,7 @@
     </style>
 </head>
 <body>
-    <p>&nbsp;&nbsp;JOB NO: ISNE/<span class="val">@V(Model.JobNumber.Replace("ISNE/", ""))</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CTD NO: <span class="val">@V(Model.CtdNumber)</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DT: <span class="val">@D(Model.CtdDate)</span></p>
+    <p>&nbsp;&nbsp;JOB NO: ISNE/<span class="val">@V(Model.JobNumber.Replace("ISNE/", ""))</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CTD NO: <span class="val">@V(Model.CtdNumber)</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DT: <span class="val">@D(Model.CtdDate)</span></p>
 
     <div class="hdr">
         <p class="title">ANNEXURE &ndash; A</p>
@@ -59,15 +63,15 @@
     <p><span class="num">2.</span> EXIT CUSTOMS SITE: (PL TICK), ROUTE OF TRANSIT: <span class="val">@V(Model.RouteOfTransit)</span></p>
     <p><span class="num">3.</span> IMPORTER'S CODE: <span class="val">@V(Model.ImporterCode)</span></p>
     <p><span class="num">4.</span> IMPORTER'S NAME &amp; ADDRESS: <span class="val">@V(Model.PartyName)</span></p>
-    <p class="cont"><span class="val">@V(Model.Address)</span>, PAN: <span class="val">&nbsp;</span>.</p>
+    <p class="cont"><span class="val">@V(Model.Address)</span>, PAN: <span class="val">@V(importerPan)</span>.</p>
     <p class="cont">NOTIFY NAME AND ADDRESS: <span class="val">SAME AS ABOVE</span></p>
     <p><span class="num">5.</span> INVOICE NO: <span class="val">@V(Model.InvoiceNumber)</span>, DATE: <span class="val">@D(Model.InvoiceDate)</span></p>
     <p><span class="num">6.</span> CERTIFICATE OF ORIGIN: <span class="val">@V(Model.CertificateOfOrigin)</span>, DATE: <span class="val">@D(Model.CertificateOfOriginDate)</span></p>
     <p><span class="num">7.</span> LC / EL NO: <span class="val">@V(Model.LcNo)</span>,&nbsp; DATE: <span class="val">@D(Model.LcDate)</span>,&nbsp; COUNTRY OF ORIGIN: <span class="val">@V(Model.CountryOrigin)</span></p>
     <p class="cont">COUNTRY OF CONSIGNMENT: <span class="val">@V(Model.CountryCgn)</span>.&nbsp; CURRENCY CODE: <span class="val">@V(Model.Currency)</span></p>
-    <p><span class="num">8.</span> INS. POLICY NO:&nbsp;<span class="val">&nbsp;</span>, DATE:&nbsp;<span class="val">&nbsp;</span>, EXP DATE:&nbsp;<span class="val">&nbsp;</span></p>
+    <p><span class="num">8.</span> INS. POLICY NO: <span class="val">&nbsp;</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;, DATE: <span class="val">&nbsp;</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;, EXP DATE: <span class="val">&nbsp;</span></p>
     <p><span class="num">9.</span> INSURANCE COMPANY NAME &amp; ADD : <span class="val">@V(Model.SensitiveCargo ? Model.InsuranceCompanyNameAddress : null)</span></p>
-    <p><span class="num">10.</span> IGM NO: <span class="val">@V(Model.RotNo)</span>, IGM DATE: <span class="val">@D(Model.RotDate)</span>, LINE NO: <span class="val">@V(Model.LineNo)</span>, INWARD DATE: <span class="val">@D(Model.InwardDate)</span></p>
+    <p><span class="num">10.</span> IGM NO: <span class="val">@V(Model.RotNo)</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;, IGM DATE: <span class="val">@D(Model.RotDate)</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;, LINE NO: <span class="val">@V(Model.LineNo)</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;, INWARD DATE: <span class="val">@D(Model.InwardDate)</span></p>
     <p><span class="num">11.</span> MBL NO: <span class="val">@V(Model.MblNo)</span>, DATE: <span class="val">@D(Model.MblDate)</span>, HBL NO: <span class="val">@V(Model.HblNo)</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DATE: <span class="val">@D(Model.HblDate)</span></p>
     <p>
         <span class="num">12.</span> TOTAL PACKAGE: <span class="val">@(Model.Containers.Sum(c => c.NoPackages) is var totalPkg && totalPkg > 0 ? totalPkg.ToString() : "")</span>,
@@ -84,14 +88,18 @@
         var first = true;
         foreach (var c in Model.Containers)
         {
-            var sealSuffix = string.IsNullOrWhiteSpace(c.SealNumbers) ? "" : $" / SEAL: {c.SealNumbers}";
+            // Container / seal / size, in that order — the size suffix (e.g. 40') goes at
+            // the end so it's never mistaken for part of the seal number.
+            var sealPart = string.IsNullOrWhiteSpace(c.SealNumbers) ? "" : $" / {c.SealNumbers}";
+            var sizePart = string.IsNullOrWhiteSpace(c.ContainerSize) ? "" : $" {c.ContainerSize.TrimEnd('t', 'f')}'";
+            var containerSealDisplay = $"{V(c.ContainerNo)}{sealPart}{sizePart}";
             if (first)
             {
-                <p><span class="num">14.</span> CONTAINER NO/SHIPPER SEAL NO: <span class="val">@V(c.ContainerNo) &ndash; @V(c.ContainerSize.TrimEnd('t', 'f'))'@sealSuffix</span></p>
+                <p><span class="num">14.</span> CONTAINER NO/SHIPPER SEAL NO: <span class="val">@containerSealDisplay</span></p>
             }
             else
             {
-                <p class="cont">CONTAINER NO/SHIPPER SEAL NO: <span class="val">@V(c.ContainerNo) &ndash; @V(c.ContainerSize.TrimEnd('t', 'f'))'@sealSuffix</span></p>
+                <p class="cont">CONTAINER NO/SHIPPER SEAL NO: <span class="val">@containerSealDisplay</span></p>
             }
             first = false;
         }
@@ -123,18 +131,20 @@
         <p><span class="num">15.</span> ITEM NO: <span class="val">&nbsp;</span>, CTH: <span class="val">&nbsp;</span>,&nbsp; SENSITIVE: <span class="val">@(Model.SensitiveCargo ? "YES" : "NO")</span></p>
     }
     <p><span class="num">16.</span> DESCRIPTION OF GOODS: <span class="val">@V(Model.CargoDescription ?? Model.MiscDescription)</span></p>
-    <p><span class="num">17.</span> CIF VALUE IN FC: @V(Model.Currency). <span class="val">@(Model.CifFc.HasValue ? Model.CifFc.Value.ToString("N2") : "")</span>,&nbsp; ANTI DUMPING DUTY(INR): <span class="val">&nbsp;</span></p>
+    <p><span class="num">17.</span> CIF VALUE IN FC: @V(Model.Currency). <span class="val">@(Model.CifFcReference.HasValue ? Model.CifFcReference.Value.ToString("N2") : "")</span>,&nbsp; ANTI DUMPING DUTY(INR): <span class="val">&nbsp;</span></p>
     <p><span class="num">18.</span> DUTY EXCLUDING ANTI DUMPING AND SAFEGUARD(INR): <span class="val">@(Model.DutyAmount.HasValue ? Model.DutyAmount.Value.ToString("N2") : "")</span></p>
     <p><span class="num">19.</span> VHICLE NO: <span class="val">&nbsp;</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CHASSIS NO: <span class="val">&nbsp;</span></p>
     <p><span class="num">20.</span> ENGINE NO: <span class="val">&nbsp;</span>&nbsp;&nbsp;&nbsp;DATE OF REGN: <span class="val">&nbsp;</span></p>
     <p><span class="num">21.</span> MODE OF TRANSPORT &ndash; ROAD</p>
 
-    <p style="margin-top:18px;">FOR <span class="val">@agentName</span></p>
-    <p>&nbsp;</p>
-    <p>&nbsp;</p>
-    <p><span class="val">@V(agent?.ContactPersonName)</span></p>
-    <p>AUTHORIZED SIGNATORY</p>
-    <p>DT: <span class="val">@D(DateTime.Today)</span></p>
+    <div style="margin-top:18px; text-align:right;">
+        <p>FOR <span class="val">@agentName</span></p>
+        <p>&nbsp;</p>
+        <p>&nbsp;</p>
+        <p><span class="val">@V(agent?.ContactPersonName)</span></p>
+        <p>AUTHORIZED SIGNATORY</p>
+        <p>DT: <span class="val">@D(DateTime.Today)</span></p>
+    </div>
 
     <p class="footer">Printed from Eroyal Suite &middot; @DateTime.Now.ToString("g")</p>
 </body>
