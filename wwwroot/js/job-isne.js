@@ -413,10 +413,23 @@
     calcMktVal();
   }
 
+  // CFR/CNF Value (FC) can also be typed in directly instead of via FOB + Freight
+  // (e.g. only the combined CFR/CNF figure is known) — cascade downstream from a
+  // direct edit too, without re-running calcCfrCnf(), which would overwrite what
+  // was just typed with the FOB+Freight-derived amount.
+  function recalcFromCfrCnfAmount() {
+    calcInsuranceFc();
+    calcInsuranceValueInr();
+    calcCifValueFc();
+    calcCIFINR();
+    calcMktVal();
+  }
+
   if (fob) fob.addEventListener("input", recalcCommercialChain);
   if (freight) freight.addEventListener("input", recalcCommercialChain);
   if (insRate) insRate.addEventListener("input", recalcCommercialChain);
   if (excRate) excRate.addEventListener("input", recalcCommercialChain);
+  if (cif) cif.addEventListener("input", recalcFromCfrCnfAmount);
   if (insFC) insFC.addEventListener("input", recalcFromInsuranceAmount);
   if (mktRate) mktRate.addEventListener("input", calcMktVal);
 
