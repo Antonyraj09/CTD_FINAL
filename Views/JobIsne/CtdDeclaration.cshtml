@@ -27,7 +27,12 @@
     const string DefaultAgentPhone = "2243-5348";
     const string DefaultAgentGstin = "19AAACE5876H1ZB";
 
-    var agentName = agent?.Name ?? Model.SubAgentName;
+    // CHA identity on this form is always the logged-in CHA/forwarding company itself —
+    // never the job's Party or SubAgent, which is a different party to the shipment. Name
+    // and Address come from the tenant's own Company Profile (Settings screen), which is
+    // exactly what AppSettingsEntity.CompanyName/CompanyAddress exist for.
+    var settings = ViewBag.CompanySettings as AppSettingsEntity;
+    var agentName = settings?.CompanyName;
     if (string.IsNullOrWhiteSpace(agentName)) agentName = DefaultAgentName;
 
     var agentLicenseNo = agent?.LicenseNo;
@@ -39,15 +44,14 @@
     var agentGstin = agent?.GstinNo;
     if (string.IsNullOrWhiteSpace(agentGstin)) agentGstin = DefaultAgentGstin;
 
-    // Reference form's header cell is exactly 3 lines: Name<tab>CHA No. / full address on
-    // one line ending with the copy-type marker / Phone immediately followed by GSTIN with
-    // no separator (verified against the reference .docx paragraph-by-paragraph, including
-    // its own lack of a space between the phone number and "GSTIN").
-    var agentAddress = agent is null
-        ? null
-        : string.Join(", ", new[] { agent.AddressLine1, agent.AddressLine2, string.Join("-", new[] { agent.City, agent.PinCode }.Where(s => !string.IsNullOrWhiteSpace(s))) }
-            .Where(s => !string.IsNullOrWhiteSpace(s)));
+    var agentAddress = settings?.CompanyAddress;
     if (string.IsNullOrWhiteSpace(agentAddress)) agentAddress = DefaultAgentAddress;
+
+    // Ship's Name prefers the transshipment vessel/voyage (the one actually carrying the
+    // container into the relevant Indian port for this transit) over the main ocean vessel,
+    // falling back to the main vessel/voyage when there's no transshipment leg recorded.
+    var shipName = !string.IsNullOrWhiteSpace(Model.TsVessel) ? Model.TsVessel : Model.VesselName;
+    var shipVoyage = !string.IsNullOrWhiteSpace(Model.TsVessel) ? Model.TsVoyage : Model.VoyageNo;
 }
 <!DOCTYPE html>
 <html>
@@ -82,6 +86,8 @@
         .copytype { text-align: right; border-bottom: 1px solid #10172a; padding: 1px 6px; }
         .title-body { padding: 2px 7px 1px; }
         .formtitle { letter-spacing: .02em; }
+        .subtitle-row { display: block; position: relative; }
+        .subtitle-row .iccd { position: absolute; right: 0; }
         .jobno { margin-top: 3px; }
 
         .cell-lbl { color: #333; }
@@ -100,6 +106,7 @@
 
         .decl-cell b { font-weight: 700; }
         .sign-block { margin-top: 6px; }
+        .sign-date { position: absolute; left: 4px; right: 4px; bottom: 4px; }
 
         .footer { margin: 0 0 0 2.5mm; font-size: 7pt; line-height: 1; color: #888; text-align: right; width: 193.26mm; box-sizing: border-box; }
         @@media print { .no-print { display: none; } }
@@ -125,7 +132,7 @@
             <td colspan="6" class="title-cell">
                 <div class="copytype">Org/Dup/Trip/Quard/Quin/6th/Office</div>
                 <div class="title-body">
-                    <div class="formtitle">CUSTOMS TRANSIT DECLARATION<br /><span class="sub">(IMPORT) &nbsp; ICCD</span></div>
+                    <div class="formtitle">CUSTOMS TRANSIT DECLARATION<br /><span class="sub subtitle-row">(IMPORT)<span class="iccd">ICCD</span></span></div>
                     <div class="jobno">Job No. <b>@Model.JobNumber</b></div>
                 </div>
             </td>
@@ -133,14 +140,14 @@
         <tr style="height:18.54mm">
             <td colspan="3" rowspan="2">
                 <div class="cell-lbl">Importer's Name &amp; Address</div>
+                @if (!string.IsNullOrWhiteSpace(Model.BankName))
+                {
+                    <div class="cell-val">@Model.BankName</div>
+                }
                 <div class="cell-val">@V(Model.PartyName)</div>
                 @if (!string.IsNullOrWhiteSpace(Model.Address))
                 {
                     <div class="cell-val">@Model.Address</div>
-                }
-                @if (!string.IsNullOrWhiteSpace(Model.ImporterCode))
-                {
-                    <div>EXIM: <b>@Model.ImporterCode</b></div>
                 }
             </td>
             <td colspan="6">
@@ -193,10 +200,10 @@
         </tr>
         <tr style="height:9.68mm">
             <td colspan="2">
-                <div class="cell-val">@V(Model.VesselName)</div>
-                @if (!string.IsNullOrWhiteSpace(Model.VoyageNo))
+                <div class="cell-val">@V(shipName)</div>
+                @if (!string.IsNullOrWhiteSpace(shipVoyage))
                 {
-                    <div class="cell-val">@Model.VoyageNo</div>
+                    <div class="cell-val">@shipVoyage</div>
                 }
             </td>
             <td colspan="3"><div class="cell-val">@V(Model.RotNo)</div></td>
@@ -212,13 +219,13 @@
             <td colspan="6">&nbsp;</td>
         </tr>
         <tr style="height:6.63mm" class="cargo-grid">
-            <th rowspan="2">Marks and Serial No. of Pkgs</th>
+            <th>Marks and Serial No. of Pkgs</th>
             <th colspan="5">No. and description of Pkgs/description of goods</th>
             <th colspan="2">Gr. Wt. kgs.</th>
             <th>Cif Value Rs.</th>
         </tr>
         <tr style="height:104.97mm">
-            <td colspan="5">
+            <td>
                 @if (Model.Containers.Any())
                 {
                     @foreach (var c in Model.Containers)
@@ -229,14 +236,12 @@
                                 <b>@c.MarksSerial</b>
                             }
                             <div>Container</div>
-                            <b>@V(c.ContainerNo)</b>
-                            @if (!string.IsNullOrWhiteSpace(c.SealNumbers))
-                            {
-                                <div>Seal No. <b>@c.SealNumbers</b></div>
-                            }
+                            <b>@V(c.ContainerNo)@(string.IsNullOrWhiteSpace(c.SealNumbers) ? "" : $"/ {c.SealNumbers}")</b>
                         </div>
                     }
                 }
+            </td>
+            <td colspan="5">
                 @foreach (var c in Model.Containers)
                 {
                     if (!string.IsNullOrWhiteSpace(c.CustomsCode))
@@ -301,13 +306,14 @@
             <td colspan="4">
                 <div class="cell-lbl">Endorsement by Customs House on entry</div>
             </td>
-            <td colspan="5" rowspan="2" class="decl-cell">
+            <td colspan="5" rowspan="2" class="decl-cell" style="position:relative;">
                 <div style="margin-bottom:2px;">Declaration,</div>
                 <div>'I/We declare that the goods entered herein are for Nepal in transit through India and shall not be diverted enroute or retained in India'..</div>
                 <div>'I/We declare that the entires made herein above are true and correct to the best of my/our knowledge and. belief.</div>
                 <div class="sign-block">
-                    For <b>@V(agentName)</b><br />
-                    <br />
+                    For <b>@V(agentName)</b>
+                </div>
+                <div class="sign-date">
                     Date <b>@D(Model.CtdDate ?? DateTime.Today)</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Director / Authorised SIgnatory
                 </div>
             </td>

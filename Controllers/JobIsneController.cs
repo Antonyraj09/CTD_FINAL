@@ -19,16 +19,18 @@ public class JobIsneController : Controller
     private readonly IGenericRepository<SubAgent> _subAgents;
     private readonly IGenericRepository<TransitRoute> _transitRoutes;
     private readonly ITenantContextAccessor _tenantContext;
+    private readonly ISettingsService _settingsService;
 
     public JobIsneController(IJobIsneService jobIsneService, IGenericRepository<Party> parties,
         IGenericRepository<SubAgent> subAgents, IGenericRepository<TransitRoute> transitRoutes,
-        ITenantContextAccessor tenantContext)
+        ITenantContextAccessor tenantContext, ISettingsService settingsService)
     {
         _jobIsneService = jobIsneService;
         _parties = parties;
         _subAgents = subAgents;
         _transitRoutes = transitRoutes;
         _tenantContext = tenantContext;
+        _settingsService = settingsService;
     }
 
     private string CurrentUserName => User.FindFirst("FullName")?.Value ?? User.Identity?.Name ?? "System";
@@ -283,6 +285,7 @@ public class JobIsneController : Controller
         if (record is null) return NotFound();
 
         ViewBag.Agent = await LoadAgentAsync(record);
+        ViewBag.CompanySettings = await _settingsService.GetAsync();
 
         return View(record);
     }
