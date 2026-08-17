@@ -18,18 +18,16 @@ public class JobIsneController : Controller
     private readonly IGenericRepository<Party> _parties;
     private readonly IGenericRepository<SubAgent> _subAgents;
     private readonly IGenericRepository<TransitRoute> _transitRoutes;
-    private readonly ITenantContextAccessor _tenantContext;
     private readonly ISettingsService _settingsService;
 
     public JobIsneController(IJobIsneService jobIsneService, IGenericRepository<Party> parties,
         IGenericRepository<SubAgent> subAgents, IGenericRepository<TransitRoute> transitRoutes,
-        ITenantContextAccessor tenantContext, ISettingsService settingsService)
+        ISettingsService settingsService)
     {
         _jobIsneService = jobIsneService;
         _parties = parties;
         _subAgents = subAgents;
         _transitRoutes = transitRoutes;
-        _tenantContext = tenantContext;
         _settingsService = settingsService;
     }
 
@@ -260,7 +258,7 @@ public class JobIsneController : Controller
         if (record is null) return NotFound();
 
         ViewBag.Agent = await LoadAgentAsync(record);
-        ViewBag.CompanyName = _tenantContext.CompanyName;
+        ViewBag.CompanyName = (await _settingsService.GetAsync()).CompanyName;
         ViewBag.ImporterPan = string.IsNullOrEmpty(record.PartyCode)
             ? null
             : (await _parties.Query().FirstOrDefaultAsync(p => p.PartyCode == record.PartyCode))?.Pan;

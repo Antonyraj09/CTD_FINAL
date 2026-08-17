@@ -19,6 +19,21 @@
     if (string.IsNullOrWhiteSpace(agentLicenseNo)) agentLicenseNo = DefaultAgentLicenseNo;
 
     var importerPan = ViewBag.ImporterPan as string;
+
+    // Some Party addresses have "EXIM: <code>" embedded as free text (a legacy data-entry
+    // habit, not a separate field) — strip it from the printed address, and when the Party
+    // has no PAN of its own on file, fall back to the first 9 characters of that EXIM code
+    // (the business convention this reference format uses).
+    var addressText = Model.Address ?? "";
+    var eximMatch = System.Text.RegularExpressions.Regex.Match(addressText, @"EXIM:\s*([A-Za-z0-9]+)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+    var displayAddress = eximMatch.Success
+        ? System.Text.RegularExpressions.Regex.Replace(addressText, @",?\s*EXIM:\s*[A-Za-z0-9]+", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase).Trim()
+        : addressText;
+    if (string.IsNullOrWhiteSpace(importerPan) && eximMatch.Success)
+    {
+        var eximCode = eximMatch.Groups[1].Value;
+        importerPan = eximCode.Length > 9 ? eximCode.Substring(0, 9) : eximCode;
+    }
 }
 <!DOCTYPE html>
 <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
@@ -134,7 +149,7 @@
     <p><span class="num">2.</span> EXIT CUSTOMS SITE: (PL TICK), ROUTE OF TRANSIT: <span class="val">@V(Model.RouteOfTransit)</span></p>
     <p><span class="num">3.</span> IMPORTER'S CODE: <span class="val">@V(Model.ImporterCode)</span></p>
     <p><span class="num">4.</span> IMPORTER'S NAME &amp; ADDRESS: <span class="val">@V(Model.PartyName)</span></p>
-    <p class="cont"><span class="val">@V(Model.Address)</span>, PAN: <span class="val">@V(importerPan)</span>.</p>
+    <p class="cont"><span class="val">@V(displayAddress)</span>, PAN: <span class="val">@V(importerPan)</span>.</p>
     <p class="cont">NOTIFY NAME AND ADDRESS: <span class="val">SAME AS ABOVE</span></p>
     <p><span class="num">5.</span> INVOICE NO: <span class="val">@V(Model.InvoiceNumber)</span>, DATE: <span class="val">@D(Model.InvoiceDate)</span></p>
     <p><span class="num">6.</span> CERTIFICATE OF ORIGIN: <span class="val">@V(Model.CertificateOfOrigin)</span>, DATE: <span class="val">@D(Model.CertificateOfOriginDate)</span></p>
