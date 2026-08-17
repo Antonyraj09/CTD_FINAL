@@ -112,7 +112,7 @@
         @@media print { .no-print { display: none; } }
     </style>
 </head>
-<body onload="window.print()">
+<body>
     <table class="outer">
         <colgroup>
             <col style="width:53.85mm" /><col style="width:21.98mm" /><col style="width:14.43mm" />
@@ -326,5 +326,52 @@
     </table>
 
     <p class="footer">Printed from Eroyal Suite &middot; @DateTime.Now.ToString("g")</p>
+
+    <script>
+        // This is a fixed one-page reference form — real job data (a long agent
+        // address, several containers, a long cargo description) can make the table
+        // taller than one printable page, which used to silently spill onto a second
+        // page. Since table-layout is fixed (column widths are set in mm, independent
+        // of font size), shrinking the font only reduces each cell's content height —
+        // it never affects the table's width — so this measures the rendered table
+        // against the actual printable page height and steps the font size down
+        // (against the CSS-declared 10pt base) until it fits on one page, or hits a
+        // floor past which text would stop being legible.
+        (function () {
+            function pxPerMm() {
+                var probe = document.createElement("div");
+                probe.style.cssText = "position:absolute;visibility:hidden;height:10mm;width:1mm;";
+                document.body.appendChild(probe);
+                var v = probe.getBoundingClientRect().height / 10;
+                document.body.removeChild(probe);
+                return v || (96 / 25.4);
+            }
+
+            function fitToOnePage() {
+                var table = document.querySelector("table.outer");
+                var footer = document.querySelector(".footer");
+                if (!table) return;
+
+                var mmToPx = pxPerMm();
+                // @@page margin: 3.88mm 9.98mm 4.94mm 2.49mm (top right bottom left) on an
+                // A4 (297mm tall) sheet.
+                var usableHeightPx = (297 - 3.88 - 4.94) * mmToPx;
+                if (footer) usableHeightPx -= footer.getBoundingClientRect().height;
+                usableHeightPx *= 0.985; // small safety margin for rounding
+
+                var basePt = 10, minPct = 55, pct = 100, step = 4;
+                for (var i = 0; i < 40; i++) {
+                    if (table.getBoundingClientRect().height <= usableHeightPx || pct <= minPct) break;
+                    pct -= step;
+                    document.body.style.fontSize = (basePt * pct / 100) + "pt";
+                }
+            }
+
+            window.addEventListener("load", function () {
+                fitToOnePage();
+                window.print();
+            });
+        })();
+    </script>
 </body>
 </html>
