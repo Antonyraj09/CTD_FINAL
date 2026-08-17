@@ -97,6 +97,7 @@ builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddScoped<IJobIsneService, JobIsneService>();
 builder.Services.AddScoped<IDeliveryIsneService, DeliveryIsneService>();
 builder.Services.AddScoped<IReportService, ReportService>();
+builder.Services.AddScoped<IReportCenterService, ReportCenterService>();
 builder.Services.AddScoped<IPartyService, PartyService>();
 
 builder.Services.AddScoped<IEncryptionService, EncryptionService>();

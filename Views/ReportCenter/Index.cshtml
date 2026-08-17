@@ -1,0 +1,31 @@
+@{
+    ViewData["Title"] = "Report Center";
+}
+<div class="section-head">
+    <div>
+        <h2>Report Center</h2>
+        <p>Ask for anything &mdash; a job number, party name, container number, invoice number, PAN, transit route &mdash; and every matching record across the application shows up here.</p>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="table-search" style="max-width:none;padding:10px 14px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="text" id="rc_search" placeholder="e.g. ISNE/0056/2026, Pallavi Electra, ONEU1702991, NP00005884…" autocomplete="off" style="font-size:14px;">
+    </div>
+</div>
+
+<div id="rc_idle" style="text-align:center;color:var(--ink-500);padding:48px 16px;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="40" height="40" style="opacity:.4;"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+    <p style="margin-top:10px;">Start typing to search across Job ISNE, Delivery ISNE, CTD Jobs, Party Master, Sub-Agents, Transit Routes and Documents.</p>
+</div>
+
+<div id="rc_empty" style="display:none;text-align:center;color:var(--ink-500);padding:48px 16px;">
+    <p>No matching records found.</p>
+</div>
+
+<div id="rc_results" style="display:none;flex-direction:column;gap:16px;margin-top:16px;"></div>
+
+@section Scripts {
+    <script src="~/js/report-center.js" asp-append-version="true"></script>
+}

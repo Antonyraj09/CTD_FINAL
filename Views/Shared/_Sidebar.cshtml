@@ -42,6 +42,13 @@
     <nav class="sidebar-nav" id="sidebarNav">
 
         <div class="nav-section-label">Overview</div>
+        <div class="sidebar-link-wrap">
+            <a class="@NavClass("report-center")" asp-controller="ReportCenter" asp-action="Index">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                <span>Report Center</span>
+            </a>
+            <div class="collapsed-tip">Report Center</div>
+        </div>
         @if (Can(PermissionKeys.DashboardView))
         {
             <div class="sidebar-link-wrap">
