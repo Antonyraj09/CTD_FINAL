@@ -55,6 +55,11 @@
         .Select(g => $"{g.Count()}X{g.Key}'"));
     var totalPackages = Model.CargoPackages ?? Model.Containers.Sum(c => c.NoPackages);
 
+    // QTY prefers Common Cargo Details' own Gross Weight/Unit over Commercial Information's
+    // GrossWeight — same "prefer the common, manually-entered figure" reasoning as packages.
+    var qty = Model.CargoGrossWeight ?? Model.GrossWeight;
+    var qtyUnit = string.IsNullOrWhiteSpace(Model.CargoGrossWeightUnit) ? "KGS" : Model.CargoGrossWeightUnit;
+
     // Bond amount is the difference between market value and CIF value — the reference
     // form's own condition clause (1) spells this out ("the difference between the market
     // value of the goods in India and their CIF value"), and the reference sample's figures
@@ -152,7 +157,7 @@
         @{ itemTop += 6.86; }
         <div class="wrap" style="top:@(itemTop)mm;left:8.47mm;width:180mm;"><b>@V(Model.CargoDescription ?? Model.MiscDescription)</b></div>
 
-        <div class="ln" style="top:102.87mm;left:8.47mm;">QTY. : <b>@(Model.GrossWeight.HasValue ? Model.GrossWeight.Value.ToString("N3", plain) : "")</b> &nbsp;&nbsp;KGS.</div>
+        <div class="ln" style="top:102.87mm;left:8.47mm;">QTY. : <b>@(qty.HasValue ? qty.Value.ToString("N3", plain) : "")</b> &nbsp;&nbsp;@qtyUnit.</div>
 
         <div class="wrap" style="top:111.33mm;left:7.92mm;width:183mm;">Amount payable in terms of para 9A of the treaty as above.</div>
         <div class="wrap" style="top:117.68mm;left:7.92mm;width:183mm;">NOW THE CONDITION of the above written undertaking is such that :-</div>
