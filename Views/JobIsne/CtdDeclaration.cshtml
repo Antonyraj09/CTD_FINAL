@@ -235,7 +235,7 @@
                             {
                                 <b>@c.MarksSerial</b>
                             }
-                            <div>Container</div>
+                            <div style="margin-top:50px;">Container</div>
                             <b>@V(c.ContainerNo)@(string.IsNullOrWhiteSpace(c.SealNumbers) ? "" : $"/ {c.SealNumbers}")</b>
                         </div>
                     }
@@ -264,7 +264,7 @@
                     <div style="margin-top:4px;font-weight:700;">@Model.MiscDescription</div>
                 }
                 <div style="margin-top:30px;">(AS PER INVOICE)</div>
-                <div style="margin-top:30px;">
+                <div style="margin-top:70px;">
                     @if (Model.FobValue.HasValue)
                     {
                         <div>FOB <b>@Model.Currency @Model.FobValue.Value.ToString("N2", inr)</b>@if (Model.ExchangeRate.HasValue) {<text>=Rs.<b>@((Model.FobValue.Value * Model.ExchangeRate.Value).ToString("N2", inr))</b>/-</text>}</div>
