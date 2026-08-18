@@ -66,6 +66,12 @@ public class JobIsne : BaseEntity
     [StringLength(1000)]
     public string? RouteOfTransit { get; set; }
 
+    /// <summary>Copied in from the selected TransitRoute's own RouteCode at save time,
+    /// alongside RouteOfTransit — same snapshot convention, so a job's printed documents
+    /// don't change retroactively if the master route is later renamed/recoded.</summary>
+    [StringLength(20)]
+    public string? RouteCode { get; set; }
+
     [StringLength(40)]
     public string? RotNo { get; set; }
 

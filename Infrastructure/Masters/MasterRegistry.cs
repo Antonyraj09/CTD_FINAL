@@ -38,9 +38,10 @@ public static class MasterRegistry
         ["route"] = new MasterTabConfig
         {
             Key = "route", EntityType = typeof(TransitRoute), Title = "Transit Route Master", EntityLabel = "Route",
-            Columns = new() { ("Name", "Route"), ("Distance", "Distance") },
+            Columns = new() { ("RouteCode", "Route Code"), ("Name", "Route"), ("Distance", "Distance") },
             Fields = new()
             {
+                new("RouteCode", "Route Code", "text", false),
                 new("Name", "Route Description", "text", true),
                 new("Distance", "Approx. Distance", "text", false),
             }

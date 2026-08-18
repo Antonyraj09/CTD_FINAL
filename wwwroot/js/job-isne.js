@@ -452,6 +452,7 @@
       countryCgn: $("#isne_countryCGN").value,
       countryOrigin: $("#isne_countryOrigin").value,
       routeOfTransit: $("#isne_rot").value,
+      routeCode: $("#isne_rot").selectedOptions[0] ? $("#isne_rot").selectedOptions[0].dataset.code || null : null,
       rotNo: $("#isne_rotNo").value,
       rotDate: $("#isne_rotDate").value || null,
       inwardDate: $("#isne_inwardDate").value || null,

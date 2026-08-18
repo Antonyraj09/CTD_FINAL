@@ -188,7 +188,7 @@
                         <option value="">-- Select Route --</option>
                         @foreach (var r in transitRoutes)
                         {
-                            <option value="@r.Name" selected="@(Model != null && Model.RouteOfTransit == r.Name)">@r.Name</option>
+                            <option value="@r.Name" data-code="@r.RouteCode" selected="@(Model != null && Model.RouteOfTransit == r.Name)">@r.Name</option>
                         }
                     </select>
                 </div>

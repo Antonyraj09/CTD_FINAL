@@ -12,5 +12,8 @@ public class TransitRoute : BaseEntity
     [StringLength(50)]
     public string? Distance { get; set; }
 
+    [StringLength(20)]
+    public string? RouteCode { get; set; }
+
     public ICollection<CtdJob> Jobs { get; set; } = new List<CtdJob>();
 }

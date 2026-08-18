@@ -114,6 +114,7 @@ public class JobIsneController : Controller
             CountryCgn = request.CountryCgn,
             CountryOrigin = request.CountryOrigin,
             RouteOfTransit = request.RouteOfTransit,
+            RouteCode = request.RouteCode,
             RotNo = request.RotNo,
             RotDate = request.RotDate,
             InwardDate = request.InwardDate,
@@ -256,6 +257,14 @@ public class JobIsneController : Controller
     {
         var record = await _jobIsneService.GetByIdAsync(id);
         if (record is null) return NotFound();
+
+        // Jobs saved before RouteCode existed on JobIsne never got a snapshot — fall back to
+        // looking it up from the master by name so their checklist still shows a code instead
+        // of just going without one forever until the job happens to be re-saved.
+        if (string.IsNullOrWhiteSpace(record.RouteCode) && !string.IsNullOrWhiteSpace(record.RouteOfTransit))
+        {
+            record.RouteCode = (await _transitRoutes.Query().FirstOrDefaultAsync(r => r.Name == record.RouteOfTransit))?.RouteCode;
+        }
 
         ViewBag.Agent = await LoadAgentAsync(record);
         ViewBag.CompanyName = (await _settingsService.GetAsync()).CompanyName;
