@@ -277,7 +277,11 @@
                     {
                         <div>Freight <b>@Model.Currency :@Model.Freight.Value.ToString("N2", inr)</b>@if (Model.ExchangeRate.HasValue) {<text>=Rs.<b>@((Model.Freight.Value * Model.ExchangeRate.Value).ToString("N2", inr))</b>/-</text>}</div>
                     }
-                    @if (Model.InsuranceValueInr.HasValue)
+                    @if (Model.CifFc.HasValue && Model.CifFc.Value != 0)
+                    {
+                        <div>CFR/CNF Value <b>@Model.Currency @Model.CifFc.Value.ToString("N2", inr)</b>@if (Model.ExchangeRate.HasValue) {<text>=Rs.<b>@((Model.CifFc.Value * Model.ExchangeRate.Value).ToString("N2", inr))</b>/-</text>}</div>
+                    }
+                    @if (Model.InsuranceValueInr.HasValue && Model.InsuranceValueInr.Value != 0)
                     {
                         <div>Insurance Rs.<b>@Model.InsuranceValueInr.Value.ToString("N2", inr)</b></div>
                     }

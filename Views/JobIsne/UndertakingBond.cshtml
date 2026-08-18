@@ -25,6 +25,11 @@
     var agentAddress = settings?.CompanyAddress;
     if (string.IsNullOrWhiteSpace(agentAddress)) agentAddress = DefaultAgentAddress;
 
+    // M.V. is the transshipment vessel (the one actually carrying the container into the
+    // relevant Indian port for this transit), same as CtdDeclaration.cshtml — falls back to
+    // the main ocean vessel when there's no transshipment leg recorded on the job.
+    var shipName = !string.IsNullOrWhiteSpace(Model.TsVessel) ? Model.TsVessel : Model.VesselName;
+
     // Some Party addresses have "EXIM: <code>" embedded as free text (a legacy data-entry
     // habit, not a separate field on JobIsne) — see CtdSubmission.cshtml for the same fix.
     // Model.ImporterCode is a different value entirely (labelled "Importer's Code" elsewhere
@@ -115,7 +120,7 @@
         <div class="wrap" style="top:54.82mm;left:59.27mm;width:130mm;"><b>@V(importerDisplayAddress)</b></div>
         <div class="ln" style="top:61.17mm;left:59.27mm;"><b>EXIM: @V(importerExim)</b></div>
 
-        <div class="ln" style="top:68.19mm;left:7.92mm;">M.V. : <b>@V(Model.VesselName)</b></div>
+        <div class="ln" style="top:68.19mm;left:7.92mm;">M.V. : <b>@V(shipName)</b></div>
         <div class="ln" style="top:68.19mm;left:82.01mm;">Rot.No.: <b>@V(Model.RotNo)</b></div>
         <div class="ln" style="top:68.19mm;left:136.52mm;">Line No. <b>@V(Model.LineNo)</b></div>
 
