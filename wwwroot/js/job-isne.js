@@ -426,12 +426,22 @@
     calcMktVal();
   }
 
+  // CIF Value FC can also be typed in directly instead of being derived from
+  // CFR/CNF + Insurance FC — cascade downstream from a direct edit too, without
+  // re-running calcCifValueFc(), which would overwrite what was just typed.
+  function recalcFromCifValueFcAmount() {
+    calcCIFINR();
+    calcInsuranceValueInr();
+    calcMktVal();
+  }
+
   if (fob) fob.addEventListener("input", recalcCommercialChain);
   if (freight) freight.addEventListener("input", recalcCommercialChain);
   if (insRate) insRate.addEventListener("input", recalcCommercialChain);
   if (excRate) excRate.addEventListener("input", recalcCommercialChain);
   if (cif) cif.addEventListener("input", recalcFromCfrCnfAmount);
   if (insFC) insFC.addEventListener("input", recalcFromInsuranceAmount);
+  if (cifRef) cifRef.addEventListener("input", recalcFromCifValueFcAmount);
   if (mktRate) mktRate.addEventListener("input", calcMktVal);
 
   /* ---------------- gather / validate ---------------- */
