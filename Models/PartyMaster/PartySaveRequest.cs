@@ -4,7 +4,6 @@ public class PartySaveRequest
 {
     public int Id { get; set; }
 
-    public string PartyCode { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public string? TradeName { get; set; }
     public string Constitution { get; set; } = "PrivateLimited";
