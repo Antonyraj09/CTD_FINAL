@@ -4,33 +4,37 @@
 @model JobIsne
 @{
     Layout = null;
-    var agent = ViewBag.Agent as SubAgent;
     var inr = CultureInfo.GetCultureInfo("en-IN");
     var plain = CultureInfo.InvariantCulture;
 
     string D(DateTime? d) => d?.ToString("dd/MM/yyyy") ?? "";
     string V(object? v) => v?.ToString() ?? "";
 
-    // Default forwarding agent letterhead — see CtdDeclaration.cshtml for the same default,
-    // used here for the same reason: a job printed without a matching Sub-Agent master
-    // record used to leave every one of these fields blank instead of falling back to
-    // this agency's own details (the reference form's own letterhead).
+    // CHA identity on this form is always the logged-in CHA/forwarding company itself —
+    // never the job's Party or SubAgent, which is a different party to the shipment. Name
+    // and Address come from the tenant's own Company Profile (Settings screen), matching
+    // CtdDeclaration.cshtml and CtdSubmission.cshtml.
     const string DefaultAgentName = "EASTERN CLEARING & FORWARDING AGENCY PVT. LTD.";
-    const string DefaultAgentAddressLine1 = "501 'MANGALAM' 24";
-    const string DefaultAgentAddressLine2 = "HEMANTA BASU SARANI";
-    const string DefaultAgentCity = "KOLKATA";
-    const string DefaultAgentPinCode = "700001";
+    const string DefaultAgentAddress = "501 'MANGALAM' 24, HEMANTA BASU SARANI, KOLKATA - 700001";
 
-    var agentName = agent?.Name ?? Model.SubAgentName;
+    var settings = ViewBag.CompanySettings as AppSettingsEntity;
+
+    var agentName = settings?.CompanyName;
     if (string.IsNullOrWhiteSpace(agentName)) agentName = DefaultAgentName;
 
-    var agentAddressLine1 = string.IsNullOrWhiteSpace(agent?.AddressLine1) ? DefaultAgentAddressLine1 : agent!.AddressLine1;
-    var agentAddressLine2 = string.IsNullOrWhiteSpace(agent?.AddressLine2) ? DefaultAgentAddressLine2 : agent!.AddressLine2;
-    var agentCity = string.IsNullOrWhiteSpace(agent?.City) ? DefaultAgentCity : agent!.City;
-    var agentPinCode = string.IsNullOrWhiteSpace(agent?.PinCode) ? DefaultAgentPinCode : agent!.PinCode;
+    var agentAddress = settings?.CompanyAddress;
+    if (string.IsNullOrWhiteSpace(agentAddress)) agentAddress = DefaultAgentAddress;
 
-    var agentAddress = string.Join(", ", new[] { agentAddressLine1, agentAddressLine2, string.Join(" - ", new[] { agentCity, agentPinCode }.Where(s => !string.IsNullOrWhiteSpace(s))) }
-        .Where(s => !string.IsNullOrWhiteSpace(s)));
+    // Some Party addresses have "EXIM: <code>" embedded as free text (a legacy data-entry
+    // habit, not a separate field on JobIsne) — see CtdSubmission.cshtml for the same fix.
+    // Model.ImporterCode is a different value entirely (labelled "Importer's Code" elsewhere
+    // in this app) and was never the right source for this line.
+    var importerAddressText = Model.Address ?? "";
+    var eximMatch = System.Text.RegularExpressions.Regex.Match(importerAddressText, @"EXIM:\s*([A-Za-z0-9]+)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+    var importerDisplayAddress = eximMatch.Success
+        ? System.Text.RegularExpressions.Regex.Replace(importerAddressText, @",?\s*EXIM:\s*[A-Za-z0-9]+", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase).Trim()
+        : importerAddressText;
+    var importerExim = eximMatch.Success ? eximMatch.Groups[1].Value : "";
 
     // Bond amount is the difference between market value and CIF value — the reference
     // form's own condition clause (1) spells this out ("the difference between the market
@@ -104,13 +108,12 @@
         <div class="ln" style="top:25.86mm;left:112.69mm;">DATE : <b>@D(Model.CtdDate)</b></div>
         <div class="ln" style="top:28.78mm;left:7.41mm;">CTD NO.            : <b>@V(Model.CtdNumber)</b></div>
         <div class="wrap" style="top:33.82mm;left:7.41mm;width:183mm;">CHA'S NAME     :     @V(agentName)</div>
-        <div class="wrap" style="top:38.81mm;left:7.66mm;width:183mm;">&amp; ADDRESS      :     @agentAddressLine1@(!string.IsNullOrWhiteSpace(agentAddressLine2) ? ", " + agentAddressLine2 : "")</div>
-        <div class="ln" style="top:43.05mm;left:26mm;">@agentCity@(!string.IsNullOrWhiteSpace(agentPinCode) ? " - " + agentPinCode : "").</div>
+        <div class="wrap" style="top:38.81mm;left:7.66mm;width:183mm;">&amp; ADDRESS      :     @agentAddress.</div>
 
         <div class="ln" style="top:49.14mm;left:7.92mm;">Importer's Name &amp; Address     :</div>
         <div class="wrap" style="top:49.27mm;left:59.27mm;width:130mm;"><b>@V(Model.PartyName)</b></div>
-        <div class="wrap" style="top:54.82mm;left:59.27mm;width:130mm;"><b>@V(Model.Address)</b></div>
-        <div class="ln" style="top:61.17mm;left:59.27mm;"><b>EXIM: @V(Model.ImporterCode)</b></div>
+        <div class="wrap" style="top:54.82mm;left:59.27mm;width:130mm;"><b>@V(importerDisplayAddress)</b></div>
+        <div class="ln" style="top:61.17mm;left:59.27mm;"><b>EXIM: @V(importerExim)</b></div>
 
         <div class="ln" style="top:68.19mm;left:7.92mm;">M.V. : <b>@V(Model.VesselName)</b></div>
         <div class="ln" style="top:68.19mm;left:82.01mm;">Rot.No.: <b>@V(Model.RotNo)</b></div>

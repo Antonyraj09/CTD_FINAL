@@ -310,7 +310,7 @@ public class JobIsneController : Controller
         if (record is null) return NotFound();
         if (record.SensitiveCargo) return BadRequest("Undertaking Bond is only applicable when Sensitive Cargo is set to No.");
 
-        ViewBag.Agent = await LoadAgentAsync(record);
+        ViewBag.CompanySettings = await _settingsService.GetAsync();
         return View(record);
     }
 
