@@ -8,11 +8,10 @@ public interface IPartyService
     Task<IReadOnlyList<Party>> SearchAsync(string? query, CancellationToken ct = default);
     Task<Party?> GetByIdAsync(int id, CancellationToken ct = default);
 
-    /// <summary>Computed live from existing PartyCodes on every call (MAX matching the name's
-    /// 2-letter prefix + 1) rather than a persisted counter — same reasoning as
-    /// NumberSequenceService.NextIsneJobNumberAsync: deletes are real deletes here, so the
-    /// next code should always reflect what's actually left.</summary>
-    Task<string> PeekNextCodeAsync(string? name, CancellationToken ct = default);
+    /// <summary>Party Code autocomplete — parties whose code starts with the given prefix,
+    /// so the user can see which codes already exist in that series while typing a new one,
+    /// or pick an existing party to jump straight to editing it.</summary>
+    Task<IReadOnlyList<Party>> SearchByCodePrefixAsync(string prefix, CancellationToken ct = default);
     Task<Party> SaveAsync(Party party, List<PartyBranchDto> branches, string userName, CancellationToken ct = default);
     Task<bool> DeleteAsync(int id, string userName, CancellationToken ct = default);
 }

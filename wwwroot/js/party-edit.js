@@ -83,31 +83,50 @@
     renderBranches();
   });
 
-  // Party Code is auto-generated (2-letter prefix from the name + a 3-digit sequence,
-  // e.g. "Himalaya" -> HI013) and never user-editable. Only live-preview it while creating
-  // a new party — an existing party keeps whichever code it was assigned at creation, so
-  // renaming it later must never change the code.
-  if (recordId === 0) {
-    const codeEl = $("#p_partyCode");
-    let codeTimer;
-    $("#p_name").addEventListener("input", () => {
-      clearTimeout(codeTimer);
-      const name = $("#p_name").value.trim();
-      if (!name) { codeEl.textContent = "Auto-generated from name"; return; }
-      codeTimer = setTimeout(async () => {
-        try {
-          const result = await getJson(`/Party/NextCode?name=${encodeURIComponent(name)}`);
-          codeEl.textContent = result.code;
-        } catch (e) { /* leave the last preview showing */ }
-      }, 300);
+  // Party Code is manual entry — as the user types, show existing codes that start with
+  // what's typed so far (so they can see what's already taken and pick the next free
+  // number themselves), and let them jump straight to an existing party by selecting it.
+  const codeInput = $("#p_partyCode");
+  const codeSuggestions = $("#p_partyCodeSuggestions");
+  let codeTimer;
+
+  function hideSuggestions() { codeSuggestions.style.display = "none"; codeSuggestions.innerHTML = ""; }
+
+  function renderSuggestions(items) {
+    if (!items.length) { hideSuggestions(); return; }
+    codeSuggestions.innerHTML = items.map(it =>
+      `<div class="autocomplete-item" data-id="${it.id}"><span class="ac-code">${esc(it.code)}</span><span class="ac-name">${esc(it.name)}</span></div>`
+    ).join("");
+    codeSuggestions.style.display = "block";
+    $all(".autocomplete-item", codeSuggestions).forEach(row => {
+      row.addEventListener("click", () => {
+        window.location.href = `/Party/Edit?id=${row.dataset.id}`;
+      });
     });
   }
+
+  codeInput.addEventListener("input", () => {
+    clearTimeout(codeTimer);
+    const prefix = codeInput.value.trim();
+    if (prefix.length < 1) { hideSuggestions(); return; }
+    codeTimer = setTimeout(async () => {
+      try {
+        const result = await getJson(`/Party/Suggest?prefix=${encodeURIComponent(prefix)}`);
+        renderSuggestions(result.items || []);
+      } catch (e) { hideSuggestions(); }
+    }, 250);
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!codeInput.contains(e.target) && !codeSuggestions.contains(e.target)) hideSuggestions();
+  });
 
   renderBranches();
 
   function gatherRequest() {
     return {
       id: recordId,
+      partyCode: $("#p_partyCode").value.trim(),
       name: $("#p_name").value.trim(),
       tradeName: $("#p_tradeName").value.trim(),
       constitution: $("#p_constitution").value,
@@ -139,6 +158,7 @@
   }
 
   function validate() {
+    if (!$("#p_partyCode").value.trim()) { toast("Missing information", "Party code is required", "error"); return false; }
     if (!$("#p_name").value.trim()) { toast("Missing information", "Party legal name is required", "error"); return false; }
     if (!$("#p_isImporter").checked && !$("#p_isTransporter").checked && !$("#p_isAgent").checked) {
       toast("Select a role", "Tick at least one of Importer / Transporter / Agent", "error"); return false;

@@ -43,10 +43,13 @@ public class PartyController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> NextCode(string? name, CancellationToken ct)
+    public async Task<IActionResult> Suggest(string? prefix, CancellationToken ct)
     {
-        var code = await _partyService.PeekNextCodeAsync(name, ct);
-        return Json(new { code });
+        if (string.IsNullOrWhiteSpace(prefix)) return Json(new { items = Array.Empty<object>() });
+
+        var matches = await _partyService.SearchByCodePrefixAsync(prefix.Trim(), ct);
+        var items = matches.Select(p => new { id = p.Id, code = p.PartyCode, name = p.Name });
+        return Json(new { items });
     }
 
     [HttpGet]
@@ -69,6 +72,9 @@ public class PartyController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Save([FromBody] PartySaveRequest request)
     {
+        if (string.IsNullOrWhiteSpace(request.PartyCode))
+            return Json(new { success = false, message = "Party code is required." });
+
         if (string.IsNullOrWhiteSpace(request.Name))
             return Json(new { success = false, message = "Party name is required." });
 
@@ -82,26 +88,10 @@ public class PartyController : Controller
         if (!branches.Any(b => b.IsPrimary))
             branches[0].IsPrimary = true;
 
-        // Party Code is auto-generated and never user-editable — for a new party it's
-        // computed fresh here (not trusted from the client, which only ever showed a
-        // preview), and an existing party keeps whichever code it was assigned at
-        // creation, regardless of what the client sent.
-        string partyCode;
-        if (request.Id == 0)
-        {
-            partyCode = await _partyService.PeekNextCodeAsync(request.Name, HttpContext.RequestAborted);
-        }
-        else
-        {
-            var existing = await _partyService.GetByIdAsync(request.Id, HttpContext.RequestAborted);
-            if (existing is null) return Json(new { success = false, message = "Party not found." });
-            partyCode = existing.PartyCode ?? await _partyService.PeekNextCodeAsync(request.Name, HttpContext.RequestAborted);
-        }
-
         var party = new Party
         {
             Id = request.Id,
-            PartyCode = partyCode,
+            PartyCode = request.PartyCode.Trim(),
             Name = request.Name,
             TradeName = request.TradeName,
             Constitution = ParseConstitution(request.Constitution),

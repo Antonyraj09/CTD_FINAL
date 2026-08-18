@@ -40,29 +40,12 @@ public class PartyService : IPartyService
     public async Task<Party?> GetByIdAsync(int id, CancellationToken ct = default) =>
         await _context.Parties.AsNoTracking().Include(p => p.Branches).FirstOrDefaultAsync(p => p.Id == id, ct);
 
-    public async Task<string> PeekNextCodeAsync(string? name, CancellationToken ct = default)
-    {
-        var prefix = NamePrefix(name);
-
-        var existingCodes = await _context.Parties.AsNoTracking()
+    public async Task<IReadOnlyList<Party>> SearchByCodePrefixAsync(string prefix, CancellationToken ct = default) =>
+        await _context.Parties.AsNoTracking()
             .Where(p => p.PartyCode != null && p.PartyCode.StartsWith(prefix))
-            .Select(p => p.PartyCode!)
+            .OrderBy(p => p.PartyCode)
+            .Take(10)
             .ToListAsync(ct);
-
-        var next = existingCodes.Select(c => CodeSuffix(c, prefix)).DefaultIfEmpty(0).Max() + 1;
-        return $"{prefix}{next:D3}";
-    }
-
-    private static string NamePrefix(string? name)
-    {
-        var letters = new string((name ?? string.Empty).Where(char.IsLetter).ToArray()).ToUpperInvariant();
-        if (letters.Length >= 2) return letters[..2];
-        if (letters.Length == 1) return letters + "X";
-        return "XX";
-    }
-
-    private static int CodeSuffix(string code, string prefix) =>
-        int.TryParse(code.AsSpan(prefix.Length), out var n) ? n : 0;
 
     public async Task<Party> SaveAsync(Party party, List<PartyBranchDto> branches, string userName, CancellationToken ct = default)
     {
