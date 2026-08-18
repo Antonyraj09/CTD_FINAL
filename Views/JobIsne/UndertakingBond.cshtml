@@ -41,6 +41,20 @@
         : importerAddressText;
     var importerExim = eximMatch.Success ? eximMatch.Groups[1].Value : "";
 
+    // Container mix summarized as count x size (e.g. "2X20', 1X40'") instead of one row per
+    // container — same summary used on the CTD Declaration. Fixes two things at once: the
+    // schedule used to grow one 6.86mm row per container, so 2+ containers pushed the cargo
+    // description (and the fixed-position QTY line further down the page) further down each
+    // time, eventually overlapping other text; now it's always exactly one row regardless of
+    // container count. Total packages prefers the Common Cargo Details figure (a
+    // manually-entered, all-containers total) over summing each container's own count, when
+    // that common value is set.
+    var containerSummary = string.Join(", ", Model.Containers
+        .GroupBy(c => c.ContainerSize.TrimEnd('t', 'f'))
+        .OrderBy(g => g.Key)
+        .Select(g => $"{g.Count()}X{g.Key}'"));
+    var totalPackages = Model.CargoPackages ?? Model.Containers.Sum(c => c.NoPackages);
+
     // Bond amount is the difference between market value and CIF value — the reference
     // form's own condition clause (1) spells this out ("the difference between the market
     // value of the goods in India and their CIF value"), and the reference sample's figures
@@ -129,19 +143,13 @@
 
         <div class="ln" style="top:80.89mm;left:7.92mm;">Quantity &amp; Description of Goods</div>
 
-        @{ var itemNo = 0; var itemTop = 87.92; }
-        @foreach (var c in Model.Containers)
+        @{ var itemTop = 87.92; }
+        @if (Model.Containers.Any())
         {
-            itemNo++;
-            <div class="ln" style="top:@(itemTop)mm;left:33.87mm;"><b>@itemNo</b></div>
-            <div class="wrap" style="top:@(itemTop)mm;left:44.7mm;width:130mm;"><b>1X@(c.ContainerSize.TrimEnd('t', 'f'))' CONT. STC @c.NoPackages PKG</b></div>
-            itemTop += 6.86;
+            <div class="ln" style="top:@(itemTop)mm;left:33.87mm;"><b>1</b></div>
+            <div class="wrap" style="top:@(itemTop)mm;left:44.7mm;width:130mm;"><b>@containerSummary CONT. STC @totalPackages PKG</b></div>
         }
-        @if (!Model.Containers.Any())
-        {
-            <div class="wrap" style="top:@(itemTop)mm;left:44.7mm;width:130mm;"><b>&nbsp;</b></div>
-            itemTop += 6.86;
-        }
+        @{ itemTop += 6.86; }
         <div class="wrap" style="top:@(itemTop)mm;left:8.47mm;width:180mm;"><b>@V(Model.CargoDescription ?? Model.MiscDescription)</b></div>
 
         <div class="ln" style="top:102.87mm;left:8.47mm;">QTY. : <b>@(Model.GrossWeight.HasValue ? Model.GrossWeight.Value.ToString("N3", plain) : "")</b> &nbsp;&nbsp;KGS.</div>
