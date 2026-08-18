@@ -146,7 +146,7 @@
     <div class="divider"></div>
 
     <p><span class="num">1.</span> CHA CODE: <span class="val">@agentLicenseNo</span>, CHA NAME: <span class="val">@agentName</span>,</p>
-    <p><span class="num">2.</span> EXIT CUSTOMS SITE: (PL TICK), ROUTE OF TRANSIT: <span class="val">@(string.IsNullOrWhiteSpace(Model.RouteCode) ? "" : $"[{Model.RouteCode}] ")@V(Model.RouteOfTransit)</span></p>
+    <p><span class="num">2.</span> EXIT CUSTOMS SITE: (PL TICK), ROUTE OF TRANSIT: <span class="val">@V(Model.RouteCode)</span></p>
     <p><span class="num">3.</span> IMPORTER'S CODE: <span class="val">@V(Model.ImporterCode)</span></p>
     <p><span class="num">4.</span> IMPORTER'S NAME &amp; ADDRESS: <span class="val">@V(Model.PartyName)</span></p>
     <p class="cont"><span class="val">@V(displayAddress)</span>, PAN: <span class="val">@V(importerPan)</span>.</p>
