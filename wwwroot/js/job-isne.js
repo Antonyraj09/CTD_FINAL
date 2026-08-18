@@ -435,6 +435,14 @@
     calcMktVal();
   }
 
+  // CIF Value (INR) can also be typed in directly instead of being derived from
+  // CIF Value FC x Exchange Rate — cascade downstream from a direct edit too,
+  // without re-running calcCIFINR(), which would overwrite what was just typed.
+  function recalcFromCifInrAmount() {
+    calcInsuranceValueInr();
+    calcMktVal();
+  }
+
   if (fob) fob.addEventListener("input", recalcCommercialChain);
   if (freight) freight.addEventListener("input", recalcCommercialChain);
   if (insRate) insRate.addEventListener("input", recalcCommercialChain);
@@ -442,6 +450,7 @@
   if (cif) cif.addEventListener("input", recalcFromCfrCnfAmount);
   if (insFC) insFC.addEventListener("input", recalcFromInsuranceAmount);
   if (cifRef) cifRef.addEventListener("input", recalcFromCifValueFcAmount);
+  if (cifINR) cifINR.addEventListener("input", recalcFromCifInrAmount);
   if (mktRate) mktRate.addEventListener("input", calcMktVal);
 
   /* ---------------- gather / validate ---------------- */
