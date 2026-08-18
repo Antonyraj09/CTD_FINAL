@@ -238,17 +238,18 @@
             <td>
                 @if (Model.Containers.Any())
                 {
-                    @foreach (var c in Model.Containers)
+                    var marks = string.Join(", ", Model.Containers.Select(c => c.MarksSerial).Where(m => !string.IsNullOrWhiteSpace(m)).Distinct());
+                    @if (!string.IsNullOrWhiteSpace(marks))
                     {
-                        <div class="container-block">
-                            @if (!string.IsNullOrWhiteSpace(c.MarksSerial))
-                            {
-                                <b>@c.MarksSerial</b>
-                            }
-                            <div style="margin-top:50px;">Container</div>
-                            <b>@V(c.ContainerNo)@(string.IsNullOrWhiteSpace(c.SealNumbers) ? "" : $"/ {c.SealNumbers}")</b>
-                        </div>
+                        <div class="container-block"><b>@marks</b></div>
                     }
+                    <div class="container-block">
+                        <div style="margin-top:50px;text-decoration:underline;">Container</div>
+                        @foreach (var c in Model.Containers)
+                        {
+                            <b>@V(c.ContainerNo)@(string.IsNullOrWhiteSpace(c.SealNumbers) ? "" : $"/ {c.SealNumbers}")</b>
+                        }
+                    </div>
                 }
             </td>
             <td colspan="5">
