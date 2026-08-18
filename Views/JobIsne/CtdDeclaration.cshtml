@@ -52,6 +52,16 @@
     // falling back to the main vessel/voyage when there's no transshipment leg recorded.
     var shipName = !string.IsNullOrWhiteSpace(Model.TsVessel) ? Model.TsVessel : Model.VesselName;
     var shipVoyage = !string.IsNullOrWhiteSpace(Model.TsVessel) ? Model.TsVoyage : Model.VoyageNo;
+
+    // Container mix summarized as count x size (e.g. "2X20', 1X40'") instead of one line
+    // per container — same summary used on the Undertaking Bond. Total packages prefers the
+    // Common Cargo Details figure (a manually-entered, all-containers total) over summing
+    // each container's own package count, when that common value is set.
+    var containerSummary = string.Join(", ", Model.Containers
+        .GroupBy(c => c.ContainerSize.TrimEnd('t', 'f'))
+        .OrderBy(g => g.Key)
+        .Select(g => $"{g.Count()}X{g.Key}'"));
+    var totalPackages = Model.CargoPackages ?? Model.Containers.Sum(c => c.NoPackages);
 }
 <!DOCTYPE html>
 <html>
@@ -249,12 +259,10 @@
                         <div><b>@c.CustomsCode</b></div>
                     }
                 }
-                <div style="margin-top:4px;">
-                    @foreach (var c in Model.Containers)
-                    {
-                        <div>1X<b>@(c.ContainerSize.TrimEnd('t', 'f'))</b>' CONT. STC <b>@c.NoPackages</b> PKG</div>
-                    }
-                </div>
+                @if (Model.Containers.Any())
+                {
+                    <div style="margin-top:4px;">@containerSummary CONT. STC <b>@totalPackages</b> PKG</div>
+                }
                 @if (!string.IsNullOrWhiteSpace(Model.CargoDescription))
                 {
                     <div style="margin-top:4px;font-weight:700;">@Model.CargoDescription</div>
@@ -285,7 +293,11 @@
                     {
                         <div>Insurance Rs.<b>@Model.InsuranceValueInr.Value.ToString("N2", inr)</b></div>
                     }
-                    @if (Model.CifInr.HasValue)
+                    @if (Model.CifFcReference.HasValue && Model.CifFcReference.Value != 0)
+                    {
+                        <div>CIF Value <b>@Model.Currency @Model.CifFcReference.Value.ToString("N2", inr)</b>@if (Model.CifInr.HasValue) {<text>=Rs.<b>@Model.CifInr.Value.ToString("N2", inr)</b>/-</text>}</div>
+                    }
+                    else if (Model.CifInr.HasValue)
                     {
                         <div>CIF Value = Rs.<b>@Model.CifInr.Value.ToString("N2", inr)</b>/-</div>
                     }
