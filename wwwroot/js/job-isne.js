@@ -353,9 +353,9 @@
      CFR/CNF Value (FC) = FOB Value + Freight
      Insurance in Foreign Currency = CFR/CNF Value (FC) x Insurance Rate% (Insurance
        Rate is a percentage, e.g. 1.5 means 1.5%, not a fraction)
-     Insurance Value (INR) = Insurance in Foreign Currency x Exchange Rate
-     CIF Value FC = CFR/CNF Value (FC) + Insurance in Foreign Currency
-     CIF Value (INR) = CIF Value FC x Exchange Rate
+     CIF Value FC = CFR/CNF Value (FC) + Insurance in Foreign Currency (unchanged)
+     CIF Value (INR) = Exchange Rate x CIF Value FC
+     Insurance Value (INR) = CIF Value (INR) x Insurance Rate%
      Market Value (INR) = CIF Value (INR) x Market Rate ---------------- */
   const fob = $("#isne_fobValue"), freight = $("#isne_freight"), cif = $("#isne_cifFC");
   function calcCfrCnf() {
@@ -369,12 +369,7 @@
     insFC.value = (base * (ratePct / 100)).toFixed(2);
   }
 
-  const excRate = $("#isne_exchangeRate"), insValueINR = $("#isne_insValueINR");
-  function calcInsuranceValueInr() {
-    const ins = parseFloat(insFC.value) || 0, r = parseFloat(excRate.value) || 0;
-    insValueINR.value = (ins * r).toFixed(2);
-  }
-
+  const excRate = $("#isne_exchangeRate");
   const cifRef = $("#isne_cifFCRef");
   function calcCifValueFc() {
     const c = parseFloat(cif.value) || 0, ins = parseFloat(insFC.value) || 0;
@@ -387,6 +382,12 @@
     cifINR.value = (c * r).toFixed(2);
   }
 
+  const insValueINR = $("#isne_insValueINR");
+  function calcInsuranceValueInr() {
+    const c = parseFloat(cifINR.value) || 0, ratePct = parseFloat(insRate.value) || 0;
+    insValueINR.value = (c * (ratePct / 100)).toFixed(2);
+  }
+
   const mktRate = $("#isne_marketRate"), mktVal = $("#isne_marketValueINR");
   function calcMktVal() {
     const r = parseFloat(mktRate.value) || 0, c = parseFloat(cifINR.value) || 0;
@@ -396,9 +397,9 @@
   function recalcCommercialChain() {
     calcCfrCnf();
     calcInsuranceFc();
-    calcInsuranceValueInr();
     calcCifValueFc();
     calcCIFINR();
+    calcInsuranceValueInr();
     calcMktVal();
   }
 
@@ -407,9 +408,9 @@
   // re-running calcInsuranceFc(), which would overwrite what was just typed with
   // the rate-derived amount.
   function recalcFromInsuranceAmount() {
-    calcInsuranceValueInr();
     calcCifValueFc();
     calcCIFINR();
+    calcInsuranceValueInr();
     calcMktVal();
   }
 
@@ -419,9 +420,9 @@
   // was just typed with the FOB+Freight-derived amount.
   function recalcFromCfrCnfAmount() {
     calcInsuranceFc();
-    calcInsuranceValueInr();
     calcCifValueFc();
     calcCIFINR();
+    calcInsuranceValueInr();
     calcMktVal();
   }
 
