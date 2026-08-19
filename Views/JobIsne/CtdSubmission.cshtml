@@ -8,14 +8,17 @@
 
     // Default forwarding agent letterhead — see CtdDeclaration.cshtml for the same default.
     const string DefaultAgentName = "EASTERN CLEARING & FORWARDING AGENCY PVT. LTD.";
-    const string DefaultAgentLicenseNo = "E-18";
+    const string DefaultAgentLicenseNo = "AAACE5876HCH001";
 
     // CHA identity on this form is always the logged-in CHA/forwarding company itself —
-    // never the job's Party or SubAgent, which is a different party to the shipment.
-    var agentName = ViewBag.CompanyName as string;
+    // never the job's Party or SubAgent, which is a different party to the shipment. Name
+    // and CHA Code both come from the tenant's own Company Profile (Settings screen),
+    // matching CtdDeclaration.cshtml and UndertakingBond.cshtml.
+    var settings = ViewBag.CompanySettings as AppSettingsEntity;
+    var agentName = settings?.CompanyName;
     if (string.IsNullOrWhiteSpace(agentName)) agentName = DefaultAgentName;
 
-    var agentLicenseNo = agent?.LicenseNo;
+    var agentLicenseNo = settings?.ChaLicenseNo;
     if (string.IsNullOrWhiteSpace(agentLicenseNo)) agentLicenseNo = DefaultAgentLicenseNo;
 
     var importerPan = ViewBag.ImporterPan as string;
@@ -34,6 +37,14 @@
         var eximCode = eximMatch.Groups[1].Value;
         importerPan = eximCode.Length > 9 ? eximCode.Substring(0, 9) : eximCode;
     }
+
+    // Total Package / Package Code prefer the Common Cargo Details figures (a
+    // manually-entered, all-containers total) over deriving them from each container's own
+    // package count/type, when those common values are set.
+    var totalPackage = Model.CargoPackages ?? (Model.Containers.Sum(c => c.NoPackages) is var totalPkg && totalPkg > 0 ? totalPkg : (int?)null);
+    var packageCode = !string.IsNullOrWhiteSpace(Model.CargoPackageUnit)
+        ? Model.CargoPackageUnit
+        : string.Join(", ", Model.Containers.Select(c => c.PackageType).Where(p => !string.IsNullOrWhiteSpace(p)).Distinct());
 }
 <!DOCTYPE html>
 <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
@@ -173,8 +184,8 @@
     </table>
     <p><span class="num">11.</span> MBL NO: <span class="val">@V(Model.MblNo)</span>, DATE: <span class="val">@D(Model.MblDate)</span>, HBL NO: <span class="val">@V(Model.HblNo)</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DATE: <span class="val">@D(Model.HblDate)</span></p>
     <p>
-        <span class="num">12.</span> TOTAL PACKAGE: <span class="val">@(Model.Containers.Sum(c => c.NoPackages) is var totalPkg && totalPkg > 0 ? totalPkg.ToString() : "")</span>,
-        PACKAGE CODE: <span class="val">@V(string.Join(", ", Model.Containers.Select(c => c.PackageType).Where(p => !string.IsNullOrWhiteSpace(p)).Distinct()))</span>,
+        <span class="num">12.</span> TOTAL PACKAGE: <span class="val">@V(totalPackage)</span>,
+        PACKAGE CODE: <span class="val">@V(packageCode)</span>,
         MARK AND NO: <span class="val">@(Model.Containers.Any(c => !string.IsNullOrWhiteSpace(c.MarksSerial)) ? string.Join(", ", Model.Containers.Select(c => c.MarksSerial).Where(m => !string.IsNullOrWhiteSpace(m))) : "N/M")</span>
     </p>
     <p>
@@ -208,26 +219,13 @@
         <p><span class="num">14.</span> CONTAINER NO/SHIPPER SEAL NO: <span class="val">&nbsp;</span></p>
     }
     @{
-        var itemNo = 0;
+        var cthCodes = string.Join(", ", Model.Containers.Select(c => c.CustomsCode).Where(c => !string.IsNullOrWhiteSpace(c)).Distinct());
     }
     @if (Model.Containers.Any())
     {
-        var first = true;
-        foreach (var c in Model.Containers)
-        {
-            itemNo++;
-            if (first)
-            {
-                <p><span class="num">15.</span> ITEM NO: <span class="val">@itemNo</span>, CTH: <span class="val">@V(c.CustomsCode)</span>,&nbsp; SENSITIVE: <span class="val">@(Model.SensitiveCargo ? "YES" : "NO")</span></p>
-            }
-            else
-            {
-                <p class="cont">ITEM NO: <span class="val">@itemNo</span>, CTH: <span class="val">@V(c.CustomsCode)</span>,&nbsp; SENSITIVE: <span class="val">@(Model.SensitiveCargo ? "YES" : "NO")</span></p>
-            }
-            first = false;
-        }
+        <p><span class="num">15.</span> ITEM NO: <span class="val">@Model.Containers.Count</span>, CTH: <span class="val">@V(cthCodes)</span>,&nbsp; SENSITIVE: <span class="val">@(Model.SensitiveCargo ? "YES" : "NO")</span></p>
     }
-    @if (!Model.Containers.Any())
+    else
     {
         <p><span class="num">15.</span> ITEM NO: <span class="val">&nbsp;</span>, CTH: <span class="val">&nbsp;</span>,&nbsp; SENSITIVE: <span class="val">@(Model.SensitiveCargo ? "YES" : "NO")</span></p>
     }

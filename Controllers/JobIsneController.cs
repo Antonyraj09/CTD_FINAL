@@ -58,9 +58,6 @@ public class JobIsneController : Controller
     [RequirePermission(PermissionKeys.JobIsneManage)]
     public async Task<IActionResult> Save([FromBody] JobIsneSaveRequest request)
     {
-        if (string.IsNullOrWhiteSpace(request.PartyCode) || string.IsNullOrWhiteSpace(request.PartyName))
-            return Json(new { success = false, message = "Party Code and Party Name are required." });
-
         if (!string.IsNullOrEmpty(request.CtdNumber))
         {
             if (request.CtdNumber.Length > 25)
@@ -267,7 +264,7 @@ public class JobIsneController : Controller
         }
 
         ViewBag.Agent = await LoadAgentAsync(record);
-        ViewBag.CompanyName = (await _settingsService.GetAsync()).CompanyName;
+        ViewBag.CompanySettings = await _settingsService.GetAsync();
         ViewBag.ImporterPan = string.IsNullOrEmpty(record.PartyCode)
             ? null
             : (await _parties.Query().FirstOrDefaultAsync(p => p.PartyCode == record.PartyCode))?.Pan;
