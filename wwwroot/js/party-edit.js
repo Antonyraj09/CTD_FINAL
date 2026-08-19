@@ -27,11 +27,11 @@
         </div>
       </div>
       <div class="form-grid cols-4">
-        <div class="field"><label>Branch Name <span class="req">*</span></label><input class="br-field" data-field="branchName" type="text" value="${esc(b.branchName)}" placeholder="e.g. Head Office, Kolkata Port Office"></div>
-        <div class="field"><label>City <span class="req">*</span></label><input class="br-field" data-field="city" type="text" value="${esc(b.city)}"></div>
+        <div class="field"><label>Branch Name</label><input class="br-field" data-field="branchName" type="text" value="${esc(b.branchName)}" placeholder="e.g. Head Office, Kolkata Port Office"></div>
+        <div class="field"><label>City</label><input class="br-field" data-field="city" type="text" value="${esc(b.city)}"></div>
         <div class="field"><label>State</label><input class="br-field" data-field="state" type="text" value="${esc(b.state || "")}"></div>
         <div class="field"><label>PIN Code</label><input class="br-field" data-field="pinCode" type="text" value="${esc(b.pinCode || "")}"></div>
-        <div class="field span-2"><label>Address Line 1 <span class="req">*</span></label><input class="br-field" data-field="addressLine1" type="text" value="${esc(b.addressLine1)}"></div>
+        <div class="field span-2"><label>Address Line 1</label><input class="br-field" data-field="addressLine1" type="text" value="${esc(b.addressLine1)}"></div>
         <div class="field span-2"><label>Address Line 2</label><input class="br-field" data-field="addressLine2" type="text" value="${esc(b.addressLine2 || "")}"></div>
         <div class="field"><label>Country</label><input class="br-field" data-field="country" type="text" value="${esc(b.country || "India")}"></div>
         <div class="field"><label>GSTIN <span style="font-weight:400;color:var(--ink-400);">(state-specific)</span></label><input class="br-field" data-field="gstin" type="text" value="${esc(b.gstin || "")}"></div>

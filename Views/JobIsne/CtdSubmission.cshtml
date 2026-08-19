@@ -21,22 +21,7 @@
     var agentLicenseNo = settings?.ChaLicenseNo;
     if (string.IsNullOrWhiteSpace(agentLicenseNo)) agentLicenseNo = DefaultAgentLicenseNo;
 
-    var importerPan = ViewBag.ImporterPan as string;
-
-    // Some Party addresses have "EXIM: <code>" embedded as free text (a legacy data-entry
-    // habit, not a separate field) — strip it from the printed address, and when the Party
-    // has no PAN of its own on file, fall back to the first 9 characters of that EXIM code
-    // (the business convention this reference format uses).
-    var addressText = Model.Address ?? "";
-    var eximMatch = System.Text.RegularExpressions.Regex.Match(addressText, @"EXIM:\s*([A-Za-z0-9]+)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-    var displayAddress = eximMatch.Success
-        ? System.Text.RegularExpressions.Regex.Replace(addressText, @",?\s*EXIM:\s*[A-Za-z0-9]+", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase).Trim()
-        : addressText;
-    if (string.IsNullOrWhiteSpace(importerPan) && eximMatch.Success)
-    {
-        var eximCode = eximMatch.Groups[1].Value;
-        importerPan = eximCode.Length > 9 ? eximCode.Substring(0, 9) : eximCode;
-    }
+    var (displayAddress, importerPan) = CTD_FINAL.Helpers.PartyAddressHelper.ExtractPan(Model.Address, ViewBag.ImporterPan as string);
 
     // Total Package / Package Code prefer the Common Cargo Details figures (a
     // manually-entered, all-containers total) over deriving them from each container's own
@@ -193,31 +178,18 @@
         NET WT: <span class="val">@(Model.NetWeight.HasValue? Model.NetWeight.Value.ToString("N3") : "")</span>,
         UNIT: <span class="val">KGS</span>
     </p>
-    @if (Model.Containers.Any())
-    {
-        var first = true;
-        foreach (var c in Model.Containers)
+    @{
+        // Container / seal / size, in that order per container — the size suffix (e.g. 40')
+        // goes at the end so it's never mistaken for part of the seal number. All containers
+        // summarized on one line instead of one line each.
+        var containerList = string.Join(", ", Model.Containers.Select(c =>
         {
-            // Container / seal / size, in that order — the size suffix (e.g. 40') goes at
-            // the end so it's never mistaken for part of the seal number.
             var sealPart = string.IsNullOrWhiteSpace(c.SealNumbers) ? "" : $" / {c.SealNumbers}";
             var sizePart = string.IsNullOrWhiteSpace(c.ContainerSize) ? "" : $" {c.ContainerSize.TrimEnd('t', 'f')}'";
-            var containerSealDisplay = $"{V(c.ContainerNo)}{sealPart}{sizePart}";
-            if (first)
-            {
-                <p><span class="num">14.</span> CONTAINER NO/SHIPPER SEAL NO: <span class="val">@containerSealDisplay</span></p>
-            }
-            else
-            {
-                <p class="cont">CONTAINER NO/SHIPPER SEAL NO: <span class="val">@containerSealDisplay</span></p>
-            }
-            first = false;
-        }
+            return $"{V(c.ContainerNo)}{sealPart}{sizePart}";
+        }));
     }
-    else
-    {
-        <p><span class="num">14.</span> CONTAINER NO/SHIPPER SEAL NO: <span class="val">&nbsp;</span></p>
-    }
+    <p><span class="num">14.</span> CONTAINER NO/SHIPPER SEAL NO: <span class="val">@(string.IsNullOrEmpty(containerList) ? " " : containerList)</span></p>
     @{
         var cthCodes = string.Join(", ", Model.Containers.Select(c => c.CustomsCode).Where(c => !string.IsNullOrWhiteSpace(c)).Distinct());
     }

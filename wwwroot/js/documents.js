@@ -37,7 +37,7 @@
       title: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Upload Document`,
       bodyHTML: `
         <div class="form-grid cols-2">
-          <div class="field span-2"><label>Document Name <span class="req">*</span></label><input type="text" id="docUploadName" placeholder="e.g. Certificate_of_Origin.pdf"></div>
+          <div class="field span-2"><label>Document Name</label><input type="text" id="docUploadName" placeholder="e.g. Certificate_of_Origin.pdf"></div>
           <div class="field"><label>Document Type</label><select id="docUploadType"><option>Customer Document</option><option>CTD Document</option><option>Checklist</option><option>Forwarding Note</option><option>Rail Form</option><option>Invoice</option></select></div>
           <div class="field"><label>Job Number</label><input type="text" id="docUploadJob" placeholder="CTD-2026-0000"></div>
           <div class="field span-2"><label>File</label><input type="file" id="docUploadFile"></div>

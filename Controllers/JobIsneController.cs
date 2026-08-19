@@ -290,6 +290,9 @@ public class JobIsneController : Controller
 
         ViewBag.Agent = await LoadAgentAsync(record);
         ViewBag.CompanySettings = await _settingsService.GetAsync();
+        ViewBag.ImporterPan = string.IsNullOrEmpty(record.PartyCode)
+            ? null
+            : (await _parties.Query().FirstOrDefaultAsync(p => p.PartyCode == record.PartyCode))?.Pan;
 
         return View(record);
     }

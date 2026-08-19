@@ -25,7 +25,6 @@
   const jobSelect = $("#dlv_jobSelect");
   const jobIdField = $("#dlv_jobIsneId");
   const containerSelect = $("#dlv_containerSelect");
-  const containerReqFlag = $("#dlv_containerReq");
 
   /* ---------------- Job select: populate options (New mode only) ---------------- */
   if (jobSelect) {
@@ -51,8 +50,6 @@
 
   function populateContainerSelect(job, preselectContainerNo) {
     const containers = job ? job.containers : [];
-    const hasContainers = containers && containers.length > 0;
-    containerReqFlag.style.display = hasContainers ? "" : "none";
 
     containerSelect.innerHTML = '<option value="">-- No Container --</option>' +
       containers.map(function (c) {

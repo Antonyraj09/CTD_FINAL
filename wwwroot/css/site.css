@@ -559,7 +559,6 @@ body{
 .field.span-2{grid-column:span 2;}
 .field.span-3{grid-column:span 3;}
 .field label{font-size:12px;font-weight:700;color:var(--ink-700);display:flex;align-items:center;gap:5px;}
-.field label .req{color:var(--seal-red);}
 .field label .hint-ico{color:var(--ink-300);cursor:help;}
 .field input,.field select,.field textarea{
   border:1px solid var(--surface-border-strong);

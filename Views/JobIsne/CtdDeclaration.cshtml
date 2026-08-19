@@ -53,6 +53,8 @@
     var shipName = !string.IsNullOrWhiteSpace(Model.TsVessel) ? Model.TsVessel : Model.VesselName;
     var shipVoyage = !string.IsNullOrWhiteSpace(Model.TsVessel) ? Model.TsVoyage : Model.VoyageNo;
 
+    var (importerDisplayAddress, importerPan) = CTD_FINAL.Helpers.PartyAddressHelper.ExtractPan(Model.Address, ViewBag.ImporterPan as string);
+
     // Container mix summarized as count x size (e.g. "2X20', 1X40'") instead of one line
     // per container — same summary used on the Undertaking Bond. Total packages prefers the
     // Common Cargo Details figure (a manually-entered, all-containers total) over summing
@@ -155,9 +157,13 @@
                     <div class="cell-val">@Model.BankName</div>
                 }
                 <div class="cell-val">@V(Model.PartyName)</div>
-                @if (!string.IsNullOrWhiteSpace(Model.Address))
+                @if (!string.IsNullOrWhiteSpace(importerDisplayAddress))
                 {
-                    <div class="cell-val">@Model.Address</div>
+                    <div class="cell-val">@importerDisplayAddress</div>
+                }
+                @if (!string.IsNullOrWhiteSpace(importerPan))
+                {
+                    <div class="cell-val">PAN: @importerPan</div>
                 }
             </td>
             <td colspan="6">

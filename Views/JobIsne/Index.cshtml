@@ -113,15 +113,15 @@
         <div class="erp-section-body">
             <div class="form-grid cols-4">
                 <div class="field">
-                    <label>Job Number <span class="req">*</span></label>
+                    <label>Job Number</label>
                     <div class="field-static" id="isne_jobNumber">@jobNumber</div>
                 </div>
                 <div class="field">
-                    <label>Job Date <span class="req">*</span></label>
+                    <label>Job Date</label>
                     <input type="date" id="isne_jobDate" value="@(Model is null ? today : D(Model.JobDate))">
                 </div>
                 <div class="field">
-                    <label>Party Code <span class="req">*</span></label>
+                    <label>Party Code</label>
                     <select id="isne_partyCode">
                         <option value="">-- Select Party --</option>
                         @foreach (var p in parties.Where(p => !string.IsNullOrEmpty(p.PartyCode)))
@@ -131,7 +131,7 @@
                     </select>
                 </div>
                 <div class="field">
-                    <label>Party Name <span class="req">*</span></label>
+                    <label>Party Name</label>
                     <input type="text" id="isne_partyName" placeholder="Importer / Consignee Name" value="@Model?.PartyName">
                 </div>
                 <div class="field" id="isne_branchField" style="display:none;">
@@ -291,7 +291,7 @@
                         Shipment Information
                     </div>
                     <div class="field">
-                        <label>Shipment Type <span class="req">*</span></label>
+                        <label>Shipment Type</label>
                         <div class="radio-group">
                             <label class="radio-pill @(Model is null || Model.ShipmentType == CTD_FINAL.Enums.ContainerStatus.FCL ? "checked" : "")" id="rp_shiptype_fcl">
                                 <input type="radio" name="isneShipmentType" value="FCL" checked="@(Model is null || Model.ShipmentType == CTD_FINAL.Enums.ContainerStatus.FCL)">
@@ -307,7 +307,7 @@
                     </div>
                     <div class="form-grid cols-2" style="gap:14px;margin-top:14px;align-items:end;">
                         <div class="field">
-                            <label>No. of Containers <span class="req">*</span></label>
+                            <label>No. of Containers</label>
                             <input type="number" id="isne_containerCount" placeholder="e.g. 10" min="0" max="200" step="1" value="@(Model?.Containers.Count ?? 1)">
                         </div>
                         <div class="field">

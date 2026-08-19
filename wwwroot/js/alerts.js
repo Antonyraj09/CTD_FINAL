@@ -20,7 +20,7 @@
     openModal({
       title: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg> New Alert Rule`,
       bodyHTML: `<div class="form-grid cols-2">
-        <div class="field span-2"><label>Rule Name <span class="req">*</span></label><input type="text" id="ar_name" placeholder="e.g. Container Seal Mismatch Alert"></div>
+        <div class="field span-2"><label>Rule Name</label><input type="text" id="ar_name" placeholder="e.g. Container Seal Mismatch Alert"></div>
         <div class="field"><label>Channel</label><select id="ar_channel"><option>Email</option><option>SMS</option><option>Email + SMS</option></select></div>
         <div class="field"><label>Audience</label><input type="text" id="ar_audience" placeholder="e.g. Importer + Agent"></div>
         <div class="field span-2"><label>Trigger Condition</label><input type="text" id="ar_trigger" placeholder="e.g. On Status Change to Transit"></div>

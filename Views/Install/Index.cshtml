@@ -37,7 +37,7 @@
             <div class="subhead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Client Information</div>
             <div class="form-grid">
                 <div class="field"><label>License Number</label><div class="field-static">Assigned automatically once installation completes</div></div>
-                <div class="field"><label>License Type <span class="req">*</span></label>
+                <div class="field"><label>License Type</label>
                     <select id="i1_licenseType">
                         @foreach (var lt in Enum.GetValues<LicenseType>())
                         {
@@ -45,13 +45,13 @@
                         }
                     </select>
                 </div>
-                <div class="field"><label>Company Name <span class="req">*</span></label><input type="text" id="i1_companyName" placeholder="ABC Logistics Pvt. Ltd.">
+                <div class="field"><label>Company Name</label><input type="text" id="i1_companyName" placeholder="ABC Logistics Pvt. Ltd.">
                     <span class="field-error">Company name is required</span>
                 </div>
-                <div class="field"><label>Company Code <span class="req">*</span></label><input type="text" id="i1_companyCode" placeholder="ABCLOG" maxlength="20">
+                <div class="field"><label>Company Code</label><input type="text" id="i1_companyCode" placeholder="ABCLOG" maxlength="20">
                     <span class="field-error">Company code is required</span>
                 </div>
-                <div class="field"><label>Email <span class="req">*</span></label><input type="email" id="i1_email" placeholder="ops@abclogistics.com">
+                <div class="field"><label>Email</label><input type="email" id="i1_email" placeholder="ops@abclogistics.com">
                     <span class="field-error">A valid email is required</span>
                 </div>
                 <div class="field"><label>Phone</label><input type="text" id="i1_phone" placeholder="+91 98765 43210"></div>
@@ -69,14 +69,14 @@
         <div class="wizard-pane" id="ipane-2">
             <div class="subhead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>Database Configuration</div>
             <div class="form-grid">
-                <div class="field"><label>Database Name <span class="req">*</span></label><input type="text" id="i2_databaseName" placeholder="CTD_ABC_LOGISTICS">
+                <div class="field"><label>Database Name</label><input type="text" id="i2_databaseName" placeholder="CTD_ABC_LOGISTICS">
                     <span class="field-error">Letters, digits and underscores only, starting with a letter</span>
                 </div>
-                <div class="field"><label>Database Username <span class="req">*</span></label><input type="text" id="i2_databaseUsername" placeholder="ctd_abclog_user">
+                <div class="field"><label>Database Username</label><input type="text" id="i2_databaseUsername" placeholder="ctd_abclog_user">
                     <div style="font-size:11px;color:var(--ink-500);margin-top:4px;">Must be unique across every client on this SQL Server — logins aren't per-database.</div>
                     <span class="field-error">Letters, digits and underscores only, starting with a letter</span>
                 </div>
-                <div class="field"><label>Database Password <span class="req">*</span></label><input type="password" id="i2_databasePassword" placeholder="At least 8 characters">
+                <div class="field"><label>Database Password</label><input type="password" id="i2_databasePassword" placeholder="At least 8 characters">
                     <span class="field-error">At least 8 characters</span>
                 </div>
             </div>
@@ -84,13 +84,13 @@
             <h4 style="margin:0 0 12px;font-size:13.5px;">Default Administrator Account</h4>
             <p style="margin:0 0 14px;font-size:12px;color:var(--ink-500);">This is the only login seeded into the new database — no demo data or extra users are created.</p>
             <div class="form-grid">
-                <div class="field"><label>Full Name <span class="req">*</span></label><input type="text" id="i2_adminFullName" placeholder="Administrator">
+                <div class="field"><label>Full Name</label><input type="text" id="i2_adminFullName" placeholder="Administrator">
                     <span class="field-error">Full name is required</span>
                 </div>
-                <div class="field"><label>Email <span class="req">*</span></label><input type="email" id="i2_adminEmail" placeholder="admin@abclogistics.com">
+                <div class="field"><label>Email</label><input type="email" id="i2_adminEmail" placeholder="admin@abclogistics.com">
                     <span class="field-error">A valid email is required</span>
                 </div>
-                <div class="field"><label>Password <span class="req">*</span></label><input type="password" id="i2_adminPassword" placeholder="At least 8 characters">
+                <div class="field"><label>Password</label><input type="password" id="i2_adminPassword" placeholder="At least 8 characters">
                     <div style="font-size:11px;color:var(--ink-500);margin-top:4px;">Must include an uppercase letter, a lowercase letter, a digit, and a symbol.</div>
                     <span class="field-error">Must include an uppercase letter, a lowercase letter, a digit, and a symbol</span>
                 </div>

@@ -80,7 +80,7 @@
                     <div class="field-static" id="dlv_serialNo">@(isNew ? "Auto Generated" : Model!.SerialNo.ToString())</div>
                 </div>
                 <div class="field">
-                    <label>Delivery Date <span class="req">*</span></label>
+                    <label>Delivery Date</label>
                     <input type="date" id="dlv_deliveryDate" value="@(isNew ? today : D(Model!.DeliveryDate))" @ro>
                 </div>
                 <div class="field">
@@ -104,7 +104,7 @@
         <div class="erp-section-body">
             <div class="form-grid cols-4">
                 <div class="field span-2">
-                    <label>Job No. <span class="req">*</span></label>
+                    <label>Job No.</label>
                     @if (isNew)
                     {
                         <select id="dlv_jobSelect">
@@ -151,7 +151,7 @@
                     <input type="text" id="dlv_keyNo" value="@Model?.KeyNo" @ro>
                 </div>
                 <div class="field">
-                    <label>Package <span class="req">*</span></label>
+                    <label>Package</label>
                     <input type="number" step="0.001" min="0" id="dlv_package" value="@(Model?.Package)" @ro>
                 </div>
 
@@ -160,7 +160,7 @@
                     <input type="text" id="dlv_route" value="@Model?.Route" @ro>
                 </div>
                 <div class="field">
-                    <label>Transporter Code <span class="req">*</span></label>
+                    <label>Transporter Code</label>
                     <select id="dlv_transporterSelect" @ro>
                         <option value="">-- Select --</option>
                         @foreach (var t in transporterLookup)
@@ -179,7 +179,7 @@
                     <input type="text" id="dlv_bslNo" value="@Model?.BslNo" @ro>
                 </div>
                 <div class="field">
-                    <label>Staff Code <span class="req">*</span></label>
+                    <label>Staff Code</label>
                     <select id="dlv_staffSelect" @ro>
                         <option value="">-- Select --</option>
                         @foreach (var s in staffLookup)
@@ -198,7 +198,7 @@
                 </div>
 
                 <div class="field span-2">
-                    <label>Container No. <span class="req" id="dlv_containerReq" style="display:none;">*</span></label>
+                    <label>Container No.</label>
                     <select id="dlv_containerSelect" @ro>
                         <option value="">-- No Container --</option>
                     </select>

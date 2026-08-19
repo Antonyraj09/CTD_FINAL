@@ -5,15 +5,15 @@
 <input type="hidden" id="uf_id" value="@Model.Id" />
 <div class="form-grid cols-2">
     <div class="field">
-        <label>Full Name <span class="req">*</span></label>
+        <label>Full Name</label>
         <input type="text" id="uf_fullName" value="@Model.FullName">
     </div>
     <div class="field">
-        <label>Email <span class="req">*</span></label>
+        <label>Email</label>
         <input type="email" id="uf_email" value="@Model.Email">
     </div>
     <div class="field">
-        <label>Role <span class="req">*</span></label>
+        <label>Role</label>
         <select id="uf_role">
             @foreach (var role in roles)
             {
