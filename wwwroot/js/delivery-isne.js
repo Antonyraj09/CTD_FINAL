@@ -75,8 +75,8 @@
   }
 
   /* ---------------- Transporter / Staff cascades ---------------- */
-  // Transporter Name is a manual entry — selecting a Transporter Code fills it in as a
-  // starting point, but the user can freely overwrite it afterward.
+  // Transporter Name and Staff Name are manual entry — selecting the matching Code fills
+  // them in as a starting point, but the user can freely overwrite either afterward.
   const transporterSelect = $("#dlv_transporterSelect");
   if (transporterSelect) {
     transporterSelect.addEventListener("change", function () {
@@ -88,7 +88,7 @@
   if (staffSelect) {
     staffSelect.addEventListener("change", function () {
       const s = staffById[Number(staffSelect.value)];
-      $("#dlv_staffName").textContent = s ? s.name : "—";
+      $("#dlv_staffName").value = s ? s.name : "";
     });
   }
 
@@ -124,7 +124,7 @@
       bslNo: $("#dlv_bslNo").value.trim(),
       staffId: s ? s.id : null,
       staffCode: s ? s.code : null,
-      staffName: s ? s.name : null,
+      staffName: $("#dlv_staffName").value.trim() || null,
       containerNo: contOpt ? contOpt.value : "",
       containerSize: contOpt ? contOpt.dataset.size || "" : "",
       remarks: $("#dlv_remarks").value.trim()
