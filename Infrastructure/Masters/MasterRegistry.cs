@@ -31,8 +31,8 @@ public static class MasterRegistry
             Columns = new() { ("Name", "Commodity Name"), ("HsCode", "HS Code") },
             Fields = new()
             {
-                new("Name", "Commodity Name", "text", true),
-                new("HsCode", "HS Code", "text", true),
+                new("Name", "Commodity Name", "text", false),
+                new("HsCode", "HS Code", "text", false),
             }
         },
         ["route"] = new MasterTabConfig
@@ -42,7 +42,7 @@ public static class MasterRegistry
             Fields = new()
             {
                 new("RouteCode", "Route Code", "text", false),
-                new("Name", "Route Description", "text", true),
+                new("Name", "Route Description", "text", false),
                 new("Distance", "Approx. Distance", "text", false),
             }
         },
@@ -52,7 +52,7 @@ public static class MasterRegistry
             Columns = new() { ("Name", "Border Point"), ("State", "State / District") },
             Fields = new()
             {
-                new("Name", "Border Point Name", "text", true),
+                new("Name", "Border Point Name", "text", false),
                 new("State", "State / District", "text", false),
             }
         },
@@ -62,8 +62,8 @@ public static class MasterRegistry
             Columns = new() { ("Name", "Customs House"), ("Code", "Code") },
             Fields = new()
             {
-                new("Name", "Customs House Name", "text", true),
-                new("Code", "Code", "text", true),
+                new("Name", "Customs House Name", "text", false),
+                new("Code", "Code", "text", false),
             }
         },
         ["subagent"] = new MasterTabConfig
@@ -72,9 +72,9 @@ public static class MasterRegistry
             Columns = new() { ("Name", "Sub-Agent Name"), ("SubAgentCode", "Code"), ("City", "City"), ("LicenseNo", "License No."), ("Phone", "Phone") },
             Fields = new()
             {
-                new("SubAgentCode", "Sub-Agent Code", "text", true),
-                new("Name", "Sub-Agent Name", "text", true),
-                new("AddressLine1", "Address Line 1", "text", true),
+                new("SubAgentCode", "Sub-Agent Code", "text", false),
+                new("Name", "Sub-Agent Name", "text", false),
+                new("AddressLine1", "Address Line 1", "text", false),
                 new("AddressLine2", "Address Line 2", "text", false),
                 new("City", "City", "text", false),
                 new("State", "State", "text", false),

@@ -6,7 +6,7 @@ public class JobSaveRequest
     public bool CloseJob { get; set; }
 
     // Step 1
-    public DateTime JobDate { get; set; }
+    public DateTime? JobDate { get; set; }
     public string ShipmentType { get; set; } = "single";
     public int? ImporterId { get; set; }
     public int? AgentId { get; set; }

@@ -91,27 +91,21 @@ public class DeliveryIsneController : Controller
     [RequirePermission(PermissionKeys.DeliveryIsneManage)]
     public async Task<IActionResult> Save([FromBody] DeliveryIsneSaveRequest request)
     {
+        // Job No. is the one thing still enforced — a delivery record has no meaning
+        // without a job to attach to (its own fields, like customer/job number, are copied
+        // in from that job below), a structural requirement rather than a mandatory field
+        // in the usual sense. Everything else can be left blank.
         if (request.JobIsneId <= 0)
             return Json(new { success = false, message = "Please select Job No." });
-        if (request.DeliveryDate == default)
-            return Json(new { success = false, message = "Delivery Date is required." });
-        if (!request.Package.HasValue || request.Package.Value <= 0)
-            return Json(new { success = false, message = "Package must be greater than zero." });
-        if (!request.TransporterId.HasValue)
-            return Json(new { success = false, message = "Transporter is required." });
-        if (!request.StaffId.HasValue)
-            return Json(new { success = false, message = "Staff is required." });
 
         var job = await _jobIsnes.Query().Include(j => j.Containers).FirstOrDefaultAsync(j => j.Id == request.JobIsneId);
         if (job is null)
             return Json(new { success = false, message = "Please select Job No." });
-        if (job.Containers.Any() && string.IsNullOrWhiteSpace(request.ContainerNo))
-            return Json(new { success = false, message = "Container is required for this Job." });
 
         var entity = new DeliveryIsne
         {
             Id = request.Id,
-            DeliveryDate = request.DeliveryDate,
+            DeliveryDate = request.DeliveryDate ?? DateTime.Today,
             PartYN = request.PartYN == "Y" ? "Y" : "N",
             JobIsneId = job.Id,
             JobNo = job.JobNumber,

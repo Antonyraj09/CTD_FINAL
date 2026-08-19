@@ -72,20 +72,8 @@ public class PartyController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Save([FromBody] PartySaveRequest request)
     {
-        if (string.IsNullOrWhiteSpace(request.PartyCode))
-            return Json(new { success = false, message = "Party code is required." });
-
-        if (string.IsNullOrWhiteSpace(request.Name))
-            return Json(new { success = false, message = "Party name is required." });
-
-        if (!request.IsImporter && !request.IsTransporter && !request.IsAgent)
-            return Json(new { success = false, message = "Select at least one role (Importer / Transporter / Agent)." });
-
         var branches = request.Branches.Where(b => !string.IsNullOrWhiteSpace(b.BranchName) && !string.IsNullOrWhiteSpace(b.City)).ToList();
-        if (branches.Count == 0)
-            return Json(new { success = false, message = "At least one branch with a name and city is required." });
-
-        if (!branches.Any(b => b.IsPrimary))
+        if (branches.Count > 0 && !branches.Any(b => b.IsPrimary))
             branches[0].IsPrimary = true;
 
         var party = new Party

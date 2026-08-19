@@ -557,20 +557,10 @@
   }
 
   function validateIsneForm() {
-    const required = ["isne_jobDate", "isne_partyCode", "isne_partyName"];
     let valid = true;
-    required.forEach(function (id) {
-      const elm = $("#" + id);
-      const field = elm.closest(".field");
-      if (!elm.value || !elm.value.trim()) {
-        valid = false;
-        if (field) field.classList.add("invalid");
-      } else if (field) {
-        field.classList.remove("invalid");
-      }
-    });
 
-    // Entry for Data Sheet fields are all optional — CIF Value is only flagged
+    // No field on this form is mandatory — Job Date / Party / everything else can be
+    // saved blank. Entry for Data Sheet fields are all optional — CIF Value is only flagged
     // invalid when something was actually typed but doesn't fit; Importer Code
     // has no format requirement and never blocks saving.
 

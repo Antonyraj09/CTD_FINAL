@@ -110,7 +110,7 @@
 
     return {
       id: recordId,
-      deliveryDate: $("#dlv_deliveryDate").value,
+      deliveryDate: $("#dlv_deliveryDate").value || null,
       partYN: $("#dlv_partYN").value || "N",
       jobIsneId: jobId,
       consigneeName: $("#dlv_consignee").value.trim(),
@@ -132,14 +132,12 @@
     };
   }
 
+  // Only Job No. is enforced — every other field can be left blank. A delivery record has
+  // no meaning without a job to attach to (its own fields, like customer/job number, are
+  // copied in from that job), which is a structural requirement rather than a mandatory
+  // field in the usual sense.
   function validate(req) {
     if (!req.jobIsneId) return "Please select Job No.";
-    if (!req.deliveryDate) return "Delivery Date is required.";
-    if (!req.package || req.package <= 0) return "Package must be greater than zero.";
-    if (!req.transporterId) return "Transporter is required.";
-    if (!req.staffId) return "Staff is required.";
-    const job = jobById[req.jobIsneId];
-    if (job && job.containers && job.containers.length > 0 && !req.containerNo) return "Container is required for this Job.";
     return null;
   }
 

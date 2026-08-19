@@ -77,13 +77,10 @@ public class JobsController : Controller
         if (request.CloseJob && !await HasPermissionAsync(PermissionKeys.JobClose))
             return Json(new { success = false, message = "You do not have permission to close jobs." });
 
-        if (request.Id == 0 && (!request.ImporterId.HasValue || !request.TransporterId.HasValue))
-            return Json(new { success = false, message = "Importer and Transporter are required." });
-
         var job = new CtdJob
         {
             Id = request.Id,
-            JobDate = request.JobDate,
+            JobDate = request.JobDate ?? DateTime.Today,
             ShipmentType = request.ShipmentType == "multiple" ? ShipmentType.Multiple : ShipmentType.Single,
             ImporterId = request.ImporterId,
             AgentId = request.AgentId,
@@ -125,9 +122,6 @@ public class JobsController : Controller
             .Select(c => new JobContainerDto { ContainerNo = c.ContainerNo, Size = c.Size, Seal = c.Seal, Weight = c.Weight })
             .ToList();
         var checklist = request.Checklist.Select(c => new JobChecklistItemDto { Name = c.Name, Done = c.Done }).ToList();
-
-        if (request.Id == 0 && containers.Count == 0)
-            return Json(new { success = false, message = "At least one container with a container number is required." });
 
         var saved = await _jobService.SaveAsync(job, containers, checklist, request.CloseJob, CurrentUserName);
 

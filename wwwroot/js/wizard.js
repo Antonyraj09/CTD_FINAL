@@ -118,27 +118,10 @@
   function setFieldError(input) { input.closest(".field")?.classList.add("invalid"); }
   $all(".field input, .field select").forEach(inp => inp.addEventListener("input", () => clearFieldError(inp)));
 
+  // No field on any wizard step is mandatory — every step can be left incomplete and the
+  // user can still move on / save.
   function validateStep(step) {
-    let valid = true;
-    const required = {
-      1: ["f1_jobDate", "f1_importer", "f1_transporter", "f1_portArrival", "f1_borderPoint"],
-      2: ["f2_invoiceNo", "f2_invoiceDate", "f2_invoiceValue", "f2_commodity", "f2_grossWt", "f2_netWt"],
-      3: ["f3_ctdNumber", "f3_ctdDate", "f3_customsHouse", "f3_transitRoute"],
-      4: []
-    }[step] || [];
-    required.forEach(id => {
-      const inp = $("#" + id);
-      if (!inp.value || !inp.value.trim()) { setFieldError(inp); valid = false; }
-      else clearFieldError(inp);
-    });
-    if (step === 2) {
-      if (containerRows.some(r => !r.containerNo.trim())) {
-        toast("Container details required", "Each container row needs a container number", "warning");
-        valid = false;
-      }
-    }
-    if (!valid) toast("Missing information", "Please complete all required fields before continuing", "error");
-    return valid;
+    return true;
   }
 
   /* ---------------- STEP NAVIGATION ---------------- */
@@ -172,7 +155,7 @@
     return {
       id: jobId,
       closeJob: !!closeJob,
-      jobDate: $("#f1_jobDate").value,
+      jobDate: $("#f1_jobDate").value || null,
       shipmentType: document.querySelector('input[name="shipType"]:checked')?.value || "single",
       importerId: $("#f1_importer").value || null,
       agentId: $("#f1_agent").value || null,

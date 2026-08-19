@@ -157,17 +157,9 @@
     };
   }
 
+  // No field on this form is mandatory — party code, name, role, and every branch field
+  // can all be left blank.
   function validate() {
-    if (!$("#p_partyCode").value.trim()) { toast("Missing information", "Party code is required", "error"); return false; }
-    if (!$("#p_name").value.trim()) { toast("Missing information", "Party legal name is required", "error"); return false; }
-    if (!$("#p_isImporter").checked && !$("#p_isTransporter").checked && !$("#p_isAgent").checked) {
-      toast("Select a role", "Tick at least one of Importer / Transporter / Agent", "error"); return false;
-    }
-    for (const b of branches) {
-      if (!b.branchName.trim() || !b.city.trim() || !b.addressLine1.trim()) {
-        toast("Incomplete branch", "Every branch needs a name, city and address line 1", "error"); return false;
-      }
-    }
     return true;
   }
 

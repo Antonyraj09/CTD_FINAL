@@ -17,7 +17,7 @@ public class DeliveryIsneFilter
 public class DeliveryIsneSaveRequest
 {
     public int Id { get; set; }
-    public DateTime DeliveryDate { get; set; }
+    public DateTime? DeliveryDate { get; set; }
     public string PartYN { get; set; } = "N";
     public int JobIsneId { get; set; }
 
