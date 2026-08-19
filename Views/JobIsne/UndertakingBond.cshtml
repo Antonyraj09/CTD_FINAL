@@ -31,15 +31,21 @@
     var shipName = !string.IsNullOrWhiteSpace(Model.TsVessel) ? Model.TsVessel : Model.VesselName;
 
     // Some Party addresses have "EXIM: <code>" embedded as free text (a legacy data-entry
-    // habit, not a separate field on JobIsne) — see CtdSubmission.cshtml for the same fix.
-    // Model.ImporterCode is a different value entirely (labelled "Importer's Code" elsewhere
-    // in this app) and was never the right source for this line.
+    // habit, not a separate field on JobIsne) — same fix as CtdSubmission.cshtml: strip it
+    // from the printed address, and prefer the Party's own PAN (ViewBag.ImporterPan) over
+    // it, falling back to the first 9 characters of that EXIM code only when the Party has
+    // no PAN of its own on file.
     var importerAddressText = Model.Address ?? "";
     var eximMatch = System.Text.RegularExpressions.Regex.Match(importerAddressText, @"EXIM:\s*([A-Za-z0-9]+)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
     var importerDisplayAddress = eximMatch.Success
         ? System.Text.RegularExpressions.Regex.Replace(importerAddressText, @",?\s*EXIM:\s*[A-Za-z0-9]+", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase).Trim()
         : importerAddressText;
-    var importerExim = eximMatch.Success ? eximMatch.Groups[1].Value : "";
+    var importerPan = ViewBag.ImporterPan as string;
+    if (string.IsNullOrWhiteSpace(importerPan) && eximMatch.Success)
+    {
+        var eximCode = eximMatch.Groups[1].Value;
+        importerPan = eximCode.Length > 9 ? eximCode.Substring(0, 9) : eximCode;
+    }
 
     // Container mix summarized as count x size (e.g. "2X20', 1X40'") instead of one row per
     // container — same summary used on the CTD Declaration. Fixes two things at once: the
@@ -137,7 +143,7 @@
         <div class="ln" style="top:49.14mm;left:7.92mm;">Importer's Name &amp; Address     :</div>
         <div class="wrap" style="top:49.27mm;left:59.27mm;width:130mm;"><b>@V(Model.PartyName)</b></div>
         <div class="wrap" style="top:54.82mm;left:59.27mm;width:130mm;"><b>@V(importerDisplayAddress)</b></div>
-        <div class="ln" style="top:61.17mm;left:59.27mm;"><b>EXIM: @V(importerExim)</b></div>
+        <div class="ln" style="top:61.17mm;left:59.27mm;"><b>PAN: @V(importerPan)</b></div>
 
         <div class="ln" style="top:68.19mm;left:7.92mm;">M.V. : <b>@V(shipName)</b></div>
         <div class="ln" style="top:68.19mm;left:82.01mm;">Rot.No.: <b>@V(Model.RotNo)</b></div>

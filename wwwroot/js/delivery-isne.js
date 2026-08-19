@@ -78,11 +78,13 @@
   }
 
   /* ---------------- Transporter / Staff cascades ---------------- */
+  // Transporter Name is a manual entry — selecting a Transporter Code fills it in as a
+  // starting point, but the user can freely overwrite it afterward.
   const transporterSelect = $("#dlv_transporterSelect");
   if (transporterSelect) {
     transporterSelect.addEventListener("change", function () {
       const t = transporterById[Number(transporterSelect.value)];
-      $("#dlv_transporterName").textContent = t ? t.name : "—";
+      $("#dlv_transporterName").value = t ? t.name : "";
     });
   }
   const staffSelect = $("#dlv_staffSelect");
@@ -121,7 +123,7 @@
       route: $("#dlv_route").value.trim(),
       transporterId: t ? t.id : null,
       transporterCode: t ? t.code : null,
-      transporterName: t ? t.name : null,
+      transporterName: $("#dlv_transporterName").value.trim() || null,
       bslNo: $("#dlv_bslNo").value.trim(),
       staffId: s ? s.id : null,
       staffCode: s ? s.code : null,

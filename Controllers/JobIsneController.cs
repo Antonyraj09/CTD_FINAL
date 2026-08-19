@@ -317,6 +317,9 @@ public class JobIsneController : Controller
         if (record.SensitiveCargo) return BadRequest("Undertaking Bond is only applicable when Sensitive Cargo is set to No.");
 
         ViewBag.CompanySettings = await _settingsService.GetAsync();
+        ViewBag.ImporterPan = string.IsNullOrEmpty(record.PartyCode)
+            ? null
+            : (await _parties.Query().FirstOrDefaultAsync(p => p.PartyCode == record.PartyCode))?.Pan;
         return View(record);
     }
 
