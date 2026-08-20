@@ -11,7 +11,7 @@ public class PartyBranchDto
     public string City { get; set; } = string.Empty;
     public string? State { get; set; }
     public string? PinCode { get; set; }
-    public string Country { get; set; } = "India";
+    public string Country { get; set; } = "Nepal";
     public string? Gstin { get; set; }
     public string? Phone { get; set; }
     public string? Email { get; set; }

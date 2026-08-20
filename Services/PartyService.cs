@@ -79,7 +79,7 @@ public class PartyService : IPartyService
                 City = b.City,
                 State = b.State,
                 PinCode = b.PinCode,
-                Country = string.IsNullOrWhiteSpace(b.Country) ? "India" : b.Country,
+                Country = string.IsNullOrWhiteSpace(b.Country) ? "Nepal" : b.Country,
                 Gstin = b.Gstin,
                 Phone = b.Phone,
                 Email = b.Email,

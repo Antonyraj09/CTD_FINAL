@@ -72,14 +72,16 @@ public class PartyController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Save([FromBody] PartySaveRequest request)
     {
-        var branches = request.Branches.Where(b => !string.IsNullOrWhiteSpace(b.BranchName) && !string.IsNullOrWhiteSpace(b.City)).ToList();
+        var branches = request.Branches.ToList();
         if (branches.Count > 0 && !branches.Any(b => b.IsPrimary))
             branches[0].IsPrimary = true;
 
         var party = new Party
         {
             Id = request.Id,
-            PartyCode = request.PartyCode.Trim(),
+            // Empty must become null (not ""), since PartyCode carries a unique index —
+            // SQL treats every NULL as distinct but two blank strings collide.
+            PartyCode = NullIfEmpty(request.PartyCode?.Trim()),
             Name = request.Name,
             TradeName = request.TradeName,
             Constitution = ParseConstitution(request.Constitution),
@@ -118,7 +120,7 @@ public class PartyController : Controller
             City = b.City,
             State = NullIfEmpty(b.State),
             PinCode = NullIfEmpty(b.PinCode),
-            Country = string.IsNullOrWhiteSpace(b.Country) ? "India" : b.Country,
+            Country = string.IsNullOrWhiteSpace(b.Country) ? "Nepal" : b.Country,
             Gstin = NullIfEmpty(b.Gstin),
             Phone = NullIfEmpty(b.Phone),
             Email = NullIfEmpty(b.Email),

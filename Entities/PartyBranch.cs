@@ -35,7 +35,7 @@ public class PartyBranch : BaseEntity
     public string? PinCode { get; set; }
 
     [StringLength(80)]
-    public string Country { get; set; } = "India";
+    public string Country { get; set; } = "Nepal";
 
     /// <summary>State-specific GST registration for this place of business.</summary>
     [StringLength(20)]

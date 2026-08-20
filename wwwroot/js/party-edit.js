@@ -10,7 +10,7 @@
   const recordId = Number(form.dataset.recordId) || 0;
   let branches = JSON.parse($("#branchDataInit").textContent || "[]");
   if (branches.length === 0) {
-    branches.push({ branchName: "Head Office", isPrimary: true, isActive: true, addressLine1: "", addressLine2: "", city: "", state: "", pinCode: "", country: "India", gstin: "", phone: "", email: "", contactPersonName: "", customsRegistrationNo: "" });
+    branches.push({ branchName: "Head Office", isPrimary: true, isActive: true, addressLine1: "", addressLine2: "", city: "", state: "", pinCode: "", country: "Nepal", gstin: "", phone: "", email: "", contactPersonName: "", customsRegistrationNo: "" });
   }
 
   function branchCard(b, i) {
@@ -33,7 +33,7 @@
         <div class="field"><label>PIN Code</label><input class="br-field" data-field="pinCode" type="text" value="${esc(b.pinCode || "")}"></div>
         <div class="field span-2"><label>Address Line 1</label><input class="br-field" data-field="addressLine1" type="text" value="${esc(b.addressLine1)}"></div>
         <div class="field span-2"><label>Address Line 2</label><input class="br-field" data-field="addressLine2" type="text" value="${esc(b.addressLine2 || "")}"></div>
-        <div class="field"><label>Country</label><input class="br-field" data-field="country" type="text" value="${esc(b.country || "India")}"></div>
+        <div class="field"><label>Country</label><input class="br-field" data-field="country" type="text" value="${esc(b.country || "Nepal")}"></div>
         <div class="field"><label>GSTIN <span style="font-weight:400;color:var(--ink-400);">(state-specific)</span></label><input class="br-field" data-field="gstin" type="text" value="${esc(b.gstin || "")}"></div>
         <div class="field"><label>Phone</label><input class="br-field" data-field="phone" type="text" value="${esc(b.phone || "")}"></div>
         <div class="field"><label>Email</label><input class="br-field" data-field="email" type="email" value="${esc(b.email || "")}"></div>
@@ -79,7 +79,7 @@
   }
 
   $("#addBranchBtn").addEventListener("click", () => {
-    branches.push({ branchName: "", isPrimary: false, isActive: true, addressLine1: "", addressLine2: "", city: "", state: "", pinCode: "", country: "India", gstin: "", phone: "", email: "", contactPersonName: "", customsRegistrationNo: "" });
+    branches.push({ branchName: "", isPrimary: false, isActive: true, addressLine1: "", addressLine2: "", city: "", state: "", pinCode: "", country: "Nepal", gstin: "", phone: "", email: "", contactPersonName: "", customsRegistrationNo: "" });
     renderBranches();
   });
 
@@ -173,6 +173,6 @@
     const result = await res.json();
     if (!result.success) { toast("Cannot save", result.message, "error"); return; }
     toast("Party saved", result.message, "success");
-    setTimeout(() => { window.location.href = "/Party/Index"; }, 600);
+    setTimeout(() => { window.location.href = "/Party/Edit?id=" + result.id; }, 600);
   });
 })();
