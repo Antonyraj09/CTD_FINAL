@@ -36,10 +36,10 @@ public class PartyController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Table(string? q)
+    public async Task<IActionResult> Table(string? q, int page = 1)
     {
-        var records = await _partyService.SearchAsync(q);
-        return PartialView("_PartyTable", records);
+        var result = await _partyService.SearchAsync(q, page, 25);
+        return PartialView("_PartyTable", result);
     }
 
     [HttpGet]

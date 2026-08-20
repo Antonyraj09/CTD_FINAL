@@ -1,6 +1,7 @@
 using CTD_FINAL.DTOs;
 using CTD_FINAL.Entities;
 using CTD_FINAL.Enums;
+using CTD_FINAL.Helpers;
 using CTD_FINAL.Interfaces;
 using CTD_FINAL.Data;
 using Microsoft.EntityFrameworkCore;
@@ -18,9 +19,9 @@ public class PartyService : IPartyService
         _auditService = auditService;
     }
 
-    public async Task<IReadOnlyList<Party>> SearchAsync(string? query, CancellationToken ct = default)
+    public async Task<PagedResult<PartyListItem>> SearchAsync(string? query, int page, int pageSize, CancellationToken ct = default)
     {
-        var q = _context.Parties.AsNoTracking().Include(p => p.Branches).OrderBy(p => p.Name).AsQueryable();
+        var q = _context.Parties.AsNoTracking().OrderBy(p => p.Name).AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(query))
         {
@@ -34,7 +35,32 @@ public class PartyService : IPartyService
                 || p.Branches.Any(b => b.City.Contains(term)));
         }
 
-        return await q.ToListAsync(ct);
+        // Project down to just the columns the list row renders — and only the primary
+        // branch's name/city/GSTIN, not every field of every branch — instead of pulling
+        // each party's full branch/registration detail via Include(), which grows heavy
+        // once parties carry several state-wise GSTIN branches each.
+        var projected = q.Select(p => new PartyListItem
+        {
+            Id = p.Id,
+            PartyCode = p.PartyCode,
+            Name = p.Name,
+            TradeName = p.TradeName,
+            IsImporter = p.IsImporter,
+            IsTransporter = p.IsTransporter,
+            IsAgent = p.IsAgent,
+            Pan = p.Pan,
+            IecCode = p.IecCode,
+            IsActive = p.IsActive,
+            Branches = p.Branches.Select(b => new PartyListBranchItem
+            {
+                IsPrimary = b.IsPrimary,
+                BranchName = b.BranchName,
+                City = b.City,
+                Gstin = b.Gstin
+            }).ToList()
+        });
+
+        return await projected.ToPagedResultAsync(page, pageSize, ct);
     }
 
     public async Task<Party?> GetByIdAsync(int id, CancellationToken ct = default) =>

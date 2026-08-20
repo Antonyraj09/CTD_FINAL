@@ -7,12 +7,20 @@
   const container = $("#partyTableContainer");
   if (!container) return;
 
+  let page = 1;
+
   async function loadTable(q) {
-    container.innerHTML = await getHtml(`/Party/Table?q=${encodeURIComponent(q || "")}`);
+    container.innerHTML = await getHtml(`/Party/Table?q=${encodeURIComponent(q || "")}&page=${page}`);
     bindRowActions();
   }
 
   function bindRowActions() {
+    $all("[data-party-page]", container).forEach(btn => {
+      btn.addEventListener("click", () => {
+        page = Number(btn.dataset.partyPage);
+        loadTable($("#party_search").value);
+      });
+    });
     $all("[data-party-delete]", container).forEach(btn => {
       btn.addEventListener("click", () => {
         const name = btn.dataset.partyName;
@@ -33,7 +41,7 @@
   let searchTimer;
   $("#party_search").addEventListener("input", () => {
     clearTimeout(searchTimer);
-    searchTimer = setTimeout(() => loadTable($("#party_search").value), 300);
+    searchTimer = setTimeout(() => { page = 1; loadTable($("#party_search").value); }, 300);
   });
 
   loadTable();

@@ -5,7 +5,7 @@ namespace CTD_FINAL.Interfaces;
 
 public interface IPartyService
 {
-    Task<IReadOnlyList<Party>> SearchAsync(string? query, CancellationToken ct = default);
+    Task<PagedResult<PartyListItem>> SearchAsync(string? query, int page, int pageSize, CancellationToken ct = default);
     Task<Party?> GetByIdAsync(int id, CancellationToken ct = default);
 
     /// <summary>Party Code autocomplete — parties whose code starts with the given prefix,
