@@ -1,0 +1,72 @@
+@using CTD_FINAL.DTOs
+@model PagedResult<MisctJobListItem>
+@{
+    string D(DateTime? d) => d?.ToString("d MMM yyyy") ?? "—";
+}
+<table class="data-table" id="misctTable">
+    <thead>
+        <tr>
+            <th>Job No.</th>
+            <th>Job Date</th>
+            <th>Party Name</th>
+            <th>Vessel / Voyage</th>
+            <th>M/BL No.</th>
+            <th>Containers</th>
+            <th>Gross Weight</th>
+            <th>Invoice</th>
+            <th class="no-print">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model.Items.Count == 0)
+        {
+            <tr><td colspan="9" class="table-empty">No MISCT jobs found</td></tr>
+        }
+        else
+        {
+            foreach (var j in Model.Items)
+            {
+                <tr data-id="@j.Id">
+                    <td class="cell-strong">@j.JobNo</td>
+                    <td>@D(j.JobDate)</td>
+                    <td>@j.PartyName</td>
+                    <td>
+                        @(j.VesselName ?? "—")
+                        @if (!string.IsNullOrEmpty(j.VoyageNo))
+                        {
+                            <span style="display:block;font-size:11px;color:var(--ink-400);">@j.VoyageNo</span>
+                        }
+                    </td>
+                    <td>@(j.MblNo ?? "—")</td>
+                    <td>@j.ContainerCount</td>
+                    <td>@(j.GrossWeight.HasValue ? j.GrossWeight.Value.ToString("N3") : "—")</td>
+                    <td>
+                        @(j.InvoiceNo ?? "—")
+                        @if (j.InvoiceDate.HasValue)
+                        {
+                            <span style="display:block;font-size:11px;color:var(--ink-400);">@D(j.InvoiceDate)</span>
+                        }
+                    </td>
+                    <td class="no-print">
+                        <div class="row-actions">
+                            <a class="iconbtn-table" asp-controller="JobMisct" asp-action="Entry" asp-route-id="@j.Id" title="Open"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></a>
+                            <button class="iconbtn-table danger" data-misct-delete="@j.Id" data-misct-jobno="@j.JobNo" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m5 0V4a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v2"/></svg></button>
+                        </div>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+@if (Model.TotalPages > 1)
+{
+    <div class="table-foot">
+        <span class="text-muted">Page @Model.Page of @Model.TotalPages</span>
+        <div class="pagination">
+            @for (int pg = 1; pg <= Model.TotalPages; pg++)
+            {
+                <button type="button" class="page-btn @(pg == Model.Page ? "active" : "")" data-misct-page="@pg">@pg</button>
+            }
+        </div>
+    </div>
+}

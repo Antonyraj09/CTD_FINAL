@@ -33,16 +33,39 @@ public class JobMisctController : Controller
 
     private string CurrentUserName => User.FindFirst("FullName")?.Value ?? User.Identity?.Name ?? "System";
 
+    /// <summary>List screen — every MISCT job created so far, with a New button linking to
+    /// Entry. Same List-first-then-Entry convention as Delivery ISNE.</summary>
     [HttpGet]
     [RequirePermission(PermissionKeys.MisctManage)]
-    public async Task<IActionResult> Index(int? id)
+    public IActionResult Index()
     {
         ViewData["Title"] = "Job — MISCT";
         ViewData["Breadcrumb"] = "Eroyal Suite / Jobs / MISCT";
         ViewData["ActiveNav"] = "job-misct";
         ViewData["ActiveModule"] = "jobs";
+        return View();
+    }
+
+    [HttpGet]
+    [RequirePermission(PermissionKeys.MisctManage)]
+    public async Task<IActionResult> Table(string? q, int page = 1)
+    {
+        var result = await _jobMisctService.SearchAsync(q, page, 25);
+        return PartialView("_MisctTable", result);
+    }
+
+    /// <summary>New Job (id=null) or Edit (id set).</summary>
+    [HttpGet]
+    [RequirePermission(PermissionKeys.MisctManage)]
+    public async Task<IActionResult> Entry(int? id)
+    {
+        ViewData["Title"] = id.HasValue ? "Job — MISCT" : "Job — MISCT (New)";
+        ViewData["Breadcrumb"] = "Eroyal Suite / Jobs / MISCT";
+        ViewData["ActiveNav"] = "job-misct";
+        ViewData["ActiveModule"] = "jobs";
 
         MisctJob? record = id.HasValue ? await _jobMisctService.GetByIdAsync(id.Value) : null;
+        if (id.HasValue && record is null) return NotFound();
         ViewBag.NextJobNumber = record?.JobNo ?? await _jobMisctService.PeekNextJobNumberAsync();
 
         var parties = await _parties.Query().Include(p => p.Branches).Where(p => p.IsActive).OrderBy(p => p.Name).ToListAsync();

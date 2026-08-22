@@ -1,5 +1,7 @@
+using CTD_FINAL.DTOs;
 using CTD_FINAL.Entities;
 using CTD_FINAL.Enums;
+using CTD_FINAL.Helpers;
 using CTD_FINAL.Interfaces;
 using CTD_FINAL.Data;
 using Microsoft.EntityFrameworkCore;
@@ -35,6 +37,37 @@ public class JobMisctService : IJobMisctService
             .OrderByDescending(j => j.JobNo)
             .Take(10)
             .ToListAsync(ct);
+
+    public async Task<PagedResult<MisctJobListItem>> SearchAsync(string? query, int page, int pageSize, CancellationToken ct = default)
+    {
+        var q = _context.MisctJobs.AsNoTracking().OrderByDescending(j => j.JobDate).AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(query))
+        {
+            var term = query.Trim();
+            q = q.Where(j => j.JobNo.Contains(term)
+                || j.PartyName.Contains(term)
+                || (j.VesselName != null && j.VesselName.Contains(term))
+                || (j.MblNo != null && j.MblNo.Contains(term)));
+        }
+
+        var projected = q.Select(j => new MisctJobListItem
+        {
+            Id = j.Id,
+            JobNo = j.JobNo,
+            JobDate = j.JobDate,
+            PartyName = j.PartyName,
+            VesselName = j.VesselName,
+            VoyageNo = j.VoyageNo,
+            MblNo = j.MblNo,
+            GrossWeight = j.GrossWeight,
+            InvoiceNo = j.InvoiceNo,
+            InvoiceDate = j.InvoiceDate,
+            ContainerCount = j.Containers.Count
+        });
+
+        return await projected.ToPagedResultAsync(page, pageSize, ct);
+    }
 
     public async Task<MisctJob> SaveAsync(MisctJob record, List<MisctJobContainer> containers, string userName, CancellationToken ct = default)
     {

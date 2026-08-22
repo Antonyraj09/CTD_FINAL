@@ -63,7 +63,7 @@
     loadJobSuggestions.style.display = "block";
     $all(".autocomplete-item", loadJobSuggestions).forEach(function (row) {
       row.addEventListener("click", function () {
-        window.location.href = "/JobMisct/Index?id=" + row.dataset.id;
+        window.location.href = "/JobMisct/Entry?id=" + row.dataset.id;
       });
     });
   }
@@ -344,11 +344,11 @@
     const result = await res.json();
     if (!result.success) { toast("Cannot save", result.message, "error"); return; }
     toast("Job Saved", result.message, "success");
-    setTimeout(function () { window.location.href = "/JobMisct/Index?id=" + result.id; }, 500);
+    setTimeout(function () { window.location.href = "/JobMisct/Entry?id=" + result.id; }, 500);
   }
 
   $("#misctNewBtn")?.addEventListener("click", function () {
-    window.location.href = "/JobMisct/Index";
+    window.location.href = "/JobMisct/Entry";
   });
 
   $("#misctSaveBtn")?.addEventListener("click", saveMisct);
@@ -374,7 +374,7 @@
   }
 
   $("#misctCancelBtn")?.addEventListener("click", function () {
-    window.location.href = "/Dashboard/Index";
+    window.location.href = "/JobMisct/Index";
   });
 
   document.addEventListener("keydown", function (e) {
