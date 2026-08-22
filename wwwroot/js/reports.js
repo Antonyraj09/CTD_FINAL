@@ -79,14 +79,24 @@
     if (!jobNoInput.contains(e.target) && !suggestions.contains(e.target)) hideSuggestions();
   });
 
+  // Opens a report in a blank popup by fetching its HTML and writing it in, rather than
+  // navigating the popup straight to the report URL — the browser's print header/footer
+  // would otherwise show that URL on every printed page/PDF.
+  async function openReportPopup(url) {
+    const w = window.open("", "_blank");
+    const html = await (await fetch(url, { headers: { "X-Requested-With": "XMLHttpRequest" } })).text();
+    w.document.write(html);
+    w.document.close();
+  }
+
   forwardingBtn.addEventListener("click", () => {
     const provider = $("#misctDocProvider").value;
-    window.open("/JobMisct/ForwardingNote/" + jobIdField.value + "?provider=" + encodeURIComponent(provider), "_blank");
+    openReportPopup("/JobMisct/ForwardingNote/" + jobIdField.value + "?provider=" + encodeURIComponent(provider));
   });
   declarationBtn.addEventListener("click", () => {
-    window.open("/JobMisct/DeclarationOfTransshipment/" + jobIdField.value, "_blank");
+    openReportPopup("/JobMisct/DeclarationOfTransshipment/" + jobIdField.value);
   });
   tpBtn.addEventListener("click", () => {
-    window.open("/JobMisct/TransshipmentPermit/" + jobIdField.value, "_blank");
+    openReportPopup("/JobMisct/TransshipmentPermit/" + jobIdField.value);
   });
 })();

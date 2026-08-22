@@ -375,25 +375,36 @@
     });
   }
 
+  // Opens a report in a blank popup by fetching its HTML and writing it in, rather than
+  // navigating the popup straight to the report URL — the browser's print header/footer
+  // would otherwise show that URL on every printed page/PDF, which these customs/carrier
+  // documents shouldn't expose.
+  async function openReportPopup(url) {
+    const w = window.open("", "_blank");
+    const html = await (await fetch(url, { headers: { "X-Requested-With": "XMLHttpRequest" } })).text();
+    w.document.write(html);
+    w.document.close();
+  }
+
   const forwardingNoteBtn = $("#misctForwardingNoteBtn");
   if (forwardingNoteBtn && !forwardingNoteBtn.disabled) {
     forwardingNoteBtn.addEventListener("click", function () {
       const provider = $("#misctForwardingProvider").value;
-      window.open("/JobMisct/ForwardingNote/" + recordId + "?provider=" + encodeURIComponent(provider), "_blank");
+      openReportPopup("/JobMisct/ForwardingNote/" + recordId + "?provider=" + encodeURIComponent(provider));
     });
   }
 
   const declarationBtn = $("#misctDeclarationBtn");
   if (declarationBtn && !declarationBtn.disabled) {
     declarationBtn.addEventListener("click", function () {
-      window.open("/JobMisct/DeclarationOfTransshipment/" + recordId, "_blank");
+      openReportPopup("/JobMisct/DeclarationOfTransshipment/" + recordId);
     });
   }
 
   const tpPermitBtn = $("#misctTpPermitBtn");
   if (tpPermitBtn && !tpPermitBtn.disabled) {
     tpPermitBtn.addEventListener("click", function () {
-      window.open("/JobMisct/TransshipmentPermit/" + recordId, "_blank");
+      openReportPopup("/JobMisct/TransshipmentPermit/" + recordId);
     });
   }
 
