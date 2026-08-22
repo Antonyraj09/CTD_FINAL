@@ -36,7 +36,7 @@
         @@media print { .no-print { display: none; } }
     </style>
 </head>
-<body>
+<body onload="window.print()">
     <div class="job-no">JOB NO: @V(Model.JobNo)</div>
 
     <table style="margin-bottom:6px;">
