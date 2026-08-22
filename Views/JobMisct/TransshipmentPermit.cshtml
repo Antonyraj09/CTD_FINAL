@@ -1,0 +1,142 @@
+@model CTD_FINAL.Entities.MisctJob
+@{
+    Layout = null;
+    string D(DateTime? d) => d?.ToString("dd/MM/yyyy") ?? "";
+    string V(object? v) => v?.ToString() ?? "";
+
+    var containerSealLines = string.Join("<br />", Model.Containers.Select(c => $"{V(c.ContainerNo)} &nbsp;&nbsp; {V(c.SealNo)}"));
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Transhipment Permit - @Model.JobNo</title>
+    <style>
+        @@page { size: A4 landscape; margin: 8mm; }
+        body { font-family: Arial, Helvetica, sans-serif; color: #10172a; font-size: 9pt; margin: 0; }
+        table { border-collapse: collapse; width: 100%; }
+        td, th { border: 1px solid #10172a; padding: 3px 6px; vertical-align: top; }
+        .no-border td { border: none; padding: 1px 2px; }
+        .center { text-align: center; }
+        .right { text-align: right; }
+        .bold { font-weight: 700; }
+        .hdr-row td { border: none; }
+        .title { text-align: center; font-size: 14pt; font-weight: 700; margin: 4px 0; }
+        .page-break { page-break-before: always; }
+        @@media print { .no-print { display: none; } }
+    </style>
+</head>
+<body>
+    <table class="hdr-row" style="margin-bottom:2px;">
+        <tr>
+            <td style="width:50%;">
+                JOB NO. : <span class="bold">@V(Model.JobNo)</span><br />
+                TO<br />
+                THE COMMISSIONER OF CUSTOMS<br />
+                CUSTOM HOUSE, <span class="bold">@V(Model.PortOfEntryIndia)</span>
+            </td>
+            <td class="right" style="width:50%;">ORG/DUP/TRIP/QUAD</td>
+        </tr>
+    </table>
+    <div class="title">TRANSHIPMENT PERMIT</div>
+
+    <p style="margin:4px 0;">
+        Please be permit to be transhipment from M.V. <span class="bold">@V(Model.VesselName)</span>
+        &nbsp;&nbsp;&nbsp;Voyage No. <span class="bold">@V(Model.VoyageNo)</span>
+        &nbsp;&nbsp;&nbsp;Import No <span class="bold">@V(Model.RotNo)</span><br />
+        arrived here on &nbsp;______________&nbsp; from <span class="bold">@V(Model.CountryCgn)</span>
+        &nbsp;&nbsp;&nbsp;the under mentioned goods for exportation to <span class="bold">@V(Model.PortOfEntryNepalName), NEPAL</span>
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width:18%;">Marks and Number</th>
+                <th style="width:16%;">Number and kind<br />of packages</th>
+                <th style="width:20%;">Description of<br />Goods/ Empty Containers</th>
+                <th style="width:16%;">Weight or Quantity</th>
+                <th style="width:20%;">Original manifested for<br />Transhipment under Rotation<br />No, Line No &amp; BL No.</th>
+                <th style="width:10%;">Space for P.Cs, Stamp</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="bold">
+                    @V(Model.CustomsStationExitName)<br /><br />
+                    As per B/L<br />
+                    Container No.&nbsp;&nbsp;&nbsp;Seal No.<br />
+                    @Html.Raw(containerSealLines)
+                </td>
+                <td class="bold">@V(Model.Unit)</td>
+                <td class="bold">
+                    @V(Model.Description)<br /><br />
+                    @V(Model.CustomCode)
+                </td>
+                <td class="bold">
+                    @(Model.GrossWeight.HasValue ? Model.GrossWeight.Value.ToString("N3") : "") KGS (GR. WT)<br /><br />
+                    Commercial Invoice<br />
+                    No.@V(Model.InvoiceNo)<br /><br />
+                    DT. @D(Model.InvoiceDate)
+                </td>
+                <td class="bold">
+                    @V(Model.RotNo) &nbsp;&nbsp;DT.@D(Model.RotDate)<br />
+                    BL No. @V(Model.MblNo)<br />
+                    BL DT @D(Model.MblDate)<br />
+                    Line No.@V(Model.LineNo)
+                </td>
+                <td style="height:120px;"></td>
+            </tr>
+            <tr>
+                <td colspan="4">We do declare the contents of this application to be true<br /><br /><br />Shipping Line</td>
+                <td colspan="2">
+                    Bond Debit No.<span class="bold">@V(Model.BondNo)</span> dt<br />
+                    TP No. ___________ NSD/ &nbsp;&nbsp;DT.<br />
+                    TP approved receipt of Commercial Invoice<br />
+                    P.O. (NEPAL). NSD for n/a please.<br /><br />
+                    <span class="right" style="display:block;">Supdt. of Customs(P)<br />Nepal, NSD</span>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="6">Space for Court fee Stamp</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="page-break"></div>
+
+    <p>
+        CUSTOMS TP NO.......................NSD/ &nbsp;&nbsp;&nbsp;Dated...................... Inspected and found the one time seal of the following containers is/are intact and matched
+        with the description given in the B/L and TP and allowed the Containers for the loading on the Rail Rake ______________
+    </p>
+    <table>
+        <thead>
+            <tr>
+                <th style="width:8%;">SL No.</th>
+                <th style="width:22%;">Container No.</th>
+                <th style="width:23%;">Shipper Seal No.</th>
+                <th style="width:23%;">RFID Seal No.</th>
+                <th style="width:24%;">ECTS Device No.</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{ var sl = 1; }
+            @foreach (var c in Model.Containers)
+            {
+                <tr>
+                    <td class="center">@(sl++)</td>
+                    <td class="bold">@V(c.ContainerNo)</td>
+                    <td class="bold">@V(c.SealNo)</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                </tr>
+            }
+            <tr><td style="height:220px;" colspan="5"></td></tr>
+        </tbody>
+    </table>
+    <p style="margin-top:6px;">P.O (Nepal Appraising Unit Dock) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SCP (Nepal Appraising Unit Dock)</p>
+    <p>
+        Affixed the ECTS Device and allowed transportation of the containerzed cargo through Rail Rake to Nepal via Train No.............................
+    </p>
+    <p>P.O. (Nepal Appraising Unit Dock) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SCP (Nepal Appraising Unit Dock)</p>
+</body>
+</html>

@@ -1,0 +1,113 @@
+@model CTD_FINAL.Entities.MisctJob
+@{
+    Layout = null;
+    string D(DateTime? d) => d?.ToString("dd.MM.yyyy") ?? "";
+    string V(object? v) => v?.ToString() ?? "";
+    string StripHsitc(string? s) => string.IsNullOrWhiteSpace(s) ? "" : System.Text.RegularExpressions.Regex.Replace(s, @"^HSITC/", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+    var (importerAddress, importerPan) = CTD_FINAL.Helpers.PartyAddressHelper.ExtractPan(Model.Address, ViewBag.ImporterPan as string);
+
+    var marksAndSerials = string.Join("<br />", Model.Containers.Select(c => $"{V(c.ContainerNo)} {V(c.SealNo)}".Trim()));
+    var totalCif = Model.Containers.Sum(c => c.CifValue ?? 0);
+    var containerOrWagonNos = string.Join(", ", Model.Containers.Select(c => c.ContainerNo).Where(n => !string.IsNullOrWhiteSpace(n)));
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Declaration of Transshipment - @Model.JobNo</title>
+    <style>
+        @@page { size: A4; margin: 10mm; }
+        body { font-family: Arial, Helvetica, sans-serif; color: #10172a; font-size: 9.5pt; margin: 0; }
+        table { border-collapse: collapse; width: 100%; }
+        td, th { border: 1px solid #10172a; padding: 3px 6px; vertical-align: top; }
+        .job-no { text-align: right; font-weight: 700; margin-bottom: 4px; }
+        .center { text-align: center; }
+        .right { text-align: right; }
+        .bold { font-weight: 700; }
+        .title { text-align: center; }
+        .title h1 { font-size: 12pt; margin: 2px 0; }
+        .title p { margin: 1px 0; }
+        .section-hdr { text-align: center; font-weight: 700; background: #eee; }
+        .lbl-col { width: 40%; }
+        .decl { font-size: 8.5pt; line-height: 1.4; margin-top: 8px; }
+        .sign { text-align: right; font-weight: 700; margin-top: 20px; }
+        .page-break { page-break-before: always; }
+        @@media print { .no-print { display: none; } }
+    </style>
+</head>
+<body>
+    <div class="job-no">JOB NO: @V(Model.JobNo)</div>
+
+    <table style="margin-bottom:6px;">
+        <tr><td class="title">
+            <h1>FORM</h1>
+            <p>(Sea regulation 4)</p>
+            <p class="bold">Declaration of transshipment</p>
+            <p>(To be filed in triplicate)</p>
+        </td></tr>
+    </table>
+
+    <table>
+        <tr><td class="section-hdr" colspan="2">Part A<br /><span style="font-weight:400;">(To be filed by the authorised carrier or his agent)</span></td></tr>
+        <tr><td class="lbl-col">Name of the authorised carrier filing the declaration of transshipment</td><td class="bold">@V(Model.CarrierName)</td></tr>
+        <tr><td class="lbl-col">Manifest number and date</td><td class="bold">@V(Model.RotNo) &nbsp;&nbsp;DT.@D(Model.RotDate)</td></tr>
+        <tr><td class="lbl-col">Port of entry in India</td><td class="bold">@V(Model.PortOfEntryIndia)</td></tr>
+        <tr><td class="lbl-col">Land customs station of exit from India</td><td class="bold">@V(Model.CustomsStationExitName)</td></tr>
+        <tr><td class="lbl-col">Port of entry in Nepal</td><td class="bold">@V(Model.PortOfEntryNepalName)</td></tr>
+        <tr><td class="lbl-col">Port of final discharge in Nepal</td><td class="bold">@V(Model.PortOfEntryNepalName)</td></tr>
+        <tr><td class="lbl-col">Name and address of importer in Nepal</td><td class="bold">@V(Model.PartyName)<br />@V(importerAddress)@(string.IsNullOrWhiteSpace(importerPan) ? "" : $" PAN:{importerPan}")</td></tr>
+        <tr><td class="lbl-col">Vehicle number on which goods will transit India (if applicable)</td><td class="bold">N/A</td></tr>
+        <tr><td class="lbl-col">Name and mobile number of the driver (if applicable)</td><td class="bold">N/A</td></tr>
+        <tr><td class="lbl-col">Container number or wagon number (as applicable)</td><td class="bold">@containerOrWagonNos</td></tr>
+        <tr><td class="lbl-col">Bond No.</td><td class="bold">@V(Model.BondNo)</td></tr>
+    </table>
+
+    <table style="margin-top:6px;">
+        <tr><td class="section-hdr" colspan="7">Details of goods</td></tr>
+        <tr>
+            <th>Marks &amp; serial Nos.</th>
+            <th>Commercial Invoice<br />No.&amp; Date</th>
+            <th>Description of goods</th>
+            <th>H.S. code</th>
+            <th>Quantity (in pcs)<br />or weight, as relevant</th>
+            <th>Gross weight<br />(Kg.)</th>
+            <th>CIF Value<br />in INR</th>
+        </tr>
+        <tr>
+            <td class="bold">@Html.Raw(marksAndSerials)</td>
+            <td class="bold">@V(Model.InvoiceNo)<br />@D(Model.InvoiceDate)</td>
+            <td class="bold">@V(Model.Description)</td>
+            <td class="bold">@StripHsitc(Model.CustomCode)</td>
+            <td class="bold">@V(Model.Unit)</td>
+            <td class="bold right">@(Model.GrossWeight.HasValue ? Model.GrossWeight.Value.ToString("N3") : "")</td>
+            <td class="bold right">@(totalCif > 0 ? totalCif.ToString("N2") : "")</td>
+        </tr>
+        <tr><td style="height:60px;"></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    </table>
+
+    <div class="decl">
+        I/We declare that the goods entered herein are for transit through India to Nepal and shall not be diverted en-route in India or retained in India.<br />
+        I/We undertake to bear the cost of electronic cargo tracking system for the above trip.<br />
+        I/We further declare that all the entries made herein above are true and correct to the best of my/our knowledge.
+    </div>
+    <div class="sign">@V(Model.CarrierName)<br /><span style="font-weight:400;font-size:8.5pt;">Signature of the authorised carrier or his representative</span></div>
+
+    <div class="page-break"></div>
+
+    <table>
+        <tr><td class="section-hdr">Part B<br /><span style="font-weight:400;">(To be filled by the customs officer at the port of entry into India)</span></td></tr>
+        <tr><td>Transshipment permit No.</td></tr>
+        <tr><td>ECTS seal No.</td></tr>
+        <tr><td style="height:120px;">I verify that the aforesaid container or wagon has been sealed with ECTS seal by me.<br /><br />Signature of the officer, designation, stamp and date</td></tr>
+    </table>
+
+    <table style="margin-top:10px;">
+        <tr><td class="section-hdr">Part C<br /><span style="font-weight:400;">(To be filled by the customs officer at the land customs station of exit from India)</span></td></tr>
+        <tr><td style="height:120px;">
+            I certify that the cargo has reached from ____________ port (India) to ____________ Land Customs Station (India), as per trip report of the ECTS without any alert of unauthorised unsealing.<br /><br />
+            Signature of the officer, designation, stamp and date
+        </td></tr>
+    </table>
+</body>
+</html>

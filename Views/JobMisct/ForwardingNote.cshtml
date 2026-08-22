@@ -1,0 +1,195 @@
+@model CTD_FINAL.Entities.MisctJob
+@{
+    Layout = null;
+    string providerKey = (string)ViewBag.ProviderKey;
+    string providerName = (string)ViewBag.ProviderName;
+    string providerNote = (string)ViewBag.ProviderNote;
+    string providerService = (string)ViewBag.ProviderService;
+
+    string D(DateTime? d) => d?.ToString("dd/MM/yyyy") ?? "";
+    string V(object? v) => v?.ToString() ?? "";
+    string StripHsitc(string? s) => string.IsNullOrWhiteSpace(s) ? "" : System.Text.RegularExpressions.Regex.Replace(s, @"^HSITC/", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+    string StripSize(string? s) => string.IsNullOrWhiteSpace(s) ? "" : System.Text.RegularExpressions.Regex.Replace(s, @"[^0-9A-Za-z]", "").Replace("ft", "", StringComparison.OrdinalIgnoreCase).Replace("FT", "");
+
+    var (consigneeAddress, importerPan) = CTD_FINAL.Helpers.PartyAddressHelper.ExtractPan(Model.Address, ViewBag.ImporterPan as string);
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Forwarding Note (@providerService) - @Model.JobNo</title>
+    <style>
+        @@page { size: A4; margin: 6mm; }
+        body { font-family: Arial, Helvetica, sans-serif; color: #10172a; font-size: 8.5pt; margin: 0; }
+        table { border-collapse: collapse; width: 100%; }
+        td, th { border: 1px solid #10172a; padding: 2px 4px; vertical-align: top; }
+        .no-border td, .no-border th { border: none; }
+        .center { text-align: center; }
+        .right { text-align: right; }
+        .bold { font-weight: 700; }
+        .job-no { text-align: right; font-weight: 700; margin-bottom: 4px; }
+        .title-block { text-align: center; margin: 4px 0 6px; }
+        .title-block h1 { font-size: 12pt; margin: 0 0 2px; }
+        .title-block h2 { font-size: 10pt; margin: 0 0 2px; }
+        .title-block .note { font-size: 9pt; }
+        .lbl { color: #333; }
+        .val { font-weight: 700; }
+        .foot-legal { font-size: 7pt; margin-top: 6px; line-height: 1.3; }
+        .sign { text-align: right; font-weight: 700; margin-top: 4px; }
+        @@media print { .no-print { display: none; } }
+    </style>
+</head>
+<body>
+    <div class="job-no">JOB NO: @V(Model.JobNo)</div>
+
+    @if (providerKey == "pristine")
+    {
+        <table class="no-border" style="margin-bottom:4px;">
+            <tr>
+                <td style="width:50%;">VESSEL <span class="val">@V(Model.VesselName)</span></td>
+                <td style="width:25%;">VOY <span class="val">@V(Model.VoyageNo)</span></td>
+                <td style="width:25%;">VCN</td>
+            </tr>
+            <tr>
+                <td>ROT <span class="val">@V(Model.RotNo)</span></td>
+                <td colspan="2">LINE <span class="val">@V(Model.LineNo)</span></td>
+            </tr>
+        </table>
+    }
+
+    <div class="title-block">
+        <h1>@providerName</h1>
+        <h2>FORWARDING NOTE FOR GENERAL AND DANGEROUS MERCHANDISE</h2>
+        <div class="note">@providerNote</div>
+    </div>
+
+    <table style="margin-bottom:6px;">
+        <tr>
+            <td class="center bold" style="width:20%;">SEGMENT</td>
+            <td class="center bold" style="width:20%;background:#eee;">EXIM</td>
+            <td class="center" style="width:20%;">DOMESTIC</td>
+            <td class="center" style="width:20%;">COASTAL</td>
+            <td style="width:20%;"></td>
+        </tr>
+    </table>
+
+    <table style="margin-bottom:6px;">
+        <tr>
+            <td style="width:50%;">
+                <table class="no-border">
+                    <tr><td colspan="4" class="center bold">FROM</td></tr>
+                    <tr><td>TERMINAL</td><td>PVT.SIDING</td><td>CRT/PFT</td><td>PORT</td></tr>
+                    <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+                </table>
+            </td>
+            <td style="width:50%;">
+                <table class="no-border">
+                    <tr><td colspan="4" class="center bold">TO</td></tr>
+                    <tr><td>TERMINAL</td><td>PVT.SIDING</td><td>CRT/PFT</td><td>PORT</td></tr>
+                    <tr><td class="val">@V(Model.PortOfEntryNepalName)</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <table style="margin-bottom:6px;">
+        <tr>
+            <td style="width:50%;">
+                <table class="no-border">
+                    <tr><td class="center bold">EXIM</td></tr>
+                    <tr><td>CUSTOMER TYPE: EXPORTER &nbsp;IMPORTER &nbsp;ASSOCIATE PARTNER &nbsp;CORPORATE CUSTOMER</td></tr>
+                    <tr><td>CHA NAME &amp; CODE:</td></tr>
+                    <tr><td>FORWARDER'S NAME &amp; CODE:</td></tr>
+                    <tr><td>TRANSPORTED BY: &nbsp;SELF TPT. &nbsp;@providerService &nbsp;SELF</td></tr>
+                    <tr><td>In case of @providerService service, kindly provide</td></tr>
+                    <tr><td>PICK UP POINT/KM-</td></tr>
+                    <tr><td>DELIVERY POINT/KM-</td></tr>
+                    <tr><td>SHIPPING BILL NO./TP NO.</td></tr>
+                    <tr><td>PAYMENT MODE (CASH/CHEQUE/DD/PDA/CCA)&amp; NO. &nbsp;PDA A/C.</td></tr>
+                </table>
+            </td>
+            <td style="width:50%;">
+                <table class="no-border">
+                    <tr><td class="center bold">DOMESTIC/COASTAL</td></tr>
+                    <tr><td>CUSTOMER TYPE: &nbsp;CORPORATE CUSTOMER &nbsp;BUSINESS ASSOCIATE &nbsp;GENERAL/FF-/OTHERS</td></tr>
+                    <tr><td>CORPORATE CUSTOMER NAME &amp; CODE (CARGO OWNER):-</td></tr>
+                    <tr><td>SERVICE MODE*: &nbsp;DO &nbsp;TD &nbsp;TT &nbsp;DT</td></tr>
+                    <tr><td>TRANSPORTED BY: &nbsp;SELF TPT. &nbsp;@providerService</td></tr>
+                    <tr><td>In case of @providerService service, kindly provide</td></tr>
+                    <tr><td>PICK UP POINT/KM-</td></tr>
+                    <tr><td>DELIVERY POINT/KM-</td></tr>
+                    <tr><td>CONSIGNMENT IN/INDENT:</td></tr>
+                    <tr><td>BOOKING TYPE(PAID/TO PAY):</td></tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <table style="margin-bottom:2px;">
+        <tr><td style="width:16%;" class="lbl">CONSIGNOR NAME &amp; ADDRESS</td><td class="val">@V(Model.CarrierName)@(string.IsNullOrWhiteSpace(Model.CarrierAddress) ? "" : $", {Model.CarrierAddress}")@(string.IsNullOrWhiteSpace(Model.CarrierGstin) ? "" : $" GSTIN {Model.CarrierGstin}")</td></tr>
+    </table>
+    <table style="margin-bottom:6px;">
+        <tr><td style="width:16%;" class="lbl">CONSIGNEE NAME &amp; ADDRESS</td><td class="val">@V(Model.PartyName)@(string.IsNullOrWhiteSpace(consigneeAddress) ? "" : $" {consigneeAddress}")@(string.IsNullOrWhiteSpace(importerPan) ? "" : $". PAN:{importerPan}")</td></tr>
+    </table>
+
+    <table style="margin-bottom:6px;">
+        <thead>
+            <tr>
+                <th>CONTAINER NO.</th>
+                <th>TYPE</th>
+                <th>SIZE</th>
+                <th>TARE WEIGHT<br />IN MT</th>
+                <th>NUMBER OF<br />ARTICLES</th>
+                <th>COMMODITY NAME</th>
+                <th>COMMODITY<br />HSN CODE</th>
+                <th>CARGO WEIGHT<br />(IN KG)</th>
+                <th>VERIFIED GROSS<br />CASS(VGM)OF<br />CONTAINER</th>
+                <th>HAZARDOUS<br />(YES/NO), IF YES,<br />IMDG/RLY.RED<br />TARIFF CODE</th>
+                <th>VALUE OF<br />CARGO/FOB<br />VALUE(IN RS.)</th>
+                <th>EWAY<br />BILL NO</th>
+                <th>SEAL NO</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (!Model.Containers.Any())
+            {
+                <tr><td colspan="13" class="center">&nbsp;</td></tr>
+            }
+            else
+            {
+                foreach (var c in Model.Containers)
+                {
+                    <tr>
+                        <td class="bold">@V(c.ContainerNo)</td>
+                        <td>DRY</td>
+                        <td>@StripSize(c.ContainerSize)</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>@V(Model.Description)</td>
+                        <td>@StripHsitc(Model.CustomCode)</td>
+                        <td class="right">@(c.Weight.HasValue ? c.Weight.Value.ToString("N3") : "")</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td class="right">@(c.CifValue.HasValue ? c.CifValue.Value.ToString("N2") : "")</td>
+                        <td>&nbsp;</td>
+                        <td class="bold">@V(c.SealNo)</td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+
+    <div class="foot-legal">
+        (ACCEPTED ON SAID TO CONTAIN BASIS)<br />
+        1. I declare that each consignment is of value Rs.______________ and engage**/do not engage** to pay percentage charge on excess value for the increased risk as required
+        by @providerService (Description and contents in each package and its value should be specifically mentioned). Alternative @providerService risk and Owner's risk rate being
+        available, I elect to pay _____________ rates.<br />
+        2. please declare whether above container's contains high value cargo- yes/no. Tick the appropriate options shown above.<br />
+        3. I do hereby certify that I have satisfied myself that the description, marks and weight or quantity of goods consingned by me have been correctly entered in the forwarding
+        note. I further declares that I have read and accept the terms &amp; conditions mentioned here in and overleaf.<br />
+        DD - Door to Door, TD - Terminal to Door, TT - Terminal to Terminal, Dt - Door to Terminal, FF - Freight Forwarder. **Strike out any clause inapplicable before signing this form.
+    </div>
+    <div class="sign">@V(Model.CarrierName)</div>
+    <div class="right bold" style="margin-top:6px;">P.T.O.</div>
+</body>
+</html>

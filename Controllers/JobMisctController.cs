@@ -175,6 +175,8 @@ public class JobMisctController : Controller
             CustomsStationExitName = customsHouse?.Name,
             PortOfEntryNepalId = request.PortOfEntryNepalId,
             PortOfEntryNepalName = borderPoint?.Name,
+            PortOfEntryIndia = request.PortOfEntryIndia,
+            BondNo = request.BondNo,
             Container20Qty = request.Container20Qty,
             Container40Qty = request.Container40Qty,
             LclQty = request.LclQty,
@@ -215,6 +217,71 @@ public class JobMisctController : Controller
             return Json(new { success = false, message = "Unable to save MISCT Job — one or more fields are too long or otherwise violate a database constraint. Please try again." });
         }
     }
+
+    /// <summary>Forwarding Note for General and Dangerous Merchandise — same field layout
+    /// across the three terminal operators (CONCOR/Pristine/HTPL) this app's clients use,
+    /// only the letterhead differs, so one shared view is parameterized by provider instead
+    /// of tripling the markup.</summary>
+    [HttpGet]
+    [RequirePermission(PermissionKeys.MisctManage)]
+    public async Task<IActionResult> ForwardingNote(int id, string provider = "concor")
+    {
+        var record = await _jobMisctService.GetByIdAsync(id);
+        if (record is null) return NotFound();
+
+        var providerKey = (provider ?? "concor").ToLowerInvariant();
+        switch (providerKey)
+        {
+            case "pristine":
+                ViewBag.ProviderName = "PRISTINE MEGA LOGISTICS PARK PVT. LTD.";
+                ViewBag.ProviderNote = "(FOR PRISTINE ONLY)";
+                ViewBag.ProviderService = "Pristine";
+                break;
+            case "htpl":
+                ViewBag.ProviderName = "HIND TERMINALS PRIVATE LIMITED (HTPL)";
+                ViewBag.ProviderNote = "(FOR HTPL USE ONLY)";
+                ViewBag.ProviderService = "HTPL";
+                break;
+            default:
+                providerKey = "concor";
+                ViewBag.ProviderName = "CONTAINER CORPORATION OF INDIA LIMITED (CONCOR)";
+                ViewBag.ProviderNote = "(FOR CONCOR USE ONLY)";
+                ViewBag.ProviderService = "CONCOR";
+                break;
+        }
+        ViewBag.ProviderKey = providerKey;
+        ViewBag.ImporterPan = await LoadImporterPanAsync(record.PartyCode);
+        return View(record);
+    }
+
+    /// <summary>"Declaration of transshipment" (Sea regulation 4) — filed by the authorised
+    /// carrier declaring the goods' transit route from Indian port to Nepal border.</summary>
+    [HttpGet]
+    [RequirePermission(PermissionKeys.MisctManage)]
+    public async Task<IActionResult> DeclarationOfTransshipment(int id)
+    {
+        var record = await _jobMisctService.GetByIdAsync(id);
+        if (record is null) return NotFound();
+        ViewBag.ImporterPan = await LoadImporterPanAsync(record.PartyCode);
+        return View(record);
+    }
+
+    /// <summary>Transhipment Permit addressed to the Commissioner of Customs at the Indian
+    /// port of entry, requesting permission to move the goods onward to Nepal.</summary>
+    [HttpGet]
+    [RequirePermission(PermissionKeys.MisctManage)]
+    public async Task<IActionResult> TransshipmentPermit(int id)
+    {
+        var record = await _jobMisctService.GetByIdAsync(id);
+        if (record is null) return NotFound();
+        ViewBag.ImporterPan = await LoadImporterPanAsync(record.PartyCode);
+        return View(record);
+    }
+
+    private async Task<string?> LoadImporterPanAsync(string partyCode) =>
+        string.IsNullOrEmpty(partyCode)
+            ? null
+            : (await _parties.Query().FirstOrDefaultAsync(p => p.PartyCode == partyCode))?.Pan;
 
     [HttpPost]
     [ValidateAntiForgeryToken]

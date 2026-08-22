@@ -69,6 +69,18 @@ public class MisctJob : BaseEntity
     [StringLength(150)]
     public string? PortOfEntryNepalName { get; set; }
 
+    /// <summary>The Indian seaport where the ocean vessel discharges (e.g. "KOLKATA") — distinct
+    /// from CustomsStationExit (the land border crossing, e.g. Raxaul) and PortOfEntryNepal (the
+    /// Nepal-side border point, e.g. Birgunj). Free text, not a master reference — needed by the
+    /// Transhipment Permit / Declaration of Transshipment print reports.</summary>
+    [StringLength(100)]
+    public string? PortOfEntryIndia { get; set; }
+
+    /// <summary>Customs bond reference debited for this transit movement — printed on the
+    /// Declaration of Transshipment and Transhipment Permit reports.</summary>
+    [StringLength(30)]
+    public string? BondNo { get; set; }
+
     // ---- Container / Cargo Information ----
     /// <summary>Header-level count of 20 FT containers on this job — auto-tallied client-side
     /// from the Container Details grid as rows are added/edited, but stored (and editable) as

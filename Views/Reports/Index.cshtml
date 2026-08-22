@@ -1,5 +1,16 @@
+@using CTD_FINAL.Constants
+@using CTD_FINAL.Interfaces
+@inject IPermissionService PermissionService
 @{
     ViewData["Title"] = "Reports";
+    // Same per-role permission gate as the JobMisct module itself (its own actions still
+    // enforce this server-side) — hidden here too so a role without it isn't shown a search
+    // box that would just redirect to Access Denied on use.
+    var currentRole = User.IsInRole(RoleNames.Administrator) ? RoleNames.Administrator
+        : User.IsInRole(RoleNames.Manager) ? RoleNames.Manager
+        : User.IsInRole(RoleNames.Operator) ? RoleNames.Operator
+        : RoleNames.Viewer;
+    bool canManageMisct = await PermissionService.IsAllowedAsync(currentRole, PermissionKeys.MisctManage);
     var reports = new (string Key, string Title, string Desc, string Icon)[]
     {
         ("dailyJob", "Daily Job Report", "All jobs created on a selected date",
@@ -37,6 +48,39 @@
         </div>
     }
 </div>
+
+@if (canManageMisct)
+{
+    <div class="panel" style="margin-top:20px;">
+        <div class="table-toolbar">
+            <h3 style="margin:0;font-size:14.5px;">Job MISCT Documents</h3>
+        </div>
+        <div class="panel-body">
+            <p style="font-size:12px;color:var(--ink-400);margin:0 0 12px;">Look up a MISCT job by Job No. to print its Forwarding Note, Declaration of Transshipment, or Transhipment Permit.</p>
+            <div class="form-grid cols-4">
+                <div class="field span-2" style="position:relative;">
+                    <label>Job No.</label>
+                    <input type="text" id="misctDocJobNo" placeholder="e.g. MISCT/0338/2026" autocomplete="off">
+                    <div id="misctDocJobSuggestions" class="autocomplete-list" style="display:none;"></div>
+                    <input type="hidden" id="misctDocJobId">
+                </div>
+                <div class="field">
+                    <label>Forwarding Note Provider</label>
+                    <select id="misctDocProvider">
+                        <option value="concor">CONCOR</option>
+                        <option value="pristine">Pristine</option>
+                        <option value="htpl">HTPL</option>
+                    </select>
+                </div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+                <button type="button" class="btn btn-outline btn-xs" id="misctDocForwardingBtn" disabled>Forwarding Note</button>
+                <button type="button" class="btn btn-outline btn-xs" id="misctDocDeclarationBtn" disabled>Declaration of Transshipment</button>
+                <button type="button" class="btn btn-outline btn-xs" id="misctDocTpBtn" disabled>Transhipment Permit</button>
+            </div>
+        </div>
+    </div>
+}
 
 <div class="panel" id="reportOutputPanel" style="display:none;margin-top:20px;">
     <div class="table-toolbar">

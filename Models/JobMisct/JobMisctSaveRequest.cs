@@ -27,6 +27,8 @@ public class JobMisctSaveRequest
     // Customs & Route
     public int? CustomsStationExitId { get; set; }
     public int? PortOfEntryNepalId { get; set; }
+    public string? PortOfEntryIndia { get; set; }
+    public string? BondNo { get; set; }
 
     // Container / Cargo
     public int Container20Qty { get; set; }

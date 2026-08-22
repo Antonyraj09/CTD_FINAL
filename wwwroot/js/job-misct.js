@@ -262,6 +262,8 @@
       mblDate: $("#misct_mblDate").value || null,
       customsStationExitId: $("#misct_customsStationExit").value ? Number($("#misct_customsStationExit").value) : null,
       portOfEntryNepalId: $("#misct_portOfEntryNepal").value ? Number($("#misct_portOfEntryNepal").value) : null,
+      portOfEntryIndia: $("#misct_portOfEntryIndia").value,
+      bondNo: $("#misct_bondNo").value,
       container20Qty: Number($("#misct_container20Qty").value) || 0,
       container40Qty: Number($("#misct_container40Qty").value) || 0,
       lclQty: Number($("#misct_lclQty").value) || 0,
@@ -370,6 +372,28 @@
           toast("Cannot delete", result.message, "error");
         }
       }, { danger: true, okLabel: "Delete Job" });
+    });
+  }
+
+  const forwardingNoteBtn = $("#misctForwardingNoteBtn");
+  if (forwardingNoteBtn && !forwardingNoteBtn.disabled) {
+    forwardingNoteBtn.addEventListener("click", function () {
+      const provider = $("#misctForwardingProvider").value;
+      window.open("/JobMisct/ForwardingNote/" + recordId + "?provider=" + encodeURIComponent(provider), "_blank");
+    });
+  }
+
+  const declarationBtn = $("#misctDeclarationBtn");
+  if (declarationBtn && !declarationBtn.disabled) {
+    declarationBtn.addEventListener("click", function () {
+      window.open("/JobMisct/DeclarationOfTransshipment/" + recordId, "_blank");
+    });
+  }
+
+  const tpPermitBtn = $("#misctTpPermitBtn");
+  if (tpPermitBtn && !tpPermitBtn.disabled) {
+    tpPermitBtn.addEventListener("click", function () {
+      window.open("/JobMisct/TransshipmentPermit/" + recordId, "_blank");
     });
   }
 
