@@ -24,6 +24,8 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, 
     public DbSet<JobIsne> JobIsnes => Set<JobIsne>();
     public DbSet<JobIsneContainer> JobIsneContainers => Set<JobIsneContainer>();
     public DbSet<DeliveryIsne> DeliveryIsnes => Set<DeliveryIsne>();
+    public DbSet<MisctJob> MisctJobs => Set<MisctJob>();
+    public DbSet<MisctJobContainer> MisctJobContainers => Set<MisctJobContainer>();
 
     public DbSet<GeneratedDocument> GeneratedDocuments => Set<GeneratedDocument>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();

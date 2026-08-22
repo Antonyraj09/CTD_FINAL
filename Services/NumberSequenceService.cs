@@ -38,14 +38,24 @@ public class NumberSequenceService : INumberSequenceService
     public async Task<string> NextIsneJobNumberAsync(CancellationToken ct = default)
     {
         var existingNumbers = await _context.JobIsnes.AsNoTracking().Select(j => j.JobNumber).ToListAsync(ct);
-        var next = existingNumbers.Select(ParseIsneSequence).DefaultIfEmpty(0).Max() + 1;
+        var next = existingNumbers.Select(ParseSlashSeparatedSequence).DefaultIfEmpty(0).Max() + 1;
         return $"ISNE/{next:D4}/{DateTime.UtcNow.Year}";
     }
 
-    private static int ParseIsneSequence(string jobNumber)
+    private static int ParseSlashSeparatedSequence(string jobNumber)
     {
         var parts = jobNumber.Split('/');
         return parts.Length >= 2 && int.TryParse(parts[1], out var seq) ? seq : 0;
+    }
+
+    /// <summary>Same live-MAX-over-existing-rows convention as NextIsneJobNumberAsync (see its
+    /// own comment) — deletes here are hard deletes too, so a freed number is reused rather
+    /// than skipped.</summary>
+    public async Task<string> NextMisctJobNumberAsync(CancellationToken ct = default)
+    {
+        var existingNumbers = await _context.MisctJobs.AsNoTracking().Select(j => j.JobNo).ToListAsync(ct);
+        var next = existingNumbers.Select(ParseSlashSeparatedSequence).DefaultIfEmpty(0).Max() + 1;
+        return $"MISCT/{next:D4}/{DateTime.UtcNow.Year}";
     }
 
     public Task<int> NextDeliveryIsneSerialAsync(CancellationToken ct = default) => NextAsync("DeliveryIsneSerial", ct);

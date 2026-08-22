@@ -21,6 +21,7 @@ public static class PermissionKeys
     public const string AlertRulesManage = "AlertRules.Manage";
     public const string JobIsneManage = "JobIsne.Manage";
     public const string DeliveryIsneManage = "DeliveryIsne.Manage";
+    public const string MisctManage = "Misct.Manage";
 
     public static readonly (string Key, string Label)[] All =
     {
@@ -38,5 +39,6 @@ public static class PermissionKeys
         (AlertRulesManage, "Alert Rules — Manage"),
         (JobIsneManage, "Job ISNE — Manage"),
         (DeliveryIsneManage, "Delivery ISNE — Manage"),
+        (MisctManage, "Job MISCT — Manage"),
     };
 }

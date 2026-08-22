@@ -114,7 +114,7 @@
             </div>
         </div>
 
-        @if (Can(PermissionKeys.JobCreateEdit) || Can(PermissionKeys.JobIsneManage))
+        @if (Can(PermissionKeys.JobCreateEdit) || Can(PermissionKeys.JobIsneManage) || Can(PermissionKeys.MisctManage))
         {
             <div class="@ModuleClass("jobs")" id="module-jobs">
                 <div class="@ModuleHeaderClass("jobs")" data-module="jobs">
@@ -129,7 +129,10 @@
                         <div class="sidebar-link-wrap"><a class="@NavClass("job-isne") erp-child" asp-controller="JobIsne" asp-action="Index"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="2"/></svg><span>Job ISNE</span></a><div class="collapsed-tip">Job ISNE</div></div>
                     }
                     <div class="sidebar-link-wrap"><a class="@NavClass("job-miscn") erp-child" asp-controller="Placeholder" asp-action="Index" asp-route-slug="job-miscn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="2"/></svg><span>Job MISCN</span></a><div class="collapsed-tip">Job MISCN</div></div>
-                    <div class="sidebar-link-wrap"><a class="@NavClass("job-misct") erp-child" asp-controller="Placeholder" asp-action="Index" asp-route-slug="job-misct"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="2"/></svg><span>Job MISCT</span></a><div class="collapsed-tip">Job MISCT</div></div>
+                    @if (Can(PermissionKeys.MisctManage))
+                    {
+                        <div class="sidebar-link-wrap"><a class="@NavClass("job-misct") erp-child" asp-controller="JobMisct" asp-action="Index"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="2"/></svg><span>Job MISCT</span></a><div class="collapsed-tip">Job MISCT</div></div>
+                    }
                     <div class="sidebar-link-wrap"><a class="@NavClass("job-isne-browse") erp-child" asp-controller="Placeholder" asp-action="Index" asp-route-slug="job-isne-browse"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="2"/></svg><span>Job ISNE Browse</span></a><div class="collapsed-tip">Job ISNE Browse</div></div>
                     <div class="sidebar-link-wrap"><a class="@NavClass("edi-job-register") erp-child" asp-controller="Placeholder" asp-action="Index" asp-route-slug="edi-job-register"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="2"/></svg><span>EDI Job Register</span></a><div class="collapsed-tip">EDI Job Register</div></div>
                     @if (Can(PermissionKeys.JobCreateEdit))

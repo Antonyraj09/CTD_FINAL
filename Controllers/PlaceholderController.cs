@@ -7,7 +7,7 @@ namespace CTD_FINAL.Controllers;
 /// Backs every prototype nav entry that has no functioning screen behind it yet.
 /// Two kinds of entries share this controller, exactly as the prototype's own
 /// "Under Development" badge sections did for its ~24 future-ERP-module stubs:
-///   1. Genuine prototype placeholders (EDI Import/Export, Job MISCN/MISCT, Delivery
+///   1. Genuine prototype placeholders (EDI Import/Export, Job MISCN, Delivery
 ///      variants, Accounts vouchers, Report 2/3) — permanent, title/description
 ///      copied verbatim from the prototype.
 ///   2. Real screens not yet wired up in the current build phase — temporary,
@@ -24,7 +24,6 @@ public class PlaceholderController : Controller
         ["edi-export-ese"] = New("EDI Export (ESE)", "Sea EDI Export — Export Sea Entry"),
         ["job-esne-esbe"] = New("Job ESNE / ESBE", "Export Sea / Nepal Entry & Export Sea Bill of Entry"),
         ["job-miscn"] = New("Job MISCN", "Miscellaneous Nepal Cargo Job Entry"),
-        ["job-misct"] = New("Job MISCT", "Miscellaneous Cargo Transit Job Entry"),
         ["job-isne-browse"] = New("Job ISNE Browse", "Browse and search all ISNE jobs"),
         ["edi-job-register"] = New("EDI Job Register", "EDI Job Register — IAE / ISE / EAE view"),
         ["delivery-challan"] = New("Delivery Challan", "Generate delivery challan documents"),
