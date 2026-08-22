@@ -112,6 +112,36 @@ public class InstallProvisionRequest
     public string? SetupKey { get; set; }
 }
 
+/// <summary>Fields the Installed Clients detail modal lets an operator edit. Company Name,
+/// Company Code, database connection info, License Number, and the installation-date audit
+/// stamp are deliberately not here — they stay read-only display in that modal.</summary>
+public class ClientUpdateRequest
+{
+    public int CompanyId { get; set; }
+
+    public string? Address { get; set; }
+    public string? Country { get; set; }
+    public string? State { get; set; }
+    public string? City { get; set; }
+    public string? GstNumber { get; set; }
+    public string? ContactPerson { get; set; }
+    public string Email { get; set; } = string.Empty;
+    public string? Phone { get; set; }
+    public string? InstallationLocation { get; set; }
+    public string CompanyStatus { get; set; } = "Active";
+
+    public string LicenseType { get; set; } = "Trial";
+    public string LicenseStatus { get; set; } = "Active";
+    public DateTime? ExpiryDate { get; set; }
+    public bool Activated { get; set; }
+
+    public string? InstalledBy { get; set; }
+    public string? MachineName { get; set; }
+
+    /// <summary>Same access gate as re-running the install wizard — see InstallController.</summary>
+    public string? SetupKey { get; set; }
+}
+
 /// <summary>One row of either the "Installed Clients" list (a real Company joined with its
 /// License/ClientDatabase — <see cref="IsComplete"/> true) or the "pending installation" block
 /// screen (an attempt with no Company yet, fields read back from InstallationHistory's request

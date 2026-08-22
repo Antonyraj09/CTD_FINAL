@@ -54,6 +54,13 @@ public class LicenseService : ILicenseService
         };
     }
 
+    public void ReissueSignature(License license, string companyCode)
+    {
+        var payload = BuildPayload(license.LicenseNumber, companyCode, license.LicenseType, license.IssueDate, license.ExpiryDate, license.ApplicationVersion ?? string.Empty);
+        license.LicenseKey = SignPayload(payload);
+        license.EncryptedLicense = _encryptionService.Encrypt(payload);
+    }
+
     public async Task<LicenseValidationResult> ValidateAsync(string licenseNumber, string machineIdentifier, CancellationToken ct = default)
     {
         var license = await _context.Licenses.Include(l => l.Company).FirstOrDefaultAsync(l => l.LicenseNumber == licenseNumber, ct);

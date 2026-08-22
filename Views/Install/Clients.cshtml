@@ -15,7 +15,7 @@
 <div class="section-head">
     <div>
         <h2>Installed Clients</h2>
-        <p>Double-click a row to view its details (read-only).</p>
+        <p>Double-click a row to view and edit its details.</p>
         @if (pendingCount > 0)
         {
             <p style="margin-top:6px;">
@@ -33,7 +33,7 @@
     </div>
 </div>
 
-<div class="panel">
+<div class="panel" id="clientsRoot" data-setup-key="@ViewBag.SetupKey">
     <div class="table-scroll">
         <table class="data-table" id="clientsTable">
             <thead>

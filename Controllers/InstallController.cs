@@ -27,13 +27,15 @@ public class InstallController : Controller
 {
     private readonly AdminDbContext _adminContext;
     private readonly IProvisioningService _provisioningService;
+    private readonly ILicenseService _licenseService;
     private readonly IConfiguration _configuration;
     private readonly ILogger<InstallController> _logger;
 
-    public InstallController(AdminDbContext adminContext, IProvisioningService provisioningService, IConfiguration configuration, ILogger<InstallController> logger)
+    public InstallController(AdminDbContext adminContext, IProvisioningService provisioningService, ILicenseService licenseService, IConfiguration configuration, ILogger<InstallController> logger)
     {
         _adminContext = adminContext;
         _provisioningService = provisioningService;
+        _licenseService = licenseService;
         _configuration = configuration;
         _logger = logger;
     }
@@ -159,8 +161,72 @@ public class InstallController : Controller
         .ToList();
 
         ViewBag.PendingCount = (await GetPendingAttemptsAsync()).Count;
+        ViewBag.SetupKey = key;
         return View(model);
     }
+
+    /// <summary>Edits a provisioned client's Company/License details from the Installed Clients
+    /// detail modal. Company Name, Company Code, database connection fields, License Number,
+    /// and the installation-date audit stamp aren't accepted here — they stay read-only.
+    /// LicenseType/ExpiryDate feed the license's cryptographic signature (see LicenseService),
+    /// so changing either re-signs and re-encrypts the license in the same save.</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateClient([FromBody] ClientUpdateRequest request)
+    {
+        var hasExistingCompany = await _adminContext.Companies.AnyAsync();
+        if (hasExistingCompany && !IsSetupKeyValid(request.SetupKey) && !IsMasterLicenseAdmin())
+            return Json(new { success = false, message = "A valid setup key is required to edit client details." });
+
+        var company = await _adminContext.Companies
+            .Include(c => c.Licenses)
+            .FirstOrDefaultAsync(c => c.Id == request.CompanyId);
+        if (company is null) return Json(new { success = false, message = "Client not found." });
+
+        company.Address = NullIfEmpty(request.Address);
+        company.Country = NullIfEmpty(request.Country);
+        company.State = NullIfEmpty(request.State);
+        company.City = NullIfEmpty(request.City);
+        company.GstNumber = NullIfEmpty(request.GstNumber);
+        company.ContactPerson = NullIfEmpty(request.ContactPerson);
+        company.Email = request.Email?.Trim() ?? string.Empty;
+        company.Phone = NullIfEmpty(request.Phone);
+        company.InstallationLocation = NullIfEmpty(request.InstallationLocation);
+        if (Enum.TryParse<CompanyStatus>(request.CompanyStatus, true, out var companyStatus))
+            company.Status = companyStatus;
+
+        var license = company.Licenses.OrderByDescending(l => l.IssueDate).FirstOrDefault();
+        if (license is not null)
+        {
+            var newLicenseType = Enum.TryParse<LicenseType>(request.LicenseType, true, out var lt) ? lt : license.LicenseType;
+            var newExpiryDate = request.ExpiryDate ?? license.ExpiryDate;
+            var signedFieldsChanged = newLicenseType != license.LicenseType || newExpiryDate != license.ExpiryDate;
+
+            license.LicenseType = newLicenseType;
+            license.ExpiryDate = newExpiryDate;
+            license.Activated = request.Activated;
+            if (Enum.TryParse<LicenseStatus>(request.LicenseStatus, true, out var licenseStatus))
+                license.Status = licenseStatus;
+
+            if (signedFieldsChanged)
+                _licenseService.ReissueSignature(license, company.CompanyCode);
+        }
+
+        var lastHistory = await _adminContext.InstallationHistories
+            .Where(h => h.CompanyId == company.Id)
+            .OrderByDescending(h => h.InstallationDate)
+            .FirstOrDefaultAsync();
+        if (lastHistory is not null)
+        {
+            lastHistory.InstalledBy = NullIfEmpty(request.InstalledBy);
+            lastHistory.MachineName = NullIfEmpty(request.MachineName);
+        }
+
+        await _adminContext.SaveChangesAsync();
+        return Json(new { success = true, message = $"{company.CompanyName} updated successfully" });
+    }
+
+    private static string? NullIfEmpty(string? s) => string.IsNullOrWhiteSpace(s) ? null : s;
 
     /// <summary>Attempts that never reached the point of creating a Company row — Started (the
     /// app never got to record an outcome, e.g. it crashed mid-install) or Failed. Succeeded and

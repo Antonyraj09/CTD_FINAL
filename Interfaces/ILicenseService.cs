@@ -19,6 +19,14 @@ public interface ILicenseService
 
     Task<LicenseValidationResult> ValidateAsync(string licenseNumber, string machineIdentifier, CancellationToken ct = default);
 
+    /// <summary>Recomputes LicenseKey/EncryptedLicense from a License's current field values
+    /// (LicenseNumber, LicenseType, IssueDate, ExpiryDate, ApplicationVersion) plus its
+    /// company's code. Call this whenever an already-issued license's signed fields are
+    /// edited (e.g. LicenseType or ExpiryDate from an admin screen) — without it, the stored
+    /// signature would no longer match what ValidateAsync recomputes and the client would be
+    /// rejected as tampered at next login, even though nothing malicious happened.</summary>
+    void ReissueSignature(License license, string companyCode);
+
     /// <summary>Marks LastValidation always, and on first-ever success also Activated + MachineIdentifier.</summary>
     Task RecordSuccessfulActivationAsync(License license, string machineIdentifier, CancellationToken ct = default);
 
