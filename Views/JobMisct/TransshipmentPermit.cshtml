@@ -12,16 +12,17 @@
     <meta charset="utf-8" />
     <title>Transhipment Permit - @Model.JobNo</title>
     <style>
-        @@page { size: A4; margin: 8mm; }
-        body { font-family: Arial, Helvetica, sans-serif; color: #10172a; font-size: 7.5pt; margin: 0; }
+        /* Landscape, matching the reference form exactly (297x210mm) on both pages. */
+        @@page { size: A4 landscape; margin: 8mm; }
+        body { font-family: Arial, Helvetica, sans-serif; color: #10172a; font-size: 9pt; margin: 0; }
         table { border-collapse: collapse; width: 100%; }
-        td, th { border: 1px solid #10172a; padding: 2px 3px; vertical-align: top; word-wrap: break-word; }
+        td, th { border: 1px solid #10172a; padding: 3px 5px; vertical-align: top; word-wrap: break-word; }
         .no-border td { border: none; padding: 1px 2px; }
         .center { text-align: center; }
         .right { text-align: right; }
         .bold { font-weight: 700; }
         .hdr-row td { border: none; }
-        .title { text-align: center; font-size: 12pt; font-weight: 700; margin: 4px 0; }
+        .title { text-align: center; font-size: 14pt; font-weight: 700; margin: 4px 0; }
         .page-break { page-break-before: always; }
         .toolbar { text-align: right; margin-bottom: 8px; }
         .toolbar button { padding: 6px 14px; margin-left: 6px; border-radius: 6px; cursor: pointer; font-size: 9pt; font-family: inherit; }
