@@ -94,7 +94,7 @@
                     <label>Job Date</label>
                     <input type="date" id="misct_jobDate" value="@(Model is null ? today : D(Model.JobDate))">
                 </div>
-                <div class="field span-2" style="position:relative;">
+                <div class="field span-2" style="position:relative;visibility:hidden">
                     <label>Load Existing Job <span style="font-weight:400;color:var(--ink-400);">(search by Job No.)</span></label>
                     <input type="text" id="misct_loadJobNo" placeholder="Type a Job No. to find and open it" autocomplete="off">
                     <div id="misct_loadJobSuggestions" class="autocomplete-list" style="display:none;"></div>
